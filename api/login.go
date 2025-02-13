@@ -80,15 +80,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	// dry login
-	if req.ServerCode == "::DRY::" && req.ServerPasscode == "::DRY::" {
-		json.NewEncoder(w).Encode(&LoginResponse{
-			Success: true,
-			Message: "ok",
-			Token:   "e30=", // empty token
-		})
-		return
-	}
 	// parse token
 	var err error
 	var mu *defines.MpayUser
@@ -118,6 +109,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(&LoginResponse{
 			Success: false,
 			Message: protocolErr.Error(),
+			Token:   utils.EncodeFBToken(mu),
 		})
 		return
 	}
