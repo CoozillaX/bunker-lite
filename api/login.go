@@ -54,12 +54,12 @@ func requestServerInfo(
 		return nil, nil, protocolErr
 	}
 	// cache version
-	versionCache.SetDefault(req.ServerCode, rentalInfo.MCVersion)
-	// check version
 	currentGameInfo, err := gameinfo.GetInfoByGameVersion(rentalInfo.MCVersion)
 	if err != nil {
 		return nil, nil, &defines.ProtocolError{Message: err.Error()}
 	}
+	versionCache.SetDefault(req.ServerCode, currentGameInfo.EngineVersion)
+	// check version
 	if gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
 		// re-login and get chain with updated engine version
 		return requestServerInfo(currentGameInfo.EngineVersion, mu, req)
