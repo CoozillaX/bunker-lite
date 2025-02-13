@@ -103,13 +103,21 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	// dry login
+	if req.ServerCode == "::DRY::" && req.ServerPasscode == "::DRY::" {
+		json.NewEncoder(w).Encode(&LoginResponse{
+			Success: true,
+			Message: "ok",
+			Token:   utils.EncodeFBToken(mu),
+		})
+		return
+	}
 	// g79 login and request server info
 	gu, serverInfo, protocolErr := requestServerInfo(gameinfo.DefaultEngineVersion, mu, &req)
 	if protocolErr != nil {
 		json.NewEncoder(w).Encode(&LoginResponse{
 			Success: false,
 			Message: protocolErr.Error(),
-			Token:   utils.EncodeFBToken(mu),
 		})
 		return
 	}
