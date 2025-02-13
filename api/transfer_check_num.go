@@ -24,6 +24,7 @@ func TransferCheckNum(w http.ResponseWriter, r *http.Request) {
 	// check method
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 	// get session
 	session := utils.GetSessionByBearer(r)

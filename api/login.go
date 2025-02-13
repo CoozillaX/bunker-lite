@@ -71,6 +71,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// check method
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 	// parse request
 	var req LoginRequest

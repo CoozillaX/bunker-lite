@@ -18,6 +18,7 @@ func TransferStartType(w http.ResponseWriter, r *http.Request) {
 	// check method
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 	// get session
 	session := utils.GetSessionByBearer(r)
