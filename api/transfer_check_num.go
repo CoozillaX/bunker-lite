@@ -11,7 +11,7 @@ import (
 )
 
 type TransferCheckNumRequest struct {
-	Data string `json:"data" binding:"min=1"`
+	Data string `json:"data"`
 }
 
 type TransferCheckNumResponse struct {
