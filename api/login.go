@@ -81,17 +81,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// parse token
-	var err error
 	var mu *defines.MpayUser
 	if req.FBToken != "" {
-		mu, err = utils.DecodeFBToken(req.FBToken)
-		if err != nil {
-			json.NewEncoder(w).Encode(&LoginResponse{
-				Success: true,
-				Message: err.Error(),
-			})
-			return
-		}
+		mu, _ = utils.DecodeFBToken(req.FBToken)
 	}
 	// try mpay login
 	var protocolErr *defines.ProtocolError
