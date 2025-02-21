@@ -13,5 +13,5 @@ func main() {
 	http.HandleFunc("/api/phoenix/transfer_start_type", api.TransferStartType)
 
 	fmt.Println("Server starts running...")
-	http.ListenAndServe(":2333", nil)
+	fmt.Println(http.ListenAndServe(":2333", nil))
 }
