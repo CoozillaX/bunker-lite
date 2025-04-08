@@ -35,11 +35,11 @@ type LoginResponse struct {
 var versionCache = cache.New(24*time.Hour, time.Hour) // cache[serverCode]serverVersion
 
 func requestServerInfo(
-	engineVersion string,
 	mu *defines.MpayUser,
 	req *LoginRequest,
 ) (*g79.G79User, *g79.RentalServerInfo, *defines.ProtocolError) {
 	// change engine version by cache
+	engineVersion := gameinfo.DefaultEngineVersion
 	if value, ok := versionCache.Get(req.ServerCode); ok {
 		engineVersion = value.(string)
 	}
@@ -62,7 +62,7 @@ func requestServerInfo(
 	// check version
 	if gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
 		// re-login and get chain with updated engine version
-		return requestServerInfo(currentGameInfo.EngineVersion, mu, req)
+		return requestServerInfo(mu, req)
 	}
 	return gu, rentalInfo, nil
 }
@@ -105,7 +105,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// g79 login and request server info
-	gu, serverInfo, protocolErr := requestServerInfo(gameinfo.DefaultEngineVersion, mu, &req)
+	gu, serverInfo, protocolErr := requestServerInfo(mu, &req)
 	if protocolErr != nil {
 		json.NewEncoder(w).Encode(&LoginResponse{
 			Success: false,
