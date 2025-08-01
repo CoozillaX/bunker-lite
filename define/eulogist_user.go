@@ -12,15 +12,18 @@ type EulogistUser struct {
 	UserName            string
 	UserPermissionLevel uint8
 
-	UserPasswordSum512 string
+	UserPasswordSum256 []byte
 	EulogistToken      string
+	UnbanUnixTime      int64
 
 	MultipleAuthServerAccounts []AuthServerAccount
 	RentalServerConfig         []RentalServerConfig
 	RentalServerCanManage      []string
 
-	CurrentAuthServerAccount    AuthServerAccount
-	AccessRentalServerWithoutOP bool
+	CurrentAuthServerAccount   protocol.Optional[AuthServerAccount]
+	DisableGlobalOpertorVerify bool
+	CanAccessAnyRentalServer   bool
+	CanGetHelperToken          bool
 }
 
 // EncodeEulogistUser ..
@@ -31,19 +34,26 @@ func EncodeEulogistUser(user EulogistUser) []byte {
 	writer.String(&user.UserUniqueID)
 	writer.String(&user.UserName)
 	writer.Uint8(&user.UserPermissionLevel)
-	writer.String(&user.UserPasswordSum512)
+	writer.ByteSlice(&user.UserPasswordSum256)
 	writer.String(&user.EulogistToken)
-	writer.Bool(&user.AccessRentalServerWithoutOP)
+	writer.Varint64(&user.UnbanUnixTime)
+	writer.Bool(&user.DisableGlobalOpertorVerify)
+	writer.Bool(&user.CanAccessAnyRentalServer)
+	writer.Bool(&user.CanGetHelperToken)
 	protocol.SliceUint8Length(writer, &user.RentalServerConfig)
 	protocol.FuncSliceUint16Length(writer, &user.RentalServerCanManage, writer.String)
 
-	accountBytes := EncodeAuthServerAccount(user.CurrentAuthServerAccount)
-	writer.ByteSlice(&accountBytes)
+	account, ok := user.CurrentAuthServerAccount.Value()
+	writer.Bool(&ok)
+	if ok {
+		accountBytes := EncodeAuthServerAccount(account)
+		writer.ByteSlice(&accountBytes)
+	}
 
 	slicenLen := uint8(len(user.MultipleAuthServerAccounts))
 	writer.Uint8(&slicenLen)
 	for _, account := range user.MultipleAuthServerAccounts {
-		accountBytes = EncodeAuthServerAccount(account)
+		accountBytes := EncodeAuthServerAccount(account)
 		writer.ByteSlice(&accountBytes)
 	}
 
@@ -53,6 +63,7 @@ func EncodeEulogistUser(user EulogistUser) []byte {
 // EncodeEulogistUser ..
 func DecodeEulogistUser(payload []byte) (user EulogistUser) {
 	var accountBytes []byte
+	var haveCurrentAuthServerAccount bool
 	var slicenLen uint8
 
 	buf := bytes.NewBuffer(payload)
@@ -61,14 +72,21 @@ func DecodeEulogistUser(payload []byte) (user EulogistUser) {
 	reader.String(&user.UserUniqueID)
 	reader.String(&user.UserName)
 	reader.Uint8(&user.UserPermissionLevel)
-	reader.String(&user.UserPasswordSum512)
+	reader.ByteSlice(&user.UserPasswordSum256)
 	reader.String(&user.EulogistToken)
-	reader.Bool(&user.AccessRentalServerWithoutOP)
+	reader.Varint64(&user.UnbanUnixTime)
+	reader.Bool(&user.DisableGlobalOpertorVerify)
+	reader.Bool(&user.CanAccessAnyRentalServer)
+	reader.Bool(&user.CanGetHelperToken)
 	protocol.SliceUint8Length(reader, &user.RentalServerConfig)
 	protocol.FuncSliceUint16Length(reader, &user.RentalServerCanManage, reader.String)
 
-	reader.ByteSlice(&accountBytes)
-	user.CurrentAuthServerAccount = DecodeAuthServerAccount(accountBytes)
+	reader.Bool(&haveCurrentAuthServerAccount)
+	if haveCurrentAuthServerAccount {
+		reader.ByteSlice(&accountBytes)
+		account := DecodeAuthServerAccount(accountBytes)
+		user.CurrentAuthServerAccount = protocol.Option(account)
+	}
 
 	reader.Uint8(&slicenLen)
 	for range slicenLen {

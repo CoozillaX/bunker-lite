@@ -16,6 +16,7 @@ require (
 require (
 	github.com/database64128/chacha8-go v0.0.0-20250204235950-5c6f473ea976 // indirect
 	github.com/sandertv/gophertunnel v1.48.1
+	go.etcd.io/bbolt v1.4.2
 	golang.org/x/sys v0.30.0 // indirect
 )
 
