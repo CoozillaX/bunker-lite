@@ -6,7 +6,7 @@ import "github.com/sandertv/gophertunnel/minecraft/protocol"
 type GameSavesKey struct {
 	EulogistUserUniqueID string
 	RentalServerNumber   string
-	GameSavesAESKeyBytes []byte
+	GameSavesAESCipher   []byte
 }
 
 func (g *GameSavesKey) MarshalKey(io protocol.IO) {
@@ -15,5 +15,5 @@ func (g *GameSavesKey) MarshalKey(io protocol.IO) {
 }
 
 func (g *GameSavesKey) MarshalData(io protocol.IO) {
-	io.ByteSlice(&g.GameSavesAESKeyBytes)
+	io.ByteSlice(&g.GameSavesAESCipher)
 }
