@@ -20,8 +20,8 @@ const (
 )
 
 const (
-	DATABASE_KEY_ALLOW_LIST_CONFIG = "ALLOW_LIST_CONFIG" // map[RentalServerNumber][]AllowListConfig
-	DATABASE_KEY_GAME_SAVES_KEYS   = "GAME_SAVES_KEYS"   // map[UserUniqueID + RentalServerNumver]GameSavesKey
+	DATABASE_KEY_ALLOW_LIST_CONFIG = "ALLOW_LIST_CONFIG" // map[RentalServerNumber][]define.AllowListConfig
+	DATABASE_KEY_GAME_SAVES_KEYS   = "GAME_SAVES_KEYS"   // map[UserUniqueID + RentalServerNumver]define.GameSavesKey
 )
 
 var (

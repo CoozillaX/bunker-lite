@@ -1,4 +1,4 @@
-package api
+package std_api
 
 import (
 	"bunker-core/protocol/g79"

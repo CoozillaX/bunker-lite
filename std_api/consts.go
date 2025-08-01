@@ -1,4 +1,4 @@
-package api
+package std_api
 
 const (
 	session_key_entity_id      = "SESSION_KEY_ENTITY_ID"
