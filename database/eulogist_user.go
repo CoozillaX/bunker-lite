@@ -2,7 +2,6 @@ package database
 
 import (
 	"bunker-lite/define"
-	"crypto/sha256"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -76,7 +75,7 @@ func GetUserByToken(token string, useLock bool) (user define.EulogistUser) {
 }
 
 // CreateUser ..
-func CreateUser(name string, password string, permissionLevel uint8, useLock bool) error {
+func CreateUser(name string, passwordSum256 []byte, permissionLevel uint8, useLock bool) error {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -85,13 +84,11 @@ func CreateUser(name string, password string, permissionLevel uint8, useLock boo
 	if CheckUserByName(name, false) {
 		return fmt.Errorf("CreateUser: 名为 %s 的用户已存在", name)
 	}
-
-	passwordSum256 := sha256.Sum256([]byte(password + define.UserPasswordSalt))
 	eulogistUser := define.EulogistUser{
 		UserUniqueID:        uuid.NewString(),
 		UserName:            name,
 		UserPermissionLevel: permissionLevel,
-		UserPasswordSum256:  passwordSum256[:],
+		UserPasswordSum256:  passwordSum256,
 		EulogistToken:       uuid.NewString(),
 	}
 
