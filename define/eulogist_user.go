@@ -21,6 +21,7 @@ type EulogistUser struct {
 	RentalServerCanManage      []string
 
 	CurrentAuthServerAccount   protocol.Optional[AuthServerAccount]
+	ProvidedPeAuthData         string
 	DisableGlobalOpertorVerify bool
 	CanAccessAnyRentalServer   bool
 	CanGetHelperToken          bool
@@ -37,6 +38,7 @@ func EncodeEulogistUser(user EulogistUser) []byte {
 	writer.ByteSlice(&user.UserPasswordSum256)
 	writer.String(&user.EulogistToken)
 	writer.Varint64(&user.UnbanUnixTime)
+	writer.String(&user.ProvidedPeAuthData)
 	writer.Bool(&user.DisableGlobalOpertorVerify)
 	writer.Bool(&user.CanAccessAnyRentalServer)
 	writer.Bool(&user.CanGetHelperToken)
@@ -75,6 +77,7 @@ func DecodeEulogistUser(payload []byte) (user EulogistUser) {
 	reader.ByteSlice(&user.UserPasswordSum256)
 	reader.String(&user.EulogistToken)
 	reader.Varint64(&user.UnbanUnixTime)
+	reader.String(&user.ProvidedPeAuthData)
 	reader.Bool(&user.DisableGlobalOpertorVerify)
 	reader.Bool(&user.CanAccessAnyRentalServer)
 	reader.Bool(&user.CanGetHelperToken)

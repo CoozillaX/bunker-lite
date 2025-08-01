@@ -9,12 +9,19 @@ import (
 const DatabseFileName = "eulogist-bunker-lite.db"
 
 const (
-	DATABASE_KEY_EULOGIST_USER            = "EULOGIST_USER"            // map[UserUniqueID]define.EulogistUser
-	DATABASE_KEY_AUTH_HELPER              = "AUTH_HELPER"              // map[UserUniqueID]define.AuthServerHelper
-	DATABASE_KEY_NTEU_MAPPING             = "NAME_TO_EULOGIST_USER"    // map[EulogistUserName]UserUniqueID
-	DATABSE_KEY_TTEU_MAPPING              = "TOKEN_TO_EULOGIST_USER"   // map[EulogistToken]UserUniqueID
-	DATABASE_KEY_TTAH_MAPPING             = "TOEKN_TO_AUTH_HELPER"     // map[AuthServerHelperToken]HelperUniqueID
-	DATABASE_KEY_RENTAL_SERVER_ALLOW_LIST = "RENTAL_SERVER_ALLOW_LIST" // map[RentalServerNumber][]EulogistUserUniqueID
+	DATABASE_KEY_EULOGIST_USER = "EULOGIST_USER" // map[UserUniqueID]define.EulogistUser
+	DATABASE_KEY_AUTH_HELPER   = "AUTH_HELPER"   // map[HelperUniqueID]define.AuthServerHelper
+)
+
+const (
+	DATABASE_KEY_NTEU_MAPPING = "NAME_TO_EULOGIST_USER"  // map[EulogistUserName]UserUniqueID
+	DATABSE_KEY_TTEU_MAPPING  = "TOKEN_TO_EULOGIST_USER" // map[EulogistToken]UserUniqueID
+	DATABASE_KEY_TTAH_MAPPING = "TOEKN_TO_AUTH_HELPER"   // map[AuthServerHelperToken]HelperUniqueID
+)
+
+const (
+	DATABASE_KEY_ALLOW_LIST_CONFIG = "ALLOW_LIST_CONFIG" // map[RentalServerNumber][]AllowListConfig
+	DATABASE_KEY_GAME_SAVES_KEYS   = "GAME_SAVES_KEYS"   // map[UserUniqueID + RentalServerNumver]GameSavesKey
 )
 
 var (
@@ -49,7 +56,10 @@ func init() {
 		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_TTAH_MAPPING)); err != nil {
 			return err
 		}
-		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_RENTAL_SERVER_ALLOW_LIST)); err != nil {
+		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_ALLOW_LIST_CONFIG)); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_GAME_SAVES_KEYS)); err != nil {
 			return err
 		}
 		return nil

@@ -11,8 +11,9 @@ import (
 type AuthServerAccount interface {
 	AuthServerAddress() string
 	AuthServerToken() string
-	DisplayName() string
+	FormatInGame() string
 	IsStdAccount() bool
+	UpdateData(newData map[string]any)
 }
 
 // EncodeAuthServerAccount ..
@@ -62,6 +63,7 @@ func DecodeAuthServerAccount(payload []byte) AuthServerAccount {
 // StdAuthServerAccount ..
 type StdAuthServerAccount struct {
 	gameNickName    string
+	g79UserUID      string
 	authServerToken string
 }
 
@@ -69,8 +71,8 @@ func (s *StdAuthServerAccount) IsStdAccount() bool {
 	return true
 }
 
-func (s *StdAuthServerAccount) DisplayName() string {
-	return s.gameNickName
+func (s *StdAuthServerAccount) FormatInGame() string {
+	return fmt.Sprintf("§r§l§e%s §r§7(§fUID §7- §b%s§7)", s.gameNickName, s.g79UserUID)
 }
 
 func (s *StdAuthServerAccount) AuthServerAddress() string {
@@ -79,6 +81,14 @@ func (s *StdAuthServerAccount) AuthServerAddress() string {
 
 func (s *StdAuthServerAccount) AuthServerToken() string {
 	return s.authServerToken
+}
+
+func (s *StdAuthServerAccount) UpdateData(newData map[string]any) {
+	*s = StdAuthServerAccount{
+		gameNickName:    newData["gameNickName"].(string),
+		g79UserUID:      newData["g79UserUID"].(string),
+		authServerToken: newData["authServerToken"].(string),
+	}
 }
 
 // CustomAuthServerAccount ..
@@ -92,8 +102,8 @@ func (c *CustomAuthServerAccount) IsStdAccount() bool {
 	return false
 }
 
-func (c *CustomAuthServerAccount) DisplayName() string {
-	return fmt.Sprintf("账户 ID - %d", c.internalAccountID)
+func (c *CustomAuthServerAccount) FormatInGame() string {
+	return fmt.Sprintf("§r§l§e账户 ID §f- §b%d", c.internalAccountID)
 }
 
 func (c *CustomAuthServerAccount) AuthServerAddress() string {
@@ -102,4 +112,12 @@ func (c *CustomAuthServerAccount) AuthServerAddress() string {
 
 func (c *CustomAuthServerAccount) AuthServerToken() string {
 	return c.authServerToken
+}
+
+func (c *CustomAuthServerAccount) UpdateData(newData map[string]any) {
+	*c = CustomAuthServerAccount{
+		internalAccountID: newData["internalAccountID"].(uint8),
+		authServerAddress: newData["authServerAddress"].(string),
+		authServerToken:   newData["authServerToken"].(string),
+	}
 }
