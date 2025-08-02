@@ -16,9 +16,10 @@ type EulogistUser struct {
 	EulogistToken      string
 	UnbanUnixTime      int64
 
-	MultipleAuthServerAccounts []AuthServerAccount
-	RentalServerConfig         []RentalServerConfig
-	RentalServerCanManage      []string
+	MultipleAuthServerAccounts  []AuthServerAccount
+	RentalServerConfig          []RentalServerConfig
+	RentalServerCanManage       []string
+	InternalIncreasingAccountID uint32
 
 	CurrentAuthServerAccount   protocol.Optional[AuthServerAccount]
 	ProvidedPeAuthData         string
@@ -39,6 +40,7 @@ func EncodeEulogistUser(user EulogistUser) []byte {
 	writer.ByteSlice(&user.UserPasswordSum256)
 	writer.String(&user.EulogistToken)
 	writer.Varint64(&user.UnbanUnixTime)
+	writer.Varuint32(&user.InternalIncreasingAccountID)
 	writer.String(&user.ProvidedPeAuthData)
 	writer.Bool(&user.DisableGlobalOpertorVerify)
 	writer.Bool(&user.CanAccessAnyRentalServer)
@@ -79,6 +81,7 @@ func DecodeEulogistUser(payload []byte) (user EulogistUser) {
 	reader.ByteSlice(&user.UserPasswordSum256)
 	reader.String(&user.EulogistToken)
 	reader.Varint64(&user.UnbanUnixTime)
+	reader.Varuint32(&user.InternalIncreasingAccountID)
 	reader.String(&user.ProvidedPeAuthData)
 	reader.Bool(&user.DisableGlobalOpertorVerify)
 	reader.Bool(&user.CanAccessAnyRentalServer)

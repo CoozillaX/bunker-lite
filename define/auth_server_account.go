@@ -32,7 +32,7 @@ func EncodeAuthServerAccount(account AuthServerAccount) []byte {
 	}
 
 	customAccount := account.(*CustomAuthServerAccount)
-	writer.Uint8(&customAccount.internalAccountID)
+	writer.Varuint32(&customAccount.internalAccountID)
 	writer.String(&customAccount.authServerAddress)
 	writer.String(&customAccount.authServerToken)
 	return buf.Bytes()
@@ -54,7 +54,7 @@ func DecodeAuthServerAccount(payload []byte) AuthServerAccount {
 	}
 
 	account := CustomAuthServerAccount{}
-	reader.Uint8(&account.internalAccountID)
+	reader.Varuint32(&account.internalAccountID)
 	reader.String(&account.authServerAddress)
 	reader.String(&account.authServerToken)
 	return &account
@@ -72,7 +72,7 @@ func (s *StdAuthServerAccount) IsStdAccount() bool {
 }
 
 func (s *StdAuthServerAccount) FormatInGame() string {
-	return fmt.Sprintf("§r§l§e%s §r§7(§fUID §7- §b%s§7)", s.gameNickName, s.g79UserUID)
+	return fmt.Sprintf("§r§l§e%s §r§7(§fUID §7- §b%s§7)§r", s.gameNickName, s.g79UserUID)
 }
 
 func (s *StdAuthServerAccount) AuthServerAddress() string {
@@ -81,6 +81,10 @@ func (s *StdAuthServerAccount) AuthServerAddress() string {
 
 func (s *StdAuthServerAccount) AuthServerSecret() string {
 	return s.authHelperUniqueID
+}
+
+func (s *StdAuthServerAccount) G79UserUID() string {
+	return s.g79UserUID
 }
 
 func (s *StdAuthServerAccount) UpdateData(newData map[string]any) {
@@ -93,7 +97,7 @@ func (s *StdAuthServerAccount) UpdateData(newData map[string]any) {
 
 // CustomAuthServerAccount ..
 type CustomAuthServerAccount struct {
-	internalAccountID uint8
+	internalAccountID uint32
 	authServerAddress string
 	authServerToken   string
 }
@@ -103,7 +107,7 @@ func (c *CustomAuthServerAccount) IsStdAccount() bool {
 }
 
 func (c *CustomAuthServerAccount) FormatInGame() string {
-	return fmt.Sprintf("§r§l§e账户 ID §f- §b%d", c.internalAccountID)
+	return fmt.Sprintf("§r§l§e账户 ID §f- §b%d§r", c.internalAccountID)
 }
 
 func (c *CustomAuthServerAccount) AuthServerAddress() string {
@@ -116,7 +120,7 @@ func (c *CustomAuthServerAccount) AuthServerSecret() string {
 
 func (c *CustomAuthServerAccount) UpdateData(newData map[string]any) {
 	*c = CustomAuthServerAccount{
-		internalAccountID: newData["internalAccountID"].(uint8),
+		internalAccountID: newData["internalAccountID"].(uint32),
 		authServerAddress: newData["authServerAddress"].(string),
 		authServerToken:   newData["authServerToken"].(string),
 	}

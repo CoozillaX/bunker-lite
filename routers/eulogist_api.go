@@ -13,6 +13,10 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 	{
 		eulogistApiGroup.POST("/register_or_login", eulogist_api.RegisterOrLogin)
 		eulogistApiGroup.POST("/request_user_info", eulogist_api.RequestUserInfo)
+		eulogistApiGroup.POST("/get_helper_info", eulogist_api.GetHelperInfo)
+		eulogistApiGroup.POST("/change_current_helper", eulogist_api.ChangeCurrentHelper)
+		eulogistApiGroup.POST("/add_helper_normal", eulogist_api.AddHelperNormal)
+		eulogistApiGroup.POST("/add_helper_sms", eulogist_api.AddHelperSMS)
 	}
 
 	// No router
