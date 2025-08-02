@@ -122,13 +122,13 @@ func AddHelperSMS(c *gin.Context) {
 		activeSMSTransaction[request.TransactionUUID] = tran
 
 		if protocolError == nil || len(protocolError.VerifyUrl) > 0 {
-			var verifyURL string
+			var errorInfo string
 			if protocolError != nil {
-				verifyURL = protocolError.VerifyUrl
+				errorInfo = protocolError.Error()
 			}
 			c.JSON(http.StatusOK, SMSHelperAddResponse{
+				ErrorInfo:    errorInfo,
 				ResponseType: ResponseTypeClientNeedSendSMS,
-				VerifyURL:    verifyURL,
 			})
 			return
 		}
