@@ -15,7 +15,7 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 		eulogistApiGroup.POST("/request_user_info", eulogist_api.RequestUserInfo)
 		eulogistApiGroup.POST("/get_std_helper_info", eulogist_api.GetStdHelperInfo)
 		eulogistApiGroup.POST("/change_current_helper", eulogist_api.ChangeCurrentHelper)
-		eulogistApiGroup.POST("/add_std_helper_normal", eulogist_api.AddStdHelperNormal)
+		eulogistApiGroup.POST("/add_helper_normal", eulogist_api.AddHelperNormal)
 		eulogistApiGroup.POST("/add_std_helper_sms", eulogist_api.AddStdHelperSMS)
 	}
 
