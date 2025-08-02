@@ -10,7 +10,7 @@ import (
 // AuthServerAccount ..
 type AuthServerAccount interface {
 	AuthServerAddress() string
-	AuthServerToken() string
+	AuthServerSecret() string
 	FormatInGame() string
 	IsStdAccount() bool
 	UpdateData(newData map[string]any)
@@ -27,7 +27,7 @@ func EncodeAuthServerAccount(account AuthServerAccount) []byte {
 	if isStdAccount {
 		stdAccount := account.(*StdAuthServerAccount)
 		writer.String(&stdAccount.gameNickName)
-		writer.String(&stdAccount.authServerToken)
+		writer.String(&stdAccount.authHelperUniqueID)
 		return buf.Bytes()
 	}
 
@@ -49,7 +49,7 @@ func DecodeAuthServerAccount(payload []byte) AuthServerAccount {
 	if isStdAccount {
 		account := StdAuthServerAccount{}
 		reader.String(&account.gameNickName)
-		reader.String(&account.authServerToken)
+		reader.String(&account.authHelperUniqueID)
 		return &account
 	}
 
@@ -62,9 +62,9 @@ func DecodeAuthServerAccount(payload []byte) AuthServerAccount {
 
 // StdAuthServerAccount ..
 type StdAuthServerAccount struct {
-	gameNickName    string
-	g79UserUID      string
-	authServerToken string
+	gameNickName       string
+	g79UserUID         string
+	authHelperUniqueID string
 }
 
 func (s *StdAuthServerAccount) IsStdAccount() bool {
@@ -79,15 +79,15 @@ func (s *StdAuthServerAccount) AuthServerAddress() string {
 	return StdAuthServerAddress
 }
 
-func (s *StdAuthServerAccount) AuthServerToken() string {
-	return s.authServerToken
+func (s *StdAuthServerAccount) AuthServerSecret() string {
+	return s.authHelperUniqueID
 }
 
 func (s *StdAuthServerAccount) UpdateData(newData map[string]any) {
 	*s = StdAuthServerAccount{
-		gameNickName:    newData["gameNickName"].(string),
-		g79UserUID:      newData["g79UserUID"].(string),
-		authServerToken: newData["authServerToken"].(string),
+		gameNickName:       newData["gameNickName"].(string),
+		g79UserUID:         newData["g79UserUID"].(string),
+		authHelperUniqueID: newData["authHelperUniqueID"].(string),
 	}
 }
 
@@ -110,7 +110,7 @@ func (c *CustomAuthServerAccount) AuthServerAddress() string {
 	return c.authServerAddress
 }
 
-func (c *CustomAuthServerAccount) AuthServerToken() string {
+func (c *CustomAuthServerAccount) AuthServerSecret() string {
 	return c.authServerToken
 }
 

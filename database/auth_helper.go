@@ -14,8 +14,26 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-// CheckUserByName ..
-func CheckAuthHelper(token string, useLock bool) (found bool) {
+// CheckAuthHelperByToken ..
+func CheckAuthHelperByUniqueID(uniqueID string, useLock bool) (found bool) {
+	if useLock {
+		mu.RLock()
+		defer mu.RUnlock()
+	}
+
+	_ = serverDatabase.View(func(tx *bbolt.Tx) error {
+		payload := tx.
+			Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).
+			Get([]byte(uniqueID))
+		found = len(payload) > 0
+		return nil
+	})
+
+	return
+}
+
+// CheckAuthHelperByToken ..
+func CheckAuthHelperByToken(token string, useLock bool) (found bool) {
 	if useLock {
 		mu.RLock()
 		defer mu.RUnlock()
@@ -32,8 +50,30 @@ func CheckAuthHelper(token string, useLock bool) (found bool) {
 	return
 }
 
-// GetUserByToken ..
-func GetAuthHelper(token string, useLock bool) (helper define.AuthServerHelper) {
+// GetAuthHelperByUniqueID ..
+func GetAuthHelperByUniqueID(uniqueID string, useLock bool) (helper define.AuthServerHelper) {
+	if useLock {
+		mu.RLock()
+		defer mu.RUnlock()
+	}
+
+	_ = serverDatabase.View(func(tx *bbolt.Tx) error {
+		payload := tx.
+			Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).
+			Get([]byte(uniqueID))
+
+		buf := bytes.NewBuffer(payload)
+		reader := protocol.NewReader(buf, 0, false)
+		helper.Marshal(reader)
+
+		return nil
+	})
+
+	return
+}
+
+// GetAuthHelperByToken ..
+func GetAuthHelperByToken(token string, useLock bool) (helper define.AuthServerHelper) {
 	if useLock {
 		mu.RLock()
 		defer mu.RUnlock()
@@ -54,7 +94,7 @@ func GetAuthHelper(token string, useLock bool) (helper define.AuthServerHelper) 
 }
 
 // CreateAuthHelper ..
-func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (token string, protocolError *defines.ProtocolError) {
+func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (uniqueID string, protocolError *defines.ProtocolError) {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -110,11 +150,11 @@ func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (token string, p
 		}
 	}
 
-	return helper.HelperToken, nil
+	return helper.HelperUniqueID, nil
 }
 
 // GetHelperBasicInfo ..
-func GetHelperBasicInfo(token string, useLock bool) (nickName string, G79UserUID string, protocolError *defines.ProtocolError) {
+func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, G79UserUID string, protocolError *defines.ProtocolError) {
 	var mpayUser defines.MpayUser
 
 	if useLock {
@@ -122,12 +162,12 @@ func GetHelperBasicInfo(token string, useLock bool) (nickName string, G79UserUID
 		defer mu.Unlock()
 	}
 
-	if !CheckAuthHelper(token, false) {
+	if !CheckAuthHelperByUniqueID(uniqueID, false) {
 		return "", "", &defines.ProtocolError{
 			Message: "GetHelperBasicInfo: 无法找到目标 MC 账号",
 		}
 	}
-	helper := GetAuthHelper(token, false)
+	helper := GetAuthHelperByUniqueID(uniqueID, false)
 
 	err := json.Unmarshal(helper.MpayUserData, &mpayUser)
 	if err != nil {
@@ -170,24 +210,78 @@ func GetHelperBasicInfo(token string, useLock bool) (nickName string, G79UserUID
 	})
 	if err != nil {
 		return "", "", &defines.ProtocolError{
-			Message: fmt.Sprintf("UpdateAuthHelper: %v", err),
+			Message: fmt.Sprintf("UpdateAuthHelper: 更新 MC 账号信息时出现问题，原因是 %v", err),
 		}
 	}
 
 	return helper.GameNickName, helper.G79UserUID, nil
 }
 
-// DeleteAuthHelper ..
-func DeleteAuthHelper(token string, useLock bool) error {
+// UpdateHelperToken ..
+func UpdateHelperToken(uniqueID string, useLock bool) error {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
 	}
 
-	if !CheckAuthHelper(token, false) {
+	if !CheckAuthHelperByUniqueID(uniqueID, false) {
+		return fmt.Errorf("UpdateHelperToken: 目标 MC 账号不存在")
+	}
+
+	helper := GetAuthHelperByUniqueID(uniqueID, false)
+	legacyToken := helper.HelperToken
+	helper.HelperToken = uuid.NewString()
+
+	err := serverDatabase.Update(func(tx *bbolt.Tx) error {
+		buf := bytes.NewBuffer(nil)
+		writer := protocol.NewWriter(buf, 0)
+		helper.Marshal(writer)
+
+		err := tx.
+			Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).
+			Put(
+				[]byte(helper.HelperUniqueID),
+				buf.Bytes(),
+			)
+		if err != nil {
+			return err
+		}
+
+		err = tx.Bucket([]byte(DATABASE_KEY_TTAH_MAPPING)).Delete([]byte(legacyToken))
+		if err != nil {
+			return err
+		}
+
+		err = tx.
+			Bucket([]byte(DATABASE_KEY_TTAH_MAPPING)).
+			Put(
+				[]byte(helper.HelperToken),
+				[]byte(helper.HelperUniqueID),
+			)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("UpdateHelperToken: 更新 MC 账号的令牌时出现问题，原因是 %v", err)
+	}
+
+	return nil
+}
+
+// DeleteAuthHelper ..
+func DeleteAuthHelper(uniqueID string, useLock bool) error {
+	if useLock {
+		mu.Lock()
+		defer mu.Unlock()
+	}
+
+	if !CheckAuthHelperByUniqueID(uniqueID, false) {
 		return fmt.Errorf("DeleteAuthHelper: 目标 MC 账号不存在")
 	}
-	helper := GetAuthHelper(token, false)
+	helper := GetAuthHelperByUniqueID(uniqueID, false)
 
 	err := serverDatabase.Update(func(tx *bbolt.Tx) error {
 		err := tx.Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).Delete([]byte(helper.HelperUniqueID))
