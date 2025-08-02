@@ -24,6 +24,7 @@ type EulogistUser struct {
 	ProvidedPeAuthData         string
 	DisableGlobalOpertorVerify bool
 	CanAccessAnyRentalServer   bool
+	CanGetGameSavesKeyCipher   bool
 	CanGetHelperToken          bool
 }
 
@@ -41,6 +42,7 @@ func EncodeEulogistUser(user EulogistUser) []byte {
 	writer.String(&user.ProvidedPeAuthData)
 	writer.Bool(&user.DisableGlobalOpertorVerify)
 	writer.Bool(&user.CanAccessAnyRentalServer)
+	writer.Bool(&user.CanGetGameSavesKeyCipher)
 	writer.Bool(&user.CanGetHelperToken)
 	protocol.SliceUint8Length(writer, &user.RentalServerConfig)
 	protocol.FuncSliceUint16Length(writer, &user.RentalServerCanManage, writer.String)
@@ -80,6 +82,7 @@ func DecodeEulogistUser(payload []byte) (user EulogistUser) {
 	reader.String(&user.ProvidedPeAuthData)
 	reader.Bool(&user.DisableGlobalOpertorVerify)
 	reader.Bool(&user.CanAccessAnyRentalServer)
+	reader.Bool(&user.CanGetGameSavesKeyCipher)
 	reader.Bool(&user.CanGetHelperToken)
 	protocol.SliceUint8Length(reader, &user.RentalServerConfig)
 	protocol.FuncSliceUint16Length(reader, &user.RentalServerCanManage, reader.String)

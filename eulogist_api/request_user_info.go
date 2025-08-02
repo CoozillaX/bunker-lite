@@ -11,7 +11,7 @@ import (
 
 // UserInfoRequest ..
 type UserInfoRequest struct {
-	Token string `json:"token"`
+	Token string `json:"token,omitempty"`
 }
 
 // UserInfoResponse ..

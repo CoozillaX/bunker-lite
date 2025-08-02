@@ -14,8 +14,8 @@ import (
 // LoginRequest ..
 type LoginRequest struct {
 	IsRegister         bool   `json:"is_register"`
-	UserName           string `json:"user_name"`
-	UserPasswordSum256 []byte `json:"user_password_sum256"`
+	UserName           string `json:"user_name,omitempty"`
+	UserPasswordSum256 []byte `json:"user_password_sum256,omitempty"`
 }
 
 // LoginResponse ..
@@ -39,6 +39,22 @@ func RegisterOrLogin(c *gin.Context) {
 	}
 
 	if request.IsRegister {
+		if len(request.UserName) == 0 || len(request.UserPasswordSum256) == 0 {
+			c.JSON(http.StatusOK, LoginResponse{
+				ErrorInfo: "RegisterOrLogin: 用户名或密码不得为空",
+				Success:   false,
+			})
+			return
+		}
+
+		if len(request.UserName) < 6 {
+			c.JSON(http.StatusOK, LoginResponse{
+				ErrorInfo: "RegisterOrLogin: 用户名长度不得少于 6 个字符",
+				Success:   false,
+			})
+			return
+		}
+
 		if len(request.UserName) > 32 {
 			c.JSON(http.StatusOK, LoginResponse{
 				ErrorInfo: "RegisterOrLogin: 用户名长度不得超过 32 个字符",
@@ -46,6 +62,7 @@ func RegisterOrLogin(c *gin.Context) {
 			})
 			return
 		}
+
 		if strings.Contains(request.UserName, "\n") {
 			c.JSON(http.StatusOK, LoginResponse{
 				ErrorInfo: "RegisterOrLogin: 用户名不得包含换行符",
