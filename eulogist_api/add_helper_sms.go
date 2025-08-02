@@ -32,7 +32,6 @@ var activeSMSTransaction = make(map[string]SMSTransaction)
 
 // SMSTransaction ..
 type SMSTransaction struct {
-	Mobile         string
 	VerifyFunc     func(code string) (*defines.MpayUser, *defines.ProtocolError)
 	ExpireUnixTime int64
 }
@@ -108,11 +107,10 @@ func AddHelperSMS(c *gin.Context) {
 
 		mu := new(defines.MpayUser)
 		tran := SMSTransaction{
-			Mobile:         request.Mobile,
 			ExpireUnixTime: currentTime.Unix() + SMSTransactionExpireSeconds,
 		}
 
-		verifyFunc, protocolError := mpay.CreateLoginHelper(mu).SMSLogin(tran.Mobile)
+		verifyFunc, protocolError := mpay.CreateLoginHelper(mu).SMSLogin(request.Mobile)
 		if protocolError != nil && len(protocolError.VerifyUrl) == 0 {
 			c.JSON(http.StatusOK, SMSHelperAddResponse{
 				ErrorInfo:    fmt.Sprintf("AddHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v", protocolError.Error()),
