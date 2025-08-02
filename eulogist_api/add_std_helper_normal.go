@@ -42,14 +42,14 @@ type HelperAddResponse struct {
 	G79UserUID           string `json:"g79_user_uid"`
 }
 
-// AddHelperNormal ..
-func AddHelperNormal(c *gin.Context) {
+// AddStdHelperNormal ..
+func AddStdHelperNormal(c *gin.Context) {
 	var request HelperAddRequest
 
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("AddStdHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
 			Success:   false,
 		})
 		return
@@ -57,7 +57,7 @@ func AddHelperNormal(c *gin.Context) {
 
 	if !database.CheckUserByToken(request.Token, true) {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo: "AddHelperNormal: 无效的赞颂者令牌",
+			ErrorInfo: "AddStdHelperNormal: 无效的赞颂者令牌",
 			Success:   false,
 		})
 		return
@@ -82,7 +82,7 @@ func AddHelperNormal(c *gin.Context) {
 
 		if isRepeat {
 			c.JSON(http.StatusOK, HelperAddResponse{
-				ErrorInfo: "AddHelperNormal: 该 MC 账号已经存在, 不能重复添加",
+				ErrorInfo: "AddStdHelperNormal: 该 MC 账号已经存在, 不能重复添加",
 				Success:   false,
 			})
 			return
@@ -90,7 +90,7 @@ func AddHelperNormal(c *gin.Context) {
 
 		if len(request.AuthServerAddress) == 0 {
 			c.JSON(http.StatusOK, HelperAddResponse{
-				ErrorInfo: "AddHelperNormal: 验证服务地址的长度不得为 0",
+				ErrorInfo: "AddStdHelperNormal: 验证服务地址的长度不得为 0",
 				Success:   false,
 			})
 			return
@@ -108,7 +108,7 @@ func AddHelperNormal(c *gin.Context) {
 		err = database.UpdateUserInfo(user, true)
 		if err != nil {
 			c.JSON(http.StatusOK, HelperAddResponse{
-				ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
+				ErrorInfo: fmt.Sprintf("AddStdHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
 				Success:   false,
 			})
 			return
@@ -122,14 +122,14 @@ func AddHelperNormal(c *gin.Context) {
 	emptyMD5Password := hex.EncodeToString(emptyMD5PasswordBytes[:])
 	if len(request.Email) == 0 {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo: "AddHelperNormal: 邮箱地址的长度不得为 0",
+			ErrorInfo: "AddStdHelperNormal: 邮箱地址的长度不得为 0",
 			Success:   false,
 		})
 		return
 	}
 	if len(request.MD5Password) == 0 || request.MD5Password == emptyMD5Password {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo: "AddHelperNormal: 邮箱密码的长度不得为 0",
+			ErrorInfo: "AddStdHelperNormal: 邮箱密码的长度不得为 0",
 			Success:   false,
 		})
 		return
@@ -142,7 +142,7 @@ func AddHelperNormal(c *gin.Context) {
 	)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo:            fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %s", protocolError.Error()),
+			ErrorInfo:            fmt.Sprintf("AddStdHelperNormal: 添加新的 MC 账号时出现问题，原因是 %s", protocolError.Error()),
 			NetEaseRequireVerify: len(protocolError.VerifyUrl) != 0,
 			VerifyURL:            protocolError.VerifyUrl,
 			Success:              false,
@@ -153,7 +153,7 @@ func AddHelperNormal(c *gin.Context) {
 	helperUniqueID, protocolError := database.CreateAuthHelper(mu, true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo:            fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %s", protocolError.Error()),
+			ErrorInfo:            fmt.Sprintf("AddStdHelperNormal: 添加新的 MC 账号时出现问题，原因是 %s", protocolError.Error()),
 			NetEaseRequireVerify: len(protocolError.VerifyUrl) != 0,
 			VerifyURL:            protocolError.VerifyUrl,
 			Success:              false,
@@ -174,13 +174,13 @@ func AddHelperNormal(c *gin.Context) {
 	if isRepeat {
 		if err = database.DeleteAuthHelper(helper.HelperUniqueID, true); err != nil {
 			c.JSON(http.StatusOK, HelperAddResponse{
-				ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
+				ErrorInfo: fmt.Sprintf("AddStdHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
 				Success:   false,
 			})
 			return
 		}
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo: "AddHelperNormal: 该 MC 账号已经存在, 不能重复添加",
+			ErrorInfo: "AddStdHelperNormal: 该 MC 账号已经存在, 不能重复添加",
 			Success:   false,
 		})
 		return
@@ -197,7 +197,7 @@ func AddHelperNormal(c *gin.Context) {
 	err = database.UpdateUserInfo(user, true)
 	if err != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("AddStdHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
 			Success:   false,
 		})
 		return

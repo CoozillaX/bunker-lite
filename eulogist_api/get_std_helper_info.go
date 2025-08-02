@@ -24,14 +24,14 @@ type HelperInfoResponse struct {
 	G79UserUID           string `json:"g79_user_uid"`
 }
 
-// GetHelperInfo ..
-func GetHelperInfo(c *gin.Context) {
+// GetStdHelperInfo ..
+func GetStdHelperInfo(c *gin.Context) {
 	var request HelperInfoRequest
 
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo: fmt.Sprintf("GetHelperInfo: 请求 MC 账号信息时出现问题，原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题，原因是 %v", err),
 			Success:   false,
 		})
 		return
@@ -39,7 +39,7 @@ func GetHelperInfo(c *gin.Context) {
 
 	if !database.CheckUserByToken(request.Token, true) {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo: "GetHelperInfo: 无效的赞颂者令牌",
+			ErrorInfo: "GetStdHelperInfo: 无效的赞颂者令牌",
 			Success:   false,
 		})
 		return
@@ -49,14 +49,14 @@ func GetHelperInfo(c *gin.Context) {
 	account, ok := user.CurrentAuthServerAccount.Value()
 	if !ok {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo: "GetHelperInfo: 当前没有正在使用的 MC 账号",
+			ErrorInfo: "GetStdHelperInfo: 当前没有正在使用的 MC 账号",
 			Success:   false,
 		})
 		return
 	}
 	if !account.IsStdAccount() {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo: "GetHelperInfo: 当前正在使用的 MC 账号未被存放在标准验证服务中",
+			ErrorInfo: "GetStdHelperInfo: 当前正在使用的 MC 账号未被存放在标准验证服务中",
 			Success:   false,
 		})
 		return
@@ -65,7 +65,7 @@ func GetHelperInfo(c *gin.Context) {
 	nickName, g79UserUID, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo:            fmt.Sprintf("GetHelperInfo: 请求 MC 账号信息时出现问题，原因是 %s", protocolError.Error()),
+			ErrorInfo:            fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题，原因是 %s", protocolError.Error()),
 			NetEaseRequireVerify: len(protocolError.VerifyUrl) != 0,
 			VerifyURL:            protocolError.VerifyUrl,
 			Success:              false,
@@ -92,7 +92,7 @@ func GetHelperInfo(c *gin.Context) {
 	err = database.UpdateUserInfo(user, true)
 	if !account.IsStdAccount() {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo: fmt.Sprintf("GetHelperInfo: 请求 MC 账号信息时出现问题，原因是 %s", err),
+			ErrorInfo: fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题，原因是 %s", err),
 			Success:   false,
 		})
 		return

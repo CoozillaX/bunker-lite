@@ -55,8 +55,8 @@ type SMSHelperAddResponse struct {
 	G79UserUID     string `json:"g79_user_uid"`
 }
 
-// AddHelperSMS ..
-func AddHelperSMS(c *gin.Context) {
+// AddStdHelperSMS ..
+func AddStdHelperSMS(c *gin.Context) {
 	var request SMSHelperAddRequest
 	smsTransactionMu.Lock()
 	defer smsTransactionMu.Unlock()
@@ -64,7 +64,7 @@ func AddHelperSMS(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
-			ErrorInfo:    fmt.Sprintf("AddHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v", err),
+			ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v", err),
 			ResponseType: ResponseTypeMeetError,
 		})
 		return
@@ -72,7 +72,7 @@ func AddHelperSMS(c *gin.Context) {
 
 	if !database.CheckUserByToken(request.Token, true) {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
-			ErrorInfo:    "AddHelperSMS: 无效的赞颂者令牌",
+			ErrorInfo:    "AddStdHelperSMS: 无效的赞颂者令牌",
 			ResponseType: ResponseTypeMeetError,
 		})
 		return
@@ -91,7 +91,7 @@ func AddHelperSMS(c *gin.Context) {
 
 		if _, ok := activeSMSTransaction[request.TransactionUUID]; ok {
 			c.JSON(http.StatusOK, SMSHelperAddResponse{
-				ErrorInfo:    "AddHelperSMS: 目标事务已经打开",
+				ErrorInfo:    "AddStdHelperSMS: 目标事务已经打开",
 				ResponseType: ResponseTypeMeetError,
 			})
 			return
@@ -99,7 +99,7 @@ func AddHelperSMS(c *gin.Context) {
 
 		if len(request.Mobile) == 0 {
 			c.JSON(http.StatusOK, SMSHelperAddResponse{
-				ErrorInfo:    "AddHelperSMS: 手机号的长度不得为 0",
+				ErrorInfo:    "AddStdHelperSMS: 手机号的长度不得为 0",
 				ResponseType: ResponseTypeMeetError,
 			})
 			return
@@ -113,7 +113,7 @@ func AddHelperSMS(c *gin.Context) {
 		verifyFunc, protocolError := mpay.CreateLoginHelper(mu).SMSLogin(request.Mobile)
 		if protocolError != nil && len(protocolError.VerifyUrl) == 0 {
 			c.JSON(http.StatusOK, SMSHelperAddResponse{
-				ErrorInfo:    fmt.Sprintf("AddHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v", protocolError.Error()),
+				ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v", protocolError.Error()),
 				ResponseType: ResponseTypeMeetError,
 			})
 			return
@@ -142,7 +142,7 @@ func AddHelperSMS(c *gin.Context) {
 	tran, ok := activeSMSTransaction[request.TransactionUUID]
 	if !ok {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
-			ErrorInfo:    "AddHelperSMS: 请求未找到，可能已经过期，请重试",
+			ErrorInfo:    "AddStdHelperSMS: 请求未找到，可能已经过期，请重试",
 			ResponseType: ResponseTypeMeetError,
 		})
 		return
@@ -152,7 +152,7 @@ func AddHelperSMS(c *gin.Context) {
 	mu, protocolError := tran.VerifyFunc(request.SMSVerifyCode)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
-			ErrorInfo:    fmt.Sprintf("AddHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v (stage 1)", protocolError.Error()),
+			ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v (stage 1)", protocolError.Error()),
 			ResponseType: ResponseTypeMeetError,
 		})
 		return
@@ -161,7 +161,7 @@ func AddHelperSMS(c *gin.Context) {
 	helperUniqueID, protocolError := database.CreateAuthHelper(mu, true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
-			ErrorInfo:    fmt.Sprintf("AddHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v (stage 2)", protocolError.Error()),
+			ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v (stage 2)", protocolError.Error()),
 			ResponseType: ResponseTypeMeetError,
 		})
 		return
@@ -180,13 +180,13 @@ func AddHelperSMS(c *gin.Context) {
 	if isRepeat {
 		if err = database.DeleteAuthHelper(helper.HelperUniqueID, true); err != nil {
 			c.JSON(http.StatusOK, SMSHelperAddResponse{
-				ErrorInfo:    fmt.Sprintf("AddHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v", err),
+				ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v", err),
 				ResponseType: ResponseTypeMeetError,
 			})
 			return
 		}
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
-			ErrorInfo:    "AddHelperSMS: 该 MC 账号已经存在, 不能重复添加",
+			ErrorInfo:    "AddStdHelperSMS: 该 MC 账号已经存在, 不能重复添加",
 			ResponseType: ResponseTypeMeetError,
 		})
 		return
@@ -203,7 +203,7 @@ func AddHelperSMS(c *gin.Context) {
 	err = database.UpdateUserInfo(user, true)
 	if err != nil {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
-			ErrorInfo:    fmt.Sprintf("AddHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v", err),
+			ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题，原因是 %v", err),
 			ResponseType: ResponseTypeMeetError,
 		})
 		return
