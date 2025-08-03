@@ -28,7 +28,7 @@ func RequestUserInfo(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, UserInfoResponse{
-			ErrorInfo: fmt.Sprintf("RequestUserInfo: 请求赞颂者账号信息时出现问题，原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("RequestUserInfo: 请求赞颂者账号信息时出现问题, 原因是 %v", err),
 			Success:   false,
 		})
 		return

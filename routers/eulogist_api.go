@@ -10,13 +10,22 @@ import (
 // initEulogistRouter 初始化赞颂者服务的 API
 func initEulogistRouter(router *gin.Engine) *gin.Engine {
 	eulogistApiGroup := router.Group("/eulogist_api")
+
+	// Baisc
 	{
 		eulogistApiGroup.POST("/register_or_login", eulogist_api.RegisterOrLogin)
 		eulogistApiGroup.POST("/request_user_info", eulogist_api.RequestUserInfo)
+	}
+
+	// Helper
+	{
 		eulogistApiGroup.POST("/get_std_helper_info", eulogist_api.GetStdHelperInfo)
 		eulogistApiGroup.POST("/change_current_helper", eulogist_api.ChangeCurrentHelper)
 		eulogistApiGroup.POST("/add_helper_normal", eulogist_api.AddHelperNormal)
 		eulogistApiGroup.POST("/add_std_helper_sms", eulogist_api.AddStdHelperSMS)
+		eulogistApiGroup.POST("/modify_custom_helper", eulogist_api.ModifyCustomHelper)
+		eulogistApiGroup.POST("/delete_helper", eulogist_api.DeleteHelper)
+		eulogistApiGroup.POST("/set_pe_auth", eulogist_api.SetPEAuth)
 	}
 
 	// No router

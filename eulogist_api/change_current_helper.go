@@ -32,7 +32,7 @@ func ChangeCurrentHelper(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, HelperChangeResponse{
-			ErrorInfo: fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题，原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题, 原因是 %v", err),
 			Success:   false,
 		})
 		return
@@ -60,17 +60,15 @@ func ChangeCurrentHelper(c *gin.Context) {
 	}
 
 	account := user.MultipleAuthServerAccounts[request.Index]
-	user.CurrentAuthServerAccount = protocol.Option(user.MultipleAuthServerAccounts[request.Index])
-	err = database.UpdateUserInfo(user, true)
-	if err != nil {
-		c.JSON(http.StatusOK, HelperChangeResponse{
-			ErrorInfo: fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题，原因是 %v", err),
-			Success:   false,
-		})
-		return
-	}
-
 	if !account.IsStdAccount() {
+		user.CurrentAuthServerAccount = protocol.Option(account)
+		if err = database.UpdateUserInfo(user, true); err != nil {
+			c.JSON(http.StatusOK, HelperChangeResponse{
+				ErrorInfo: fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题, 原因是 %v", err),
+				Success:   false,
+			})
+			return
+		}
 		c.JSON(http.StatusOK, HelperChangeResponse{
 			Success: true,
 		})
@@ -80,7 +78,7 @@ func ChangeCurrentHelper(c *gin.Context) {
 	nickName, g79UserUID, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperChangeResponse{
-			ErrorInfo:            fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题，原因是 %s", protocolError.Error()),
+			ErrorInfo:            fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题, 原因是 %s", protocolError.Error()),
 			NetEaseRequireVerify: len(protocolError.VerifyUrl) != 0,
 			VerifyURL:            protocolError.VerifyUrl,
 			Success:              false,
@@ -105,9 +103,9 @@ func ChangeCurrentHelper(c *gin.Context) {
 	}
 
 	err = database.UpdateUserInfo(user, true)
-	if !account.IsStdAccount() {
+	if err != nil {
 		c.JSON(http.StatusOK, HelperChangeResponse{
-			ErrorInfo: fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题，原因是 %s", err),
+			ErrorInfo: fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题, 原因是 %s", err),
 			Success:   false,
 		})
 		return

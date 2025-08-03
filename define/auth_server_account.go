@@ -27,6 +27,7 @@ func EncodeAuthServerAccount(account AuthServerAccount) []byte {
 	if isStdAccount {
 		stdAccount := account.(*StdAuthServerAccount)
 		writer.String(&stdAccount.gameNickName)
+		writer.String(&stdAccount.g79UserUID)
 		writer.String(&stdAccount.authHelperUniqueID)
 		return buf.Bytes()
 	}
@@ -49,6 +50,7 @@ func DecodeAuthServerAccount(payload []byte) AuthServerAccount {
 	if isStdAccount {
 		account := StdAuthServerAccount{}
 		reader.String(&account.gameNickName)
+		reader.String(&account.g79UserUID)
 		reader.String(&account.authHelperUniqueID)
 		return &account
 	}
@@ -72,7 +74,7 @@ func (s *StdAuthServerAccount) IsStdAccount() bool {
 }
 
 func (s *StdAuthServerAccount) FormatInGame() string {
-	return fmt.Sprintf("§r§l§e%s §r§7(§fUID §7- §b%s§7)§r", s.gameNickName, s.g79UserUID)
+	return fmt.Sprintf("§r§l§e%s §r§l(§b%s§r§l)§r", s.gameNickName, s.g79UserUID)
 }
 
 func (s *StdAuthServerAccount) AuthServerAddress() string {
@@ -107,7 +109,7 @@ func (c *CustomAuthServerAccount) IsStdAccount() bool {
 }
 
 func (c *CustomAuthServerAccount) FormatInGame() string {
-	return fmt.Sprintf("§r§l§e账户 ID §f- §b%d§r", c.internalAccountID)
+	return fmt.Sprintf("§r§l§e账户 §r§lID - §b%d§r", c.internalAccountID)
 }
 
 func (c *CustomAuthServerAccount) AuthServerAddress() string {
@@ -116,6 +118,10 @@ func (c *CustomAuthServerAccount) AuthServerAddress() string {
 
 func (c *CustomAuthServerAccount) AuthServerSecret() string {
 	return c.authServerToken
+}
+
+func (c *CustomAuthServerAccount) InternalAccountID() uint32 {
+	return c.internalAccountID
 }
 
 func (c *CustomAuthServerAccount) UpdateData(newData map[string]any) {

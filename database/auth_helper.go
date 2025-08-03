@@ -115,7 +115,7 @@ func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (uniqueID string
 		HelperUniqueID: uuid.NewString(),
 		HelperToken:    uuid.NewString(),
 		GameNickName:   gu.Username,
-		G79UserUID:     gu.Uid,
+		G79UserUID:     gu.EntityID,
 		MpayUserData:   mpayUserBytes,
 	}
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
@@ -177,9 +177,6 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, G79User
 	}
 
 	gu, protocolError := g79.Login(gameinfo.DefaultEngineVersion, &mpayUser)
-	if protocolError != nil {
-		return "", "", protocolError
-	}
 	mpayUserBytes, err := json.Marshal(mpayUser)
 	if err != nil {
 		return "", "", &defines.ProtocolError{
@@ -187,8 +184,10 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, G79User
 		}
 	}
 
-	helper.GameNickName = gu.Username
-	helper.G79UserUID = gu.Uid
+	if protocolError == nil {
+		helper.GameNickName = gu.Username
+		helper.G79UserUID = gu.EntityID
+	}
 	helper.MpayUserData = mpayUserBytes
 
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
@@ -214,6 +213,9 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, G79User
 		}
 	}
 
+	if protocolError != nil {
+		return "", "", protocolError
+	}
 	return helper.GameNickName, helper.G79UserUID, nil
 }
 

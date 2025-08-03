@@ -24,8 +24,9 @@ type HelperAddRequest struct {
 	Token      string `json:"token,omitempty"`
 	ActionType uint8  `json:"action_type"`
 
-	Email       string `json:"email,omitempty"`
-	MD5Password string `json:"md5_password,omitempty"`
+	TransactionUUID string `json:"transaction_uuid,omitempty"`
+	Email           string `json:"email,omitempty"`
+	MD5Password     string `json:"md5_password,omitempty"`
 
 	AuthServerAddress string `json:"auth_server_address,omitempty"`
 	AuthServerToken   string `json:"auth_server_token,omitempty"`
@@ -45,11 +46,12 @@ type HelperAddResponse struct {
 // AddHelperNormal ..
 func AddHelperNormal(c *gin.Context) {
 	var request HelperAddRequest
+	var protocolError *defines.ProtocolError
 
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %v", err),
 			Success:   false,
 		})
 		return
@@ -108,7 +110,7 @@ func AddHelperNormal(c *gin.Context) {
 		err = database.UpdateUserInfo(user, true)
 		if err != nil {
 			c.JSON(http.StatusOK, HelperAddResponse{
-				ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
+				ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %v", err),
 				Success:   false,
 			})
 			return
@@ -135,14 +137,14 @@ func AddHelperNormal(c *gin.Context) {
 		return
 	}
 
-	mu := new(defines.MpayUser)
-	mu, protocolError := mpay.CreateLoginHelper(mu).PasswordLogin(
+	tran := loadOrCreateVerifyTransaction(request.TransactionUUID)
+	tran.MpayUser, protocolError = mpay.CreateLoginHelper(tran.MpayUser).PasswordLogin(
 		request.Email, request.MD5Password,
 		utils.GetPasswordLevel(request.MD5Password),
 	)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo:            fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %s", protocolError.Error()),
+			ErrorInfo:            fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %s", protocolError.Error()),
 			NetEaseRequireVerify: len(protocolError.VerifyUrl) != 0,
 			VerifyURL:            protocolError.VerifyUrl,
 			Success:              false,
@@ -150,16 +152,17 @@ func AddHelperNormal(c *gin.Context) {
 		return
 	}
 
-	helperUniqueID, protocolError := database.CreateAuthHelper(mu, true)
+	helperUniqueID, protocolError := database.CreateAuthHelper(tran.MpayUser, true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo:            fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %s", protocolError.Error()),
+			ErrorInfo:            fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %s", protocolError.Error()),
 			NetEaseRequireVerify: len(protocolError.VerifyUrl) != 0,
 			VerifyURL:            protocolError.VerifyUrl,
 			Success:              false,
 		})
 		return
 	}
+	defer deleteVerifyTransaction(request.TransactionUUID)
 
 	isRepeat := false
 	helper := database.GetAuthHelperByUniqueID(helperUniqueID, true)
@@ -174,7 +177,7 @@ func AddHelperNormal(c *gin.Context) {
 	if isRepeat {
 		if err = database.DeleteAuthHelper(helper.HelperUniqueID, true); err != nil {
 			c.JSON(http.StatusOK, HelperAddResponse{
-				ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
+				ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %v", err),
 				Success:   false,
 			})
 			return
@@ -197,7 +200,7 @@ func AddHelperNormal(c *gin.Context) {
 	err = database.UpdateUserInfo(user, true)
 	if err != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题，原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %v", err),
 			Success:   false,
 		})
 		return

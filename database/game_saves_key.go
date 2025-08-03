@@ -48,7 +48,7 @@ func GetOrCreateGameSavesKey(eulogistUniqueID string, rentalServerNumber string,
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("GetOrCreateGameSavesKey: 获取存档 AES 密钥时出现问题，原因是 %v", err)
+		return nil, fmt.Errorf("GetOrCreateGameSavesKey: 获取存档 AES 密钥时出现问题, 原因是 %v", err)
 	}
 
 	return gameSavesKey.GameSavesAESCipher, nil

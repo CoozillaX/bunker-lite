@@ -126,7 +126,7 @@ func CreateUser(name string, passwordSum256 []byte, permissionLevel uint8, useLo
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("CreateUser: 创建赞颂者账户失败，原因是 %s", err)
+		return fmt.Errorf("CreateUser: 创建赞颂者账户失败, 原因是 %s", err)
 	}
 
 	return nil
@@ -168,7 +168,7 @@ func UpdateUserName(name string, newName string, useLock bool) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("UpdateUserName: 更改赞颂者账户的名称时出现问题，原因是 %s", err)
+		return fmt.Errorf("UpdateUserName: 更改赞颂者账户的名称时出现问题, 原因是 %s", err)
 	}
 
 	return nil
@@ -210,7 +210,7 @@ func UpdateUserToken(token string, newToken string, useLock bool) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("UpdateUserToken: 更新赞颂者账户令牌时出现问题，原因是 %s", err)
+		return fmt.Errorf("UpdateUserToken: 更新赞颂者账户令牌时出现问题, 原因是 %s", err)
 	}
 
 	return nil
@@ -231,13 +231,13 @@ func UpdateUserInfo(user define.EulogistUser, useLock bool) error {
 	if recordedUser.UserName != user.UserName {
 		err := UpdateUserName(recordedUser.UserName, user.UserName, false)
 		if err != nil {
-			return fmt.Errorf("UpdateUserInfo: 更新赞颂者用户信息时出现错误，原因是 %s", err)
+			return fmt.Errorf("UpdateUserInfo: 更新赞颂者用户信息时出现错误, 原因是 %s", err)
 		}
 	}
 	if recordedUser.EulogistToken != user.EulogistToken {
 		err := UpdateUserToken(recordedUser.EulogistToken, user.EulogistToken, false)
 		if err != nil {
-			return fmt.Errorf("UpdateUserInfo: 更新赞颂者用户信息时出现错误，原因是 %s", err)
+			return fmt.Errorf("UpdateUserInfo: 更新赞颂者用户信息时出现错误, 原因是 %s", err)
 		}
 	}
 
@@ -248,7 +248,7 @@ func UpdateUserInfo(user define.EulogistUser, useLock bool) error {
 		)
 	})
 	if err != nil {
-		return fmt.Errorf("UpdateUserInfo: 更新赞颂者用户信息时出现错误，原因是 %s", err)
+		return fmt.Errorf("UpdateUserInfo: 更新赞颂者用户信息时出现错误, 原因是 %s", err)
 	}
 
 	return nil

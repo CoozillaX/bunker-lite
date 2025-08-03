@@ -45,7 +45,7 @@ func SetAllowServerConfig(rentalServerNumber string, configs []define.AllowListC
 			Put([]byte(rentalServerNumber), buf.Bytes())
 	})
 	if err != nil {
-		return fmt.Errorf("SetAllowServerConfig: 设置租赁服 %s 的配置时出现问题，原因是 %v", rentalServerNumber, err)
+		return fmt.Errorf("SetAllowServerConfig: 设置租赁服 %s 的配置时出现问题, 原因是 %v", rentalServerNumber, err)
 	}
 
 	return nil

@@ -32,7 +32,7 @@ func RegisterOrLogin(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, LoginResponse{
-			ErrorInfo: fmt.Sprintf("RegisterOrLogin: 注册或登录赞颂者账号时出现问题，原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("RegisterOrLogin: 注册或登录赞颂者账号时出现问题, 原因是 %v", err),
 			Success:   false,
 		})
 		return
@@ -74,7 +74,7 @@ func RegisterOrLogin(c *gin.Context) {
 		err = database.CreateUser(request.UserName, request.UserPasswordSum256, define.UserPermissionDefault, true)
 		if err != nil {
 			c.JSON(http.StatusOK, LoginResponse{
-				ErrorInfo: fmt.Sprintf("RegisterOrLogin: 注册赞颂者账号时出现问题，原因是 %v", err),
+				ErrorInfo: fmt.Sprintf("RegisterOrLogin: 注册赞颂者账号时出现问题, 原因是 %v", err),
 				Success:   false,
 			})
 			return

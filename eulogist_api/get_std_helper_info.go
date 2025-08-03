@@ -31,7 +31,7 @@ func GetStdHelperInfo(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo: fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题，原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题, 原因是 %v", err),
 			Success:   false,
 		})
 		return
@@ -65,7 +65,7 @@ func GetStdHelperInfo(c *gin.Context) {
 	nickName, g79UserUID, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo:            fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题，原因是 %s", protocolError.Error()),
+			ErrorInfo:            fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题, 原因是 %s", protocolError.Error()),
 			NetEaseRequireVerify: len(protocolError.VerifyUrl) != 0,
 			VerifyURL:            protocolError.VerifyUrl,
 			Success:              false,
@@ -92,7 +92,7 @@ func GetStdHelperInfo(c *gin.Context) {
 	err = database.UpdateUserInfo(user, true)
 	if !account.IsStdAccount() {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo: fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题，原因是 %s", err),
+			ErrorInfo: fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题, 原因是 %s", err),
 			Success:   false,
 		})
 		return
