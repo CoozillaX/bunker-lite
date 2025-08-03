@@ -27,6 +27,7 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 		eulogistApiGroup.POST("/register_or_login", handlerWithMutex(eulogist_api.RegisterOrLogin))
 		eulogistApiGroup.POST("/request_user_info", handlerWithMutex(eulogist_api.RequestUserInfo))
 		eulogistApiGroup.POST("/search_eulogist_user", handlerWithMutex(eulogist_api.SearchEulogistUser))
+		eulogistApiGroup.POST("/rental_server_list", handlerWithMutex(eulogist_api.RentalServerList))
 	}
 
 	// Helper
@@ -46,6 +47,12 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 		eulogistApiGroup.POST("/update_allow_list_config", handlerWithMutex(eulogist_api.UpdateAllowListConfig))
 		eulogistApiGroup.POST("/get_allow_list_config", handlerWithMutex(eulogist_api.GetAllowListConfig))
 		eulogistApiGroup.POST("/delete_allow_list_config", handlerWithMutex(eulogist_api.DeleteAllowListConfig))
+	}
+
+	// Eulogist Admin
+	{
+		eulogistApiGroup.POST("/admin_change_main_config", handlerWithMutex(eulogist_api.ChangeMainConfig))
+		eulogistApiGroup.POST("/admin_change_manager", handlerWithMutex(eulogist_api.ChangeManager))
 	}
 
 	// No router

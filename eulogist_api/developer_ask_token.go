@@ -41,7 +41,7 @@ func DeveloperAskToken(c *gin.Context) {
 		})
 		return
 	}
-	user := database.GetUserByName(request.Token, true)
+	user := database.GetUserByToken(request.Token, true)
 
 	if !user.CanGetHelperToken {
 		c.JSON(http.StatusOK, DevTokenResp{

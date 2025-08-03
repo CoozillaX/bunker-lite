@@ -55,9 +55,9 @@ func RegisterOrLogin(c *gin.Context) {
 			return
 		}
 
-		if len(request.UserName) > 32 {
+		if len(request.UserName) > 16 {
 			c.JSON(http.StatusOK, LoginResponse{
-				ErrorInfo: "RegisterOrLogin: 用户名长度不得超过 32 个字符",
+				ErrorInfo: "RegisterOrLogin: 用户名长度不得超过 16 个字符",
 				Success:   false,
 			})
 			return

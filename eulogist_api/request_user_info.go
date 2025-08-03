@@ -9,9 +9,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	RequestTypeGetUserInfoNormal uint8 = iota
+	RequestTypeGetUserInfoAdmin
+)
+
 // UserInfoRequest ..
 type UserInfoRequest struct {
-	Token string `json:"token,omitempty"`
+	Token            string `json:"token,omitempty"`
+	RequestType      uint8  `json:"request_type"`
+	EulogistUserName string `json:"eulogist_user_name,omitempty"`
 }
 
 // UserInfoResponse ..
@@ -41,13 +48,54 @@ func RequestUserInfo(c *gin.Context) {
 		})
 		return
 	}
-
 	user := database.GetUserByToken(request.Token, true)
-	user.UserPasswordSum256 = nil
-	user.EulogistToken = ""
+
+	if request.RequestType == RequestTypeGetUserInfoNormal {
+		user.UserPasswordSum256 = nil
+		user.EulogistToken = ""
+		c.JSON(http.StatusOK, UserInfoResponse{
+			Success: true,
+			Payload: define.EncodeEulogistUser(user),
+		})
+		return
+	}
+
+	switch user.UserPermissionLevel {
+	case define.UserPermissionSystem:
+	case define.UserPermissionAdmin:
+	default:
+		c.JSON(http.StatusOK, UserInfoResponse{
+			ErrorInfo: "RequestUserInfo: 权限不足",
+			Success:   false,
+		})
+		return
+	}
+
+	if len(request.EulogistUserName) == 0 {
+		c.JSON(http.StatusOK, UserInfoResponse{
+			ErrorInfo: "RequestUserInfo: 提供的赞颂者用户名不得为空",
+			Success:   false,
+		})
+		return
+	}
+
+	if !database.CheckUserByName(request.EulogistUserName, true) {
+		c.JSON(http.StatusOK, UserInfoResponse{
+			ErrorInfo: fmt.Sprintf(
+				"RequestUserInfo: 目标用户 (%s) 没有找到, 他可能恰好改名了？",
+				request.EulogistUserName,
+			),
+			Success: false,
+		})
+		return
+	}
+
+	dst := database.GetUserByName(request.EulogistUserName, true)
+	dst.UserPasswordSum256 = nil
+	dst.EulogistToken = ""
 
 	c.JSON(http.StatusOK, UserInfoResponse{
 		Success: true,
-		Payload: define.EncodeEulogistUser(user),
+		Payload: define.EncodeEulogistUser(dst),
 	})
 }

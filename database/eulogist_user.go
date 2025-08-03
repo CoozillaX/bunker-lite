@@ -256,11 +256,11 @@ func UpdateUserInfo(user define.EulogistUser, useLock bool) error {
 		defer mu.Unlock()
 	}
 
-	if !CheckUserByName(user.UserName, false) {
-		return fmt.Errorf("UpdateUserInfo: 没有找到名为 %s 的用户", user.UserName)
+	if !CheckUserByUniqueID(user.UserUniqueID, false) {
+		return fmt.Errorf("UpdateUserInfo: 没有找到目标用户")
 	}
+	recordedUser := GetUserByUniqueID(user.UserUniqueID, false)
 
-	recordedUser := GetUserByName(user.UserName, false)
 	if recordedUser.UserName != user.UserName {
 		err := UpdateUserName(recordedUser.UserName, user.UserName, false)
 		if err != nil {

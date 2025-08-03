@@ -3,8 +3,8 @@ package define
 import "github.com/sandertv/gophertunnel/minecraft/protocol"
 
 type RentalServerConfig struct {
-	ServerNumber   string
-	ServerPassCode string
+	ServerNumber   string `json:"server_number"`
+	ServerPassCode string `json:"server_passcode"`
 }
 
 func (r *RentalServerConfig) Marshal(io protocol.IO) {

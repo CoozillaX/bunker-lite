@@ -43,7 +43,7 @@ func DeleteAllowListConfig(c *gin.Context) {
 		})
 		return
 	}
-	user := database.GetUserByName(request.Token, true)
+	user := database.GetUserByToken(request.Token, true)
 
 	if len(request.RentalServerNumber) == 0 {
 		c.JSON(http.StatusOK, AllowListDeleteResponse{

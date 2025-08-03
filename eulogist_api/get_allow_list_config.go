@@ -44,7 +44,7 @@ func GetAllowListConfig(c *gin.Context) {
 		})
 		return
 	}
-	user := database.GetUserByName(request.Token, true)
+	user := database.GetUserByToken(request.Token, true)
 
 	if len(request.RentalServerNumber) == 0 {
 		c.JSON(http.StatusOK, AllowListGetResponse{
@@ -70,8 +70,8 @@ func GetAllowListConfig(c *gin.Context) {
 	for _, value := range configs {
 		user := database.GetUserByUniqueID(value.EulogistUserUniqueID, true)
 		serverResp.UserNames = append(serverResp.UserNames, user.UserName)
-		serverResp.DisableOpertorVerify = append(serverResp.DisableOpertorVerify, user.DisableGlobalOpertorVerify)
-		serverResp.CanGetGameSavesKeyCipher = append(serverResp.CanGetGameSavesKeyCipher, user.CanGetGameSavesKeyCipher)
+		serverResp.DisableOpertorVerify = append(serverResp.DisableOpertorVerify, value.DisableOpertorVerify)
+		serverResp.CanGetGameSavesKeyCipher = append(serverResp.CanGetGameSavesKeyCipher, value.CanGetGameSavesKeyCipher)
 	}
 
 	c.JSON(http.StatusOK, serverResp)
