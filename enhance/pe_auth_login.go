@@ -13,17 +13,16 @@ import (
 )
 
 // PEAuthLogin make user login by peAuthStringData.
-// This option will have no matters to the data that saved
-// in the mysql database.
+// This option will have no matters to the data that
+// saved in the eulogist database.
 //
-// Provided peAuthStringData must be json string or hex
-// string.
-// If is a hex string, it means that peAuthStringData is
-// created by user that they use capture software to get
-// pe-authentication packet.
+// Provided peAuthStringData must be json string or
+// hex string. If is a hex string, it means that
+// peAuthStringData is created by user that they use
+// capture software to get pe-authentication http packet.
 //
-// Note that gu.MpayUser is not very completely,
-// so it the g79 user can only be used once.
+// Note that gu.MpayUser is not very completely, so
+// that the returned g79 user only can be used once.
 func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	// 0. Prepare
 	var saAuthData map[string]any
@@ -71,7 +70,7 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	cpuDigit, exist3 := saDataInCookie["cpu_digit"].(string)
 	osName, exist4 := saDataInCookie["os_name"].(string)
 	if !exist1 || !exist2 || !exist3 || !exist4 {
-		return nil, fmt.Errorf("PEAuthLogin: Wrong sa auth data string %#v", peAuthStringData)
+		return nil, fmt.Errorf("PEAuthLogin: Wrong PE Auth data string %#v", peAuthStringData)
 	}
 
 	// 3. Sync part of basic data

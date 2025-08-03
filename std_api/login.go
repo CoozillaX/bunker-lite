@@ -43,7 +43,7 @@ type AuthRequest struct {
 		或者加密的字符串。
 		一切取决于用户。
 	*/
-	ProvidedSauthData string `json:"provided_sa_auth_data"`
+	ProvidedPEAuthData string `json:"provided_pe_auth_data"`
 
 	UserName string `json:"username,omitempty"` // 用户在用户中心的用户名
 	Password string `json:"password,omitempty"` // 用户在用户中心的密码
@@ -228,10 +228,10 @@ func Login(c *gin.Context) {
 	var mu *defines.MpayUser = new(defines.MpayUser)
 	var gu *g79.G79User
 
-	if len(request.ProvidedSauthData) == 0 {
+	if len(request.ProvidedPEAuthData) == 0 {
 		err = json.Unmarshal(helper.MpayUserData, mu)
 	} else {
-		gu, err = enhance.PEAuthLogin(request.ProvidedSauthData)
+		gu, err = enhance.PEAuthLogin(request.ProvidedPEAuthData)
 	}
 	if err != nil {
 		c.JSON(http.StatusOK, AuthResponse{
