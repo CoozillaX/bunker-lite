@@ -37,6 +37,7 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 		eulogistApiGroup.POST("/add_std_helper_sms", handlerWithMutex(eulogist_api.AddStdHelperSMS))
 		eulogistApiGroup.POST("/modify_custom_helper", handlerWithMutex(eulogist_api.ModifyCustomHelper))
 		eulogistApiGroup.POST("/delete_helper", handlerWithMutex(eulogist_api.DeleteHelper))
+		eulogistApiGroup.POST("/dev_ask_token", handlerWithMutex(eulogist_api.DeveloperAskToken))
 		eulogistApiGroup.POST("/set_pe_auth", handlerWithMutex(eulogist_api.SetPEAuth))
 	}
 
