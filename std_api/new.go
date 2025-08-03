@@ -3,13 +3,14 @@ package std_api
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-func New(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	w.Write([]byte(uuid.NewString()))
+func New(c *gin.Context) {
+	c.Data(
+		http.StatusOK,
+		"text/plain",
+		[]byte(uuid.NewString()),
+	)
 }

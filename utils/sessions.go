@@ -1,11 +1,11 @@
 package utils
 
 import (
-	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -17,8 +17,8 @@ func init() {
 	sessions = cache.New(5*time.Minute, 5*time.Minute)
 }
 
-func GetSessionByBearer(r *http.Request) *sync.Map {
-	bearer := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+func GetSessionByBearer(c *gin.Context) *sync.Map {
+	bearer := strings.TrimPrefix(c.Request.Header.Get("Authorization"), "Bearer ")
 	if bearer == "" {
 		return nil
 	}

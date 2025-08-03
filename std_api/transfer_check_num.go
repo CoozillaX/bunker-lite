@@ -8,6 +8,8 @@ import (
 	"strconv"
 
 	"bunker-core/mcp"
+
+	"github.com/gin-gonic/gin"
 )
 
 type TransferCheckNumRequest struct {
@@ -20,43 +22,44 @@ type TransferCheckNumResponse struct {
 	Value   string `json:"value"`
 }
 
-func TransferCheckNum(w http.ResponseWriter, r *http.Request) {
-	// check method
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	// get session
-	session := utils.GetSessionByBearer(r)
+func TransferCheckNum(c *gin.Context) {
+	var request TransferCheckNumRequest
+
 	// parse request
-	var req TransferCheckNumRequest
-	defer r.Body.Close()
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	err := c.Bind(&request)
+	if err != nil {
+		c.Status(http.StatusBadRequest)
 		return
 	}
+
+	// get session
+	session := utils.GetSessionByBearer(c)
+
 	// get engineVersion
 	engineVersion, ok := session.Load(session_key_engine_version)
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
+		c.Status(http.StatusBadRequest)
 		return
 	}
+
 	// get patchVersion
 	patchVersion, ok := session.Load(session_key_patch_version)
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
+		c.Status(http.StatusBadRequest)
 		return
 	}
+
 	// parse fb req
 	var dataList []any
-	if err := json.Unmarshal([]byte(req.Data), &dataList); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	if err := json.Unmarshal([]byte(request.Data), &dataList); err != nil {
+		c.Status(http.StatusBadRequest)
 		return
 	}
 	if len(dataList) != 3 {
-		w.WriteHeader(http.StatusBadRequest)
+		c.Status(http.StatusBadRequest)
 		return
 	}
+
 	// get check num
 	result, err := mcp.GetMCPCheckNum(
 		engineVersion.(string),
@@ -66,16 +69,20 @@ func TransferCheckNum(w http.ResponseWriter, r *http.Request) {
 		strconv.Itoa(int(dataList[2].(float64))),
 	)
 	if err != nil {
-		json.NewEncoder(w).Encode(&TransferCheckNumResponse{
+		c.JSON(http.StatusOK, TransferCheckNumResponse{
 			Success: false,
-			Message: fmt.Sprintf("获取 CheckNum 失败: %s", err.Error()),
+			Message: fmt.Sprintf("TransferCheckNum: 获取 CheckNum 时出现问题, 原因是 %v", err),
 		})
 		return
 	}
+
 	// return result
-	json.NewEncoder(w).Encode(&TransferCheckNumResponse{
-		Success: true,
-		Message: "ok",
-		Value:   result,
-	})
+	c.JSON(
+		http.StatusOK,
+		TransferCheckNumResponse{
+			Success: true,
+			Message: "ok",
+			Value:   result,
+		},
+	)
 }

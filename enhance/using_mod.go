@@ -77,29 +77,21 @@ func GetCurrentUsingMod(gu *g79.G79User) (UsingMod, *defines.ProtocolError) {
 	return query.UsingMod, nil
 }
 
-type PhoenixEnhanceInfo struct {
-	SkinInfo   PhoenixSkinInfo `json:"skin_info"`
-	OutfitInfo map[string]*int `json:"outfit_info,omitempty"`
-}
-
 type PhoenixSkinInfo struct {
 	EntityID string `json:"entity_id"`
 	ResUrl   string `json:"res_url"`
 	IsSlim   bool   `json:"is_slim"`
 }
 
-func (u UsingMod) AsPhoenixEnhanceInfo() PhoenixEnhanceInfo {
-	return PhoenixEnhanceInfo{
-		SkinInfo: PhoenixSkinInfo{
-			EntityID: u.SkinDownloadInfo.EntityID,
-			ResUrl:   u.SkinDownloadInfo.ResUrl,
-			IsSlim:   u.SkinData.IsSlim,
-		},
-		OutfitInfo: u.GetConfigUUID2OutfitLevel(),
+func (u UsingMod) AsPhoenixBotSkin() PhoenixSkinInfo {
+	return PhoenixSkinInfo{
+		EntityID: u.SkinDownloadInfo.EntityID,
+		ResUrl:   u.SkinDownloadInfo.ResUrl,
+		IsSlim:   u.SkinData.IsSlim,
 	}
 }
 
-func (u UsingMod) GetConfigUUID2OutfitLevel() (ret map[string]*int) {
+func (u UsingMod) AsPhoenixBotComponent() (ret map[string]*int) {
 	ret = make(map[string]*int)
 	for _, v := range u.ScreenConfig {
 		if v.OutfitLevel == nil {

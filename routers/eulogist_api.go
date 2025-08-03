@@ -3,20 +3,9 @@ package routers
 import (
 	"bunker-lite/eulogist_api"
 	"net/http"
-	"sync"
 
 	"github.com/gin-gonic/gin"
 )
-
-var mu = new(sync.Mutex)
-
-func handlerWithMutex(handler func(c *gin.Context)) func(c *gin.Context) {
-	return func(c *gin.Context) {
-		mu.Lock()
-		defer mu.Unlock()
-		handler(c)
-	}
-}
 
 // initEulogistRouter 初始化赞颂者服务的 API
 func initEulogistRouter(router *gin.Engine) *gin.Engine {

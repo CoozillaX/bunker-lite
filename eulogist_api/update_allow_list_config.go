@@ -110,6 +110,7 @@ func UpdateAllowListConfig(c *gin.Context) {
 			ErrorInfo: fmt.Sprintf("UpdateAllowListConfig: 设置权限时出现问题, 原因是 %v", err),
 			Success:   false,
 		})
+		return
 	}
 
 	c.JSON(http.StatusOK, AllowListUpdateResponse{Success: true})
