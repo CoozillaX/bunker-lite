@@ -4,6 +4,8 @@ const (
 	StdAuthServerAddress = "http://127.0.0.1:8080"
 )
 
+const UserPasswordSlat = "YoRHa"
+
 const (
 	AuthServerAccountTypeStd uint8 = iota
 	AuthServerAccountTypeCustom

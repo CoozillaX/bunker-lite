@@ -107,7 +107,7 @@ func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (uniqueID string
 	mpayUserBytes, err := json.Marshal(mpayUser)
 	if err != nil {
 		return "", &defines.ProtocolError{
-			Message: fmt.Sprintf("CreateAuthHelper: 创建 MC 账号时出现问题，原因是 %v", err),
+			Message: fmt.Sprintf("CreateAuthHelper: 创建 MC 账号时出现问题, 原因是 %v", err),
 		}
 	}
 
@@ -146,7 +146,7 @@ func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (uniqueID string
 	})
 	if err != nil {
 		return "", &defines.ProtocolError{
-			Message: fmt.Sprintf("CreateAuthHelper: 创建 MC 账号时出现问题，原因是 %v", err),
+			Message: fmt.Sprintf("CreateAuthHelper: 创建 MC 账号时出现问题, 原因是 %v", err),
 		}
 	}
 
@@ -172,7 +172,7 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, G79User
 	err := json.Unmarshal(helper.MpayUserData, &mpayUser)
 	if err != nil {
 		return "", "", &defines.ProtocolError{
-			Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题，原因是 %v", err),
+			Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err),
 		}
 	}
 
@@ -180,7 +180,7 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, G79User
 	mpayUserBytes, err := json.Marshal(mpayUser)
 	if err != nil {
 		return "", "", &defines.ProtocolError{
-			Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题，原因是 %v", err),
+			Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err),
 		}
 	}
 
@@ -209,7 +209,7 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, G79User
 	})
 	if err != nil {
 		return "", "", &defines.ProtocolError{
-			Message: fmt.Sprintf("UpdateAuthHelper: 更新 MC 账号信息时出现问题，原因是 %v", err),
+			Message: fmt.Sprintf("UpdateAuthHelper: 更新 MC 账号信息时出现问题, 原因是 %v", err),
 		}
 	}
 
@@ -267,7 +267,7 @@ func UpdateHelperToken(uniqueID string, useLock bool) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("UpdateHelperToken: 更新 MC 账号的令牌时出现问题，原因是 %v", err)
+		return fmt.Errorf("UpdateHelperToken: 更新 MC 账号的令牌时出现问题, 原因是 %v", err)
 	}
 
 	return nil
@@ -297,7 +297,7 @@ func DeleteAuthHelper(uniqueID string, useLock bool) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("DeleteAuthHelper: 删除 MC 账号时出现问题，原因是 %v", err)
+		return fmt.Errorf("DeleteAuthHelper: 删除 MC 账号时出现问题, 原因是 %v", err)
 	}
 
 	return nil

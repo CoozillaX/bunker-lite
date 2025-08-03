@@ -3,6 +3,7 @@ package eulogist_api
 import (
 	"bunker-lite/database"
 	"bunker-lite/define"
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"slices"
@@ -39,9 +40,19 @@ func RegisterOrLogin(c *gin.Context) {
 	}
 
 	if request.IsRegister {
+		emptyUserPasswordSum256 := sha256.Sum256([]byte(define.UserPasswordSlat))
+
 		if len(request.UserName) == 0 || len(request.UserPasswordSum256) == 0 {
 			c.JSON(http.StatusOK, LoginResponse{
 				ErrorInfo: "RegisterOrLogin: 用户名或密码不得为空",
+				Success:   false,
+			})
+			return
+		}
+
+		if slices.Equal(request.UserPasswordSum256, emptyUserPasswordSum256[:]) {
+			c.JSON(http.StatusOK, LoginResponse{
+				ErrorInfo: "RegisterOrLogin: 密码不得为空",
 				Success:   false,
 			})
 			return
