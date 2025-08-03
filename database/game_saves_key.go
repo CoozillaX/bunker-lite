@@ -3,9 +3,9 @@ package database
 import (
 	"bunker-lite/define"
 	"bytes"
+	"crypto/rand"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 	"go.etcd.io/bbolt"
 )
@@ -31,8 +31,8 @@ func GetOrCreateGameSavesKey(eulogistUniqueID string, rentalServerNumber string,
 		payload := bucket.Get(keyBuf.Bytes())
 
 		if len(payload) == 0 {
-			uniqueID := uuid.New()
-			gameSavesKey.GameSavesAESCipher = uniqueID[:]
+			gameSavesKey.GameSavesAESCipher = make([]byte, 16)
+			_, _ = rand.Read(gameSavesKey.GameSavesAESCipher)
 
 			dataBuf := bytes.NewBuffer(nil)
 			writer = protocol.NewWriter(dataBuf, 0)
