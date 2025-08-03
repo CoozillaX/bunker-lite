@@ -29,6 +29,7 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 		eulogistApiGroup.POST("/search_eulogist_user", handlerWithMutex(eulogist_api.SearchEulogistUser))
 		eulogistApiGroup.POST("/rental_server_list", handlerWithMutex(eulogist_api.RentalServerList))
 		eulogistApiGroup.POST("/change_user_info", handlerWithMutex(eulogist_api.ChangeUserInfo))
+		eulogistApiGroup.POST("/get_game_saves_key", handlerWithMutex(eulogist_api.GetGameSavesKey))
 	}
 
 	// Helper
