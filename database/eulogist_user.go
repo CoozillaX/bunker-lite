@@ -3,10 +3,29 @@ package database
 import (
 	"bunker-lite/define"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"go.etcd.io/bbolt"
 )
+
+// CheckUserByName ..
+func CheckUserByUniqueID(uniqueID string, useLock bool) (found bool) {
+	if useLock {
+		mu.RLock()
+		defer mu.RUnlock()
+	}
+
+	_ = serverDatabase.View(func(tx *bbolt.Tx) error {
+		payload := tx.
+			Bucket([]byte(DATABASE_KEY_EULOGIST_USER)).
+			Get([]byte(uniqueID))
+		found = len(payload) > 0
+		return nil
+	})
+
+	return
+}
 
 // CheckUserByName ..
 func CheckUserByName(name string, useLock bool) (found bool) {
@@ -41,6 +60,20 @@ func CheckUserByToken(token string, useLock bool) (found bool) {
 		return nil
 	})
 
+	return
+}
+
+// GetUserByUniqueID ..
+func GetUserByUniqueID(uniqueID string, useLock bool) (user define.EulogistUser) {
+	if useLock {
+		mu.RLock()
+		defer mu.RUnlock()
+	}
+	_ = serverDatabase.View(func(tx *bbolt.Tx) error {
+		payload := tx.Bucket([]byte(DATABASE_KEY_EULOGIST_USER)).Get([]byte(uniqueID))
+		user = define.DecodeEulogistUser(payload)
+		return nil
+	})
 	return
 }
 
@@ -252,4 +285,27 @@ func UpdateUserInfo(user define.EulogistUser, useLock bool) error {
 	}
 
 	return nil
+}
+
+// ListUsers ..
+func ListUsers(filterString string, useLock bool) (hitUserName []string) {
+	if useLock {
+		mu.RLock()
+		defer mu.RUnlock()
+	}
+
+	filterString = strings.ToLower(filterString)
+	_ = serverDatabase.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(DATABASE_KEY_EULOGIST_USER))
+		_ = bucket.ForEach(func(k, v []byte) error {
+			userName := define.DecodeEulogistUser(v).UserName
+			if len(filterString) == 0 || strings.Contains(strings.ToLower(userName), filterString) {
+				hitUserName = append(hitUserName, userName)
+			}
+			return nil
+		})
+		return nil
+	})
+
+	return
 }
