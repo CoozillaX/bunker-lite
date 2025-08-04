@@ -2,9 +2,8 @@ package define
 
 const (
 	StdAuthServerAddress = "http://127.0.0.1:8080"
+	UserPasswordSlat     = "YoRHa"
 )
-
-const UserPasswordSlat = "YoRHa"
 
 const (
 	AuthServerAccountTypeStd uint8 = iota
