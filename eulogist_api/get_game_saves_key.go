@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -62,6 +63,14 @@ func GetGameSavesKey(c *gin.Context) {
 		return
 	}
 	user := database.GetUserByToken(request.Token, true)
+
+	if user.UnbanUnixTime >= time.Now().Unix() {
+		c.JSON(http.StatusOK, GameSavesKeyResponse{
+			ErrorInfo: "GetGameSavesKey: 赞颂者用户仍被封禁中",
+			Success:   false,
+		})
+		return
+	}
 
 	if len(request.RentalServerNumber) == 0 {
 		c.JSON(http.StatusOK, GameSavesKeyResponse{

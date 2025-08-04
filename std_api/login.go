@@ -171,10 +171,10 @@ func Login(c *gin.Context) {
 			return
 		}
 
-		eulogistUserUniqueID := splitAns[0]
+		eulogitUserToken := splitAns[0]
 		helperUniqueID := splitAns[1]
 
-		if !database.CheckUserByUniqueID(eulogistUserUniqueID, true) || !database.CheckAuthHelperByUniqueID(helperUniqueID, true) {
+		if !database.CheckUserByToken(eulogitUserToken, true) || !database.CheckAuthHelperByUniqueID(helperUniqueID, true) {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
 				Message: Message{
@@ -184,10 +184,21 @@ func Login(c *gin.Context) {
 			return
 		}
 
+		user := database.GetUserByToken(eulogitUserToken, true)
+		if user.UnbanUnixTime >= time.Now().Unix() {
+			c.JSON(http.StatusOK, AuthResponse{
+				SuccessStates: false,
+				Message: Message{
+					Information: "Login: 赞颂者用户仍被封禁中",
+				},
+			})
+			return
+		}
+
 		accessPass := false
 		configs := database.GetAllowServerConfig(request.ServerCode, true)
 		for _, value := range configs {
-			if value.EulogistUserUniqueID == eulogistUserUniqueID {
+			if value.EulogistUserUniqueID == user.UserUniqueID {
 				accessPass = true
 				break
 			}
