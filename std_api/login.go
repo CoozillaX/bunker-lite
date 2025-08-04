@@ -195,7 +195,7 @@ func Login(c *gin.Context) {
 			return
 		}
 
-		accessPass := false
+		accessPass := user.CanAccessAnyRentalServer
 		configs := database.GetAllowServerConfig(request.ServerCode, true)
 		for _, value := range configs {
 			if value.EulogistUserUniqueID == user.UserUniqueID {
