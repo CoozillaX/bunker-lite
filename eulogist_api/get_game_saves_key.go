@@ -91,11 +91,11 @@ func GetGameSavesKey(c *gin.Context) {
 			return
 		}
 
-		disableOpertorVerify := false
+		disableOpertorVerify := user.DisableGlobalOpertorVerify
 		configs := database.GetAllowServerConfig(request.RentalServerNumber, true)
 		for _, value := range configs {
-			if value.EulogistUserUniqueID == user.UserUniqueID {
-				disableOpertorVerify = value.DisableOpertorVerify
+			if value.EulogistUserUniqueID == user.UserUniqueID && value.DisableOpertorVerify {
+				disableOpertorVerify = true
 				break
 			}
 		}
@@ -131,8 +131,8 @@ func GetGameSavesKey(c *gin.Context) {
 	canDownloadKey := user.CanGetGameSavesKeyCipher
 	configs := database.GetAllowServerConfig(request.RentalServerNumber, true)
 	for _, value := range configs {
-		if value.EulogistUserUniqueID == user.UserUniqueID {
-			canDownloadKey = value.CanGetGameSavesKeyCipher
+		if value.EulogistUserUniqueID == user.UserUniqueID && value.CanGetGameSavesKeyCipher {
+			canDownloadKey = true
 			break
 		}
 	}
