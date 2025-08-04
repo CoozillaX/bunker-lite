@@ -20,7 +20,7 @@ type AllowListGetResponse struct {
 	ErrorInfo                string   `json:"error_info"`
 	Success                  bool     `json:"success"`
 	UserNames                []string `json:"user_names"`
-	DisableOpertorVerify     []bool   `json:"disbale_operator_verify"`
+	DisableOpertorVerify     []bool   `json:"disable_operator_verify"`
 	CanGetGameSavesKeyCipher []bool   `json:"can_get_game_saves_key_cipher"`
 }
 

@@ -21,9 +21,10 @@ type GameSavesKeyRequest struct {
 
 // GameSavesKeyResponse ..
 type GameSavesKeyResponse struct {
-	ErrorInfo string `json:"error_info"`
-	Success   bool   `json:"success"`
-	AESCipher []byte `json:"encrypted_aes_cipher"`
+	ErrorInfo            string `json:"error_info"`
+	Success              bool   `json:"success"`
+	AESCipher            []byte `json:"encrypted_aes_cipher"`
+	DisableOpertorVerify bool   `json:"disable_operator_verify"`
 }
 
 // GetGameSavesKey ..
@@ -90,9 +91,19 @@ func GetGameSavesKey(c *gin.Context) {
 			return
 		}
 
+		disableOpertorVerify := false
+		configs := database.GetAllowServerConfig(request.RentalServerNumber, true)
+		for _, value := range configs {
+			if value.EulogistUserUniqueID == user.UserUniqueID {
+				disableOpertorVerify = value.DisableOpertorVerify
+				break
+			}
+		}
+
 		resp := GameSavesKeyResponse{
-			Success:   true,
-			AESCipher: aesCipher,
+			Success:              true,
+			AESCipher:            aesCipher,
+			DisableOpertorVerify: disableOpertorVerify,
 		}
 
 		jsonBytes, err := json.Marshal(resp)
@@ -121,7 +132,7 @@ func GetGameSavesKey(c *gin.Context) {
 	configs := database.GetAllowServerConfig(request.RentalServerNumber, true)
 	for _, value := range configs {
 		if value.EulogistUserUniqueID == user.UserUniqueID {
-			canDownloadKey = true
+			canDownloadKey = value.CanGetGameSavesKeyCipher
 			break
 		}
 	}
