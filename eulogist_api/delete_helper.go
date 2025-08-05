@@ -81,6 +81,18 @@ func DeleteHelper(c *gin.Context) {
 		}
 	}
 
+	account := user.MultipleAuthServerAccounts[request.Index]
+	if account.IsStdAccount() {
+		err = database.DeleteAuthHelper(account.AuthServerSecret(), true)
+		if err != nil {
+			c.JSON(http.StatusOK, HelperDeleteResponse{
+				ErrorInfo: fmt.Sprintf("DeleteHelper: 删除已有的 MC 账号时出现问题, 原因是 %v", err),
+				Success:   false,
+			})
+			return
+		}
+	}
+
 	newAccounts := make([]define.AuthServerAccount, 0)
 	for index, value := range user.MultipleAuthServerAccounts {
 		if index != int(request.Index) {
