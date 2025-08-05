@@ -123,7 +123,7 @@ func requestServerInfo(
 		return 0, enhance.UsingMod{}, nil, false, protocolErr
 	}
 	// chain info
-	rentalInfo, protocolErr := gu.ImpactRentalServer(req.ServerCode, req.ServerCode, req.ClientPublicKey)
+	rentalInfo, protocolErr := gu.ImpactRentalServer(req.ServerCode, req.ServerPassword, req.ClientPublicKey)
 	if protocolErr != nil {
 		return 0, enhance.UsingMod{}, nil, false, protocolErr
 	}
