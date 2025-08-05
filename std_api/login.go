@@ -109,35 +109,36 @@ func requestServerInfo(
 	launcherLevel int,
 	currentUsingMod enhance.UsingMod,
 	rentalServerInfo *g79.RentalServerInfo,
+	needRelogin bool,
 	protocolErr *defines.ProtocolError,
 ) {
 	// launcher level
 	launcherLevel, _, _, protocolErr = enhance.GetLauncherLevel(gu)
 	if protocolErr != nil {
-		return 0, enhance.UsingMod{}, nil, protocolErr
+		return 0, enhance.UsingMod{}, nil, false, protocolErr
 	}
 	// using mod
 	currentUsingMod, protocolErr = enhance.GetCurrentUsingMod(gu)
 	if protocolErr != nil {
-		return 0, enhance.UsingMod{}, nil, protocolErr
+		return 0, enhance.UsingMod{}, nil, false, protocolErr
 	}
 	// chain info
 	rentalInfo, protocolErr := gu.ImpactRentalServer(req.ServerCode, req.ServerCode, req.ClientPublicKey)
 	if protocolErr != nil {
-		return 0, enhance.UsingMod{}, nil, protocolErr
+		return 0, enhance.UsingMod{}, nil, false, protocolErr
 	}
 	// cache version
 	currentGameInfo, err := gameinfo.GetInfoByGameVersion(rentalInfo.MCVersion)
 	if err != nil {
-		return 0, enhance.UsingMod{}, nil, &defines.ProtocolError{Message: err.Error()}
+		return 0, enhance.UsingMod{}, nil, false, &defines.ProtocolError{Message: err.Error()}
 	}
 	versionCache.SetDefault(req.ServerCode, currentGameInfo.EngineVersion)
 	// check version
 	if gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
-		// re-login and get chain with updated engine version
-		return requestServerInfo(gu, req)
+		// need relogin with new engine version
+		return 0, enhance.UsingMod{}, nil, true, nil
 	}
-	return launcherLevel, currentUsingMod, rentalInfo, nil
+	return launcherLevel, currentUsingMod, rentalInfo, false, nil
 }
 
 func Login(c *gin.Context) {
@@ -254,15 +255,29 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// change engine version by cache
-	engineVersion := gameinfo.DefaultEngineVersion
-	if value, ok := versionCache.Get(request.ServerCode); ok {
-		engineVersion = value.(string)
-	}
+	for {
+		// g79 login if user not use PE Auth data
+		if len(request.ProvidedPEAuthData) == 0 {
+			// change engine version by cache
+			engineVersion := gameinfo.DefaultEngineVersion
+			if value, ok := versionCache.Get(request.ServerCode); ok {
+				engineVersion = value.(string)
+			}
+			// g79 login
+			if gu, protocolErr = g79.Login(engineVersion, mu); protocolErr != nil {
+				c.JSON(http.StatusOK, AuthResponse{
+					SuccessStates: false,
+					Message: Message{
+						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", protocolErr.Error()),
+					},
+				})
+				return
+			}
+		}
 
-	// g79 login if this is normal login (but not pe-auth login)
-	if gu == nil {
-		if gu, protocolErr = g79.Login(engineVersion, mu); protocolErr != nil {
+		// request server info
+		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolErr := requestServerInfo(gu, &request)
+		if protocolErr != nil {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
 				Message: Message{
@@ -271,77 +286,79 @@ func Login(c *gin.Context) {
 			})
 			return
 		}
-	}
 
-	// request server info
-	launcherLevel, currentUsingMod, serverInfo, protocolErr := requestServerInfo(gu, &request)
-	if protocolErr != nil {
-		c.JSON(http.StatusOK, AuthResponse{
-			SuccessStates: false,
-			Message: Message{
-				Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", protocolErr.Error()),
-			},
-		})
-		return
-	}
-
-	// get session
-	session := utils.GetSessionByBearer(c)
-	if session == nil {
-		c.JSON(http.StatusOK, AuthResponse{
-			SuccessStates: false,
-			Message: Message{
-				Information: fmt.Sprintf(
-					"Login: 无效的 Auth Bearer (%s)",
-					c.Request.Header.Get("Authorization"),
-				),
-			},
-		})
-		return
-	}
-
-	// save info for anti-cheat callback
-	session.Store(session_key_entity_id, gu.EntityID)
-	session.Store(session_key_engine_version, gu.GameInfo.EngineVersion)
-	session.Store(session_key_patch_version, gu.GameInfo.PatchVersion)
-
-	// response
-	resp := AuthResponse{
-		SuccessStates:  true,
-		Message:        Message{Information: "ok"},
-		BotLevel:       launcherLevel,
-		BotSkin:        currentUsingMod.AsPhoenixBotSkin(),
-		BotComponent:   currentUsingMod.AsPhoenixBotComponent(),
-		FBToken:        request.FBToken,
-		MasterName:     gu.Username,
-		RentalServerIP: serverInfo.IPAddress,
-		ChainInfo:      serverInfo.ChainInfo,
-	}
-
-	if enableEncrypt {
-		jsonBytes, err := json.Marshal(resp)
-		if err != nil {
+		// the rental server version is not match, and need relogin
+		if needRelogin && len(request.ProvidedPEAuthData) > 0 {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
 				Message: Message{
-					Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
+					Information: "Login: 要登录的租赁服的版本跟提供的渠道服账号不匹配",
 				},
 			})
+			return
+		}
+		if needRelogin {
+			continue
 		}
 
-		encrypted, err := utils.EncryptPKCS1v15(PhoenixLoginKey, jsonBytes)
-		if err != nil {
+		// get session
+		session := utils.GetSessionByBearer(c)
+		if session == nil {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
 				Message: Message{
-					Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
+					Information: fmt.Sprintf(
+						"Login: 无效的 Auth Bearer (%s)",
+						c.Request.Header.Get("Authorization"),
+					),
 				},
 			})
+			return
 		}
 
-		c.Data(http.StatusOK, "application/octet-stream", encrypted)
-		return
-	}
+		// save info for anti-cheat callback
+		session.Store(session_key_entity_id, gu.EntityID)
+		session.Store(session_key_engine_version, gu.GameInfo.EngineVersion)
+		session.Store(session_key_patch_version, gu.GameInfo.PatchVersion)
 
-	c.JSON(http.StatusOK, resp)
+		// response
+		resp := AuthResponse{
+			SuccessStates:  true,
+			Message:        Message{Information: "ok"},
+			BotLevel:       launcherLevel,
+			BotSkin:        currentUsingMod.AsPhoenixBotSkin(),
+			BotComponent:   currentUsingMod.AsPhoenixBotComponent(),
+			FBToken:        request.FBToken,
+			MasterName:     gu.Username,
+			RentalServerIP: serverInfo.IPAddress,
+			ChainInfo:      serverInfo.ChainInfo,
+		}
+
+		if enableEncrypt {
+			jsonBytes, err := json.Marshal(resp)
+			if err != nil {
+				c.JSON(http.StatusOK, AuthResponse{
+					SuccessStates: false,
+					Message: Message{
+						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
+					},
+				})
+			}
+
+			encrypted, err := utils.EncryptPKCS1v15(PhoenixLoginKey, jsonBytes)
+			if err != nil {
+				c.JSON(http.StatusOK, AuthResponse{
+					SuccessStates: false,
+					Message: Message{
+						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
+					},
+				})
+			}
+
+			c.Data(http.StatusOK, "application/octet-stream", encrypted)
+			return
+		}
+
+		c.JSON(http.StatusOK, resp)
+	}
 }
