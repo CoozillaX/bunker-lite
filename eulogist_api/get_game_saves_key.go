@@ -91,6 +91,16 @@ func GetGameSavesKey(c *gin.Context) {
 			return
 		}
 
+		user.ProvidedPeAuthData = ""
+		err = database.UpdateUserInfo(user, true)
+		if err != nil {
+			c.JSON(http.StatusOK, GameSavesKeyResponse{
+				ErrorInfo: fmt.Sprintf("GetGameSavesKey: 获取存档解密密钥时出现问题, 原因是 %v", err),
+				Success:   false,
+			})
+			return
+		}
+
 		disableOpertorVerify := user.DisableGlobalOpertorVerify
 		configs := database.GetAllowServerConfig(request.RentalServerNumber, true)
 		for _, value := range configs {
