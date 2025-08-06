@@ -103,6 +103,7 @@ type Message struct {
 
 // requestServerInfo ..
 func requestServerInfo(
+	isPeAuthRequest bool,
 	gu *g79.G79User,
 	req *AuthRequest,
 ) (
@@ -134,7 +135,7 @@ func requestServerInfo(
 	}
 	versionCache.SetDefault(req.ServerCode, currentGameInfo.EngineVersion)
 	// check version
-	if gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
+	if !isPeAuthRequest && gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
 		// need relogin with new engine version
 		return 0, enhance.UsingMod{}, nil, true, nil
 	}
@@ -276,7 +277,8 @@ func Login(c *gin.Context) {
 		}
 
 		// request server info
-		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolErr := requestServerInfo(gu, &request)
+		isPeAuthRequest := len(request.ProvidedPEAuthData) > 0
+		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolErr := requestServerInfo(isPeAuthRequest, gu, &request)
 		if protocolErr != nil {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
@@ -288,7 +290,7 @@ func Login(c *gin.Context) {
 		}
 
 		// the rental server version is not match, and need relogin
-		if needRelogin && len(request.ProvidedPEAuthData) > 0 {
+		if needRelogin {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
 				Message: Message{

@@ -78,6 +78,8 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("PEAuthLogin: %v", err)
 	}
+	copiedBaseInfo := *defaultBaseInfo
+	defaultBaseInfo = &copiedBaseInfo
 	defaultBaseInfo.EngineVersion = engineVersion
 	defaultBaseInfo.PatchVersion = patchVersion
 
