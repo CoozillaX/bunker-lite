@@ -345,6 +345,7 @@ func Login(c *gin.Context) {
 						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
 					},
 				})
+				return
 			}
 
 			encrypted, err := utils.EncryptPKCS1v15(PhoenixLoginKey, jsonBytes)
@@ -355,6 +356,7 @@ func Login(c *gin.Context) {
 						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
 					},
 				})
+				return
 			}
 
 			c.Data(http.StatusOK, "application/octet-stream", encrypted)
@@ -362,5 +364,6 @@ func Login(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, resp)
+		return
 	}
 }
