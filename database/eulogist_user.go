@@ -194,7 +194,7 @@ func UpdateUserName(name string, newName string, useLock bool) error {
 		if err = bucket.Delete([]byte(name)); err != nil {
 			return err
 		}
-		if err = bucket.Put([]byte(newName), []byte(user.UserUniqueID)); err != nil {
+		if err = bucket.Put([]byte(user.UserName), []byte(user.UserUniqueID)); err != nil {
 			return err
 		}
 
@@ -296,9 +296,9 @@ func ListUsers(filterString string, useLock bool) (hitUserName []string) {
 
 	filterString = strings.ToLower(filterString)
 	_ = serverDatabase.View(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket([]byte(DATABASE_KEY_EULOGIST_USER))
+		bucket := tx.Bucket([]byte(DATABASE_KEY_NTEU_MAPPING))
 		_ = bucket.ForEach(func(k, v []byte) error {
-			userName := define.DecodeEulogistUser(v).UserName
+			userName := string(k)
 			if len(filterString) == 0 || strings.Contains(strings.ToLower(userName), filterString) {
 				hitUserName = append(hitUserName, userName)
 			}
