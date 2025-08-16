@@ -13,6 +13,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const DefaultResponseExpireSeconds = 30
+
 // GameSavesKeyRequest ..
 type GameSavesKeyRequest struct {
 	Token              string `json:"token,omitempty"`
@@ -21,10 +23,12 @@ type GameSavesKeyRequest struct {
 
 // GameSavesKeyResponse ..
 type GameSavesKeyResponse struct {
-	ErrorInfo            string `json:"error_info"`
-	Success              bool   `json:"success"`
-	AESCipher            []byte `json:"encrypted_aes_cipher"`
-	DisableOpertorVerify bool   `json:"disable_operator_verify"`
+	ErrorInfo              string `json:"error_info"`
+	Success                bool   `json:"success"`
+	RentelServerNumber     string `json:"rental_server_number"`
+	GameSavesAESCipher     []byte `json:"game_saves_aes_cipher"`
+	DisableOpertorVerify   bool   `json:"disable_operator_verify"`
+	ResponseExpireUnixTime int64  `json:"response_expire_unix_time"`
 }
 
 // GetGameSavesKey ..
@@ -111,9 +115,11 @@ func GetGameSavesKey(c *gin.Context) {
 		}
 
 		resp := GameSavesKeyResponse{
-			Success:              true,
-			AESCipher:            aesCipher,
-			DisableOpertorVerify: disableOpertorVerify,
+			Success:                true,
+			RentelServerNumber:     request.RentalServerNumber,
+			GameSavesAESCipher:     aesCipher,
+			DisableOpertorVerify:   disableOpertorVerify,
+			ResponseExpireUnixTime: time.Now().Unix() + DefaultResponseExpireSeconds,
 		}
 
 		jsonBytes, err := json.Marshal(resp)
@@ -165,7 +171,7 @@ func GetGameSavesKey(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, GameSavesKeyResponse{
-		Success:   true,
-		AESCipher: aesCipher,
+		Success:            true,
+		GameSavesAESCipher: aesCipher,
 	})
 }
