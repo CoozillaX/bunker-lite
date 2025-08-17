@@ -291,15 +291,6 @@ func Login(c *gin.Context) {
 
 		// the rental server version is not match, and need relogin
 		if needRelogin {
-			c.JSON(http.StatusOK, AuthResponse{
-				SuccessStates: false,
-				Message: Message{
-					Information: "Login: 要登录的租赁服的版本跟提供的渠道服账号不匹配",
-				},
-			})
-			return
-		}
-		if needRelogin {
 			continue
 		}
 
