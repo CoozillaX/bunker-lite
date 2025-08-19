@@ -75,6 +75,28 @@ func ModifyCustomHelper(c *gin.Context) {
 		return
 	}
 
+	isRepeat := false
+	for _, value := range user.MultipleAuthServerAccounts {
+		if value.IsStdAccount() {
+			continue
+		}
+		if value.AuthServerAddress() != request.AuthServerAddress {
+			continue
+		}
+		if value.AuthServerSecret() != request.AuthServerToken {
+			continue
+		}
+		isRepeat = true
+		break
+	}
+	if isRepeat {
+		c.JSON(http.StatusOK, HelperAddResponse{
+			ErrorInfo: "ModifyCustomHelper: 目标 MC 账号已经存在, 不能将当前 MC 账户修改为已经存在的 MC 账号",
+			Success:   false,
+		})
+		return
+	}
+
 	newAccount := define.CustomAuthServerAccount{}
 	newAccount.UpdateData(map[string]any{
 		"internalAccountID": src.(*define.CustomAuthServerAccount).InternalAccountID(),
