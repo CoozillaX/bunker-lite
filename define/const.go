@@ -13,7 +13,7 @@ const (
 const (
 	UserPermissionSystem = iota
 	UserPermissionAdmin
-	UserPermissionManager
+	UserPermissionAdvance
 	UserPermissionNormal
 	UserPermissionNone
 	UserPermissionDefault = UserPermissionNormal
