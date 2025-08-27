@@ -70,5 +70,6 @@ func SetSkinCache(c *gin.Context) {
 		})
 		return
 	}
+
 	c.JSON(http.StatusOK, SetSkinCacheResponse{Success: true})
 }
