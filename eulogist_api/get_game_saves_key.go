@@ -23,12 +23,17 @@ type GameSavesKeyRequest struct {
 
 // GameSavesKeyResponse ..
 type GameSavesKeyResponse struct {
-	ErrorInfo              string `json:"error_info"`
-	Success                bool   `json:"success"`
+	ErrorInfo string `json:"error_info"`
+	Success   bool   `json:"success"`
+
 	RentelServerNumber     string `json:"rental_server_number"`
-	GameSavesAESCipher     []byte `json:"game_saves_aes_cipher"`
-	DisableOpertorVerify   bool   `json:"disable_operator_verify"`
 	ResponseExpireUnixTime int64  `json:"response_expire_unix_time"`
+
+	GameSavesAESCipher   []byte `json:"game_saves_aes_cipher"`
+	DisableOpertorVerify bool   `json:"disable_operator_verify"`
+
+	HaveSkinCacheData bool   `json:"have_skin_cache_data"`
+	SkinDownloadURL   string `json:"skin_download_url"`
 }
 
 // GetGameSavesKey ..
@@ -114,12 +119,31 @@ func GetGameSavesKey(c *gin.Context) {
 			}
 		}
 
+		haveSkinCacheData, skinDownloadURL, err := database.GetAndDeleteUserSkinCache(user.UserUniqueID, true)
+		if err != nil {
+			c.JSON(http.StatusOK, GameSavesKeyResponse{
+				ErrorInfo: fmt.Sprintf("GetGameSavesKey: 获取存档解密密钥时出现问题, 原因是 %v", err),
+				Success:   false,
+			})
+			return
+		}
+		switch user.UserPermissionLevel {
+		case define.UserPermissionSystem:
+		case define.UserPermissionAdmin:
+		case define.UserPermissionAdvance:
+		default:
+			haveSkinCacheData = false
+			skinDownloadURL = ""
+		}
+
 		resp := GameSavesKeyResponse{
 			Success:                true,
 			RentelServerNumber:     request.RentalServerNumber,
+			ResponseExpireUnixTime: time.Now().Unix() + DefaultResponseExpireSeconds,
 			GameSavesAESCipher:     aesCipher,
 			DisableOpertorVerify:   disableOpertorVerify,
-			ResponseExpireUnixTime: time.Now().Unix() + DefaultResponseExpireSeconds,
+			HaveSkinCacheData:      haveSkinCacheData,
+			SkinDownloadURL:        skinDownloadURL,
 		}
 
 		jsonBytes, err := json.Marshal(resp)

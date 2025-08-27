@@ -11,7 +11,7 @@ import (
 func initEulogistRouter(router *gin.Engine) *gin.Engine {
 	eulogistApiGroup := router.Group("/eulogist_api")
 
-	// Baisc
+	// Default
 	{
 		eulogistApiGroup.POST("/register_or_login", handlerWithMutex(eulogist_api.RegisterOrLogin))
 		eulogistApiGroup.POST("/request_user_info", handlerWithMutex(eulogist_api.RequestUserInfo))
@@ -19,6 +19,7 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 		eulogistApiGroup.POST("/rental_server_list", handlerWithMutex(eulogist_api.RentalServerList))
 		eulogistApiGroup.POST("/change_user_info", handlerWithMutex(eulogist_api.ChangeUserInfo))
 		eulogistApiGroup.POST("/get_game_saves_key", handlerWithMutex(eulogist_api.GetGameSavesKey))
+		eulogistApiGroup.POST("/set_skin_cache", handlerWithMutex(eulogist_api.SetSkinCache))
 	}
 
 	// Helper

@@ -22,6 +22,7 @@ const (
 const (
 	DATABASE_KEY_ALLOW_LIST_CONFIG = "ALLOW_LIST_CONFIG" // map[RentalServerNumber][]define.AllowListConfig
 	DATABASE_KEY_GAME_SAVES_KEYS   = "GAME_SAVES_KEYS"   // map[UserUniqueID + RentalServerNumver]define.GameSavesKey
+	DATABASE_KEY_SKIN_CACHE        = "SKIN_CACHE"        // map[UserUniqueID]SkinDownloadURL
 )
 
 var (
@@ -60,6 +61,9 @@ func init() {
 			return err
 		}
 		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_GAME_SAVES_KEYS)); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_SKIN_CACHE)); err != nil {
 			return err
 		}
 		return nil
