@@ -27,6 +27,7 @@ type GameSavesKeyResponse struct {
 	Success   bool   `json:"success"`
 
 	RentelServerNumber     string `json:"rental_server_number"`
+	UserPermissionLevel    uint8  `json:"user_permission_level"`
 	ResponseExpireUnixTime int64  `json:"response_expire_unix_time"`
 
 	GameSavesAESCipher   []byte `json:"game_saves_aes_cipher"`
@@ -139,6 +140,7 @@ func GetGameSavesKey(c *gin.Context) {
 		resp := GameSavesKeyResponse{
 			Success:                true,
 			RentelServerNumber:     request.RentalServerNumber,
+			UserPermissionLevel:    user.UserPermissionLevel,
 			ResponseExpireUnixTime: time.Now().Unix() + DefaultResponseExpireSeconds,
 			GameSavesAESCipher:     aesCipher,
 			DisableOpertorVerify:   disableOpertorVerify,
