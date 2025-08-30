@@ -1,6 +1,6 @@
 module bunker-lite
 
-go 1.24.0
+go 1.25.0
 
 require (
 	bunker-core v0.0.0
@@ -41,11 +41,11 @@ require (
 )
 
 require (
-	github.com/database64128/chacha8-go v0.0.0-20250204235950-5c6f473ea976 // indirect
+	github.com/database64128/chacha8-go v0.0.0-20250815115417-e0f2726d8bd0 // indirect
 	github.com/gin-gonic/gin v1.10.1
 	github.com/sandertv/gophertunnel v1.48.1
 	go.etcd.io/bbolt v1.4.2
-	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
 )
 
 replace bunker-core => ../bunker-core
