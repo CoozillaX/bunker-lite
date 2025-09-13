@@ -20,9 +20,8 @@ import (
 
 // TanLobbyLoginRequest ..
 type TanLobbyLoginRequest struct {
-	FBToken      string `json:"login_token"`
-	RoomID       string `json:"room_id"`
-	RoomPasscode string `json:"room_passcode"`
+	FBToken string `json:"login_token"`
+	RoomID  string `json:"room_id"`
 }
 
 // TanLobbyLoginResponse ..
