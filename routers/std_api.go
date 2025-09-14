@@ -11,18 +11,13 @@ import (
 func initStdRouter(router *gin.Engine) *gin.Engine {
 	stdApiGroup := router.Group("/api")
 
-	// Phoenix Standard API
+	// Phoenix Auth API (mv4, bunker, v2.1)
 	{
 		stdApiGroup.GET("/new", handlerWithMutex(std_api.New))
 		stdApiGroup.POST("/phoenix/login", handlerWithMutex(std_api.Login))
+		stdApiGroup.POST("/phoenix/tan_lobby_login", handlerWithMutex(std_api.TanLobbyLogin))
 		stdApiGroup.POST("/phoenix/transfer_check_num", handlerWithMutex(std_api.TransferCheckNum))
 		stdApiGroup.GET("/phoenix/transfer_start_type", handlerWithMutex(std_api.TransferStartType))
-	}
-
-	// Tan lobby API
-	{
-		stdApiGroup.POST("/phoenix/tan_lobby_login", handlerWithMutex(std_api.TanLobbyLogin))
-		stdApiGroup.POST("/phoenix/tan_lobby_transfer_server", handlerWithMutex(std_api.TanLobbyTransferServer))
 	}
 
 	// No router

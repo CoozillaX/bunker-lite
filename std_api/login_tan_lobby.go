@@ -4,8 +4,9 @@ import (
 	"bunker-core/utils"
 	"bunker-lite/database"
 	"bunker-lite/define"
-	"crypto/rand"
+	cryptoRand "crypto/rand"
 	"fmt"
+	mathRand "math/rand"
 	"net/http"
 	"strconv"
 
@@ -33,13 +34,15 @@ type TanLobbyLoginResponse struct {
 	UserUniqueID   uint32 `json:"user_unique_id"`
 	UserPlayerName string `json:"user_player_name"`
 
-	RaknetRand      []byte `json:"raknet_rand"`
-	RaknetAESRand   []byte `json:"raknet_aes_rand"`
-	EncryptKeyBytes []byte `json:"encrypt_key_bytes"`
-	DecryptKeyBytes []byte `json:"decrypt_key_bytes"`
+	RaknetServerAddress string `json:"raknet_server_address"`
+	RaknetRand          []byte `json:"raknet_rand"`
+	RaknetAESRand       []byte `json:"raknet_aes_rand"`
+	EncryptKeyBytes     []byte `json:"encrypt_key_bytes"`
+	DecryptKeyBytes     []byte `json:"decrypt_key_bytes"`
 
-	SignalingSeed   []byte `json:"signaling_seed"`
-	SignalingTicket []byte `json:"signaling_ticket"`
+	SignalingServerAddress string `json:"signaling_server_address"`
+	SignalingSeed          []byte `json:"signaling_seed"`
+	SignalingTicket        []byte `json:"signaling_ticket"`
 }
 
 func TanLobbyLogin(c *gin.Context) {
@@ -75,6 +78,7 @@ func TanLobbyLogin(c *gin.Context) {
 		return
 	}
 
+	// g79 login
 	gu, protocolErr := g79.Login(gameinfo.DefaultEngineVersion, mu)
 	if protocolErr != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
@@ -115,8 +119,9 @@ func TanLobbyLogin(c *gin.Context) {
 	var query struct {
 		Code int `json:"code"`
 		List []struct {
-			HostID int `json:"hid"`
-			RoomID int `json:"rid"`
+			HostID           int `json:"hid"`
+			RoomID           int `json:"rid"`
+			TransferServerID int `json:"srv"`
 		} `json:"list"`
 	}
 	if err := json.NewDecoder(reader).Decode(&query); err != nil {
@@ -127,11 +132,13 @@ func TanLobbyLogin(c *gin.Context) {
 		return
 	}
 
-	// get room onwer id
+	// get room onwer id and transfer server id
 	var roomOwnerID uint32
+	var roomTransferServerID int
 	for _, value := range query.List {
 		if fmt.Sprintf("%d", value.RoomID) == request.RoomID {
 			roomOwnerID = uint32(value.HostID)
+			roomTransferServerID = value.TransferServerID
 			break
 		}
 	}
@@ -143,11 +150,63 @@ func TanLobbyLogin(c *gin.Context) {
 		return
 	}
 
+	// query transfer server list
+	resp, err := http.Get(gameinfo.G79ServerList.TransferServerUrl)
+	if err != nil {
+		c.JSON(http.StatusOK, TanLobbyLoginResponse{
+			Success:   false,
+			ErrorInfo: fmt.Sprintf("TanLobbyTransferServer: %v", err),
+		})
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		c.JSON(http.StatusOK, TanLobbyLoginResponse{
+			Success:   false,
+			ErrorInfo: fmt.Sprintf("TanLobbyTransferServer: API Server return a non-OK status code which is %d", resp.StatusCode),
+		})
+		return
+	}
+
+	// parse transfer server list
+	var serverList []struct {
+		Status         int    `json:"status"`
+		ServerIP       string `json:"ip"`
+		ServerID       int    `json:"id"`
+		SignalWebPort  int    `json:"SignalWebPort"`
+		WebsocketPorts []int  `json:"ports"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&serverList); err != nil {
+		c.JSON(http.StatusOK, TanLobbyLoginResponse{
+			Success:   false,
+			ErrorInfo: fmt.Sprintf("TanLobbyTransferServer: %v", err),
+		})
+		return
+	}
+	_ = resp.Body.Close()
+
+	// ensure transfer server address
+	var raknetServerAddress string
+	var signalingServerAddress string
+	for _, value := range serverList {
+		if value.ServerID == roomTransferServerID {
+			raknetServerAddress = fmt.Sprintf("%s:%d", value.ServerIP, value.WebsocketPorts[mathRand.Intn(len(value.WebsocketPorts))])
+			signalingServerAddress = fmt.Sprintf("%s:%d", value.ServerIP, value.SignalWebPort)
+			break
+		}
+	}
+	if len(raknetServerAddress) == 0 || len(signalingServerAddress) == 0 {
+		c.JSON(http.StatusOK, TanLobbyLoginResponse{
+			Success:   false,
+			ErrorInfo: "TanLobbyTransferServer: No available transfer server was found",
+		})
+		return
+	}
+
 	// generate rand and seed
 	raknetRand := make([]byte, 16)
 	signalingSeed := make([]byte, 16)
-	_, _ = rand.Read(raknetRand)
-	_, _ = rand.Read(signalingSeed)
+	_, _ = cryptoRand.Read(raknetRand)
+	_, _ = cryptoRand.Read(signalingSeed)
 
 	// compute encrypted token and key to encrypt/decrypt raknet session
 	encryptedUserToken := utils.MD5Sum([]byte(gu.G79Token))
@@ -179,16 +238,18 @@ func TanLobbyLogin(c *gin.Context) {
 	c.JSON(
 		http.StatusOK,
 		TanLobbyLoginResponse{
-			Success:         true,
-			RoomOwnerID:     roomOwnerID,
-			UserUniqueID:    uint32(g79UserUID),
-			UserPlayerName:  gu.Username,
-			RaknetRand:      raknetRand,
-			RaknetAESRand:   raknetAESRand,
-			EncryptKeyBytes: encryptKeyBytes,
-			DecryptKeyBytes: decryptKeyBytes,
-			SignalingSeed:   signalingSeed,
-			SignalingTicket: signalingTicket,
+			Success:                true,
+			RoomOwnerID:            roomOwnerID,
+			UserUniqueID:           uint32(g79UserUID),
+			UserPlayerName:         gu.Username,
+			RaknetServerAddress:    raknetServerAddress,
+			RaknetRand:             raknetRand,
+			RaknetAESRand:          raknetAESRand,
+			EncryptKeyBytes:        encryptKeyBytes,
+			DecryptKeyBytes:        decryptKeyBytes,
+			SignalingServerAddress: signalingServerAddress,
+			SignalingSeed:          signalingSeed,
+			SignalingTicket:        signalingTicket,
 		},
 	)
 }
