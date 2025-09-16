@@ -11,7 +11,7 @@ import (
 func initStdRouter(router *gin.Engine) *gin.Engine {
 	stdApiGroup := router.Group("/api")
 
-	// Phoenix Auth API (mv4, bunker, v2.1)
+	// Phoenix Auth API (mv4, bunker, v2.3)
 	{
 		stdApiGroup.GET("/new", handlerWithMutex(std_api.New))
 		stdApiGroup.POST("/phoenix/login", handlerWithMutex(std_api.Login))
