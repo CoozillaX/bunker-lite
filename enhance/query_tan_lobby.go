@@ -73,9 +73,11 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 	}
 
 	// get room mod download url and encrypt key
-	roomModItemIDs, result.RoomModDisplayName, result.RoomModDownloadURL, err = GetLobbyDownloadInfoByItemIDs(gu, roomModItemIDs)
-	if err != nil {
-		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", err)
+	if len(roomModItemIDs) > 0 {
+		roomModItemIDs, result.RoomModDisplayName, result.RoomModDownloadURL, err = GetLobbyDownloadInfoByItemIDs(gu, roomModItemIDs)
+		if err != nil {
+			return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", err)
+		}
 	}
 	if len(roomModItemIDs) > 0 {
 		if result.RoomModEncryptKey, err = GetLobbyItemEncryptionKeys(gu, roomModItemIDs); err != nil {
