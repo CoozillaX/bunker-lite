@@ -43,6 +43,7 @@ require (
 require (
 	github.com/database64128/chacha8-go v0.0.0-20250815115417-e0f2726d8bd0 // indirect
 	github.com/gin-gonic/gin v1.10.1
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/sandertv/gophertunnel v1.48.1
 	go.etcd.io/bbolt v1.4.2
 	golang.org/x/sys v0.35.0 // indirect

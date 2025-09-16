@@ -71,7 +71,7 @@ type AuthResponse struct {
 	Message
 
 	BotLevel     int                     `json:"growth_level"`          // 机器人的等级
-	BotSkin      enhance.PhoenixSkinInfo `json:"skin_info,omitempty"`   // 机器人的皮肤信息
+	BotSkin      enhance.PhoenixSkinInfo `json:"skin_info"`             // 机器人的皮肤信息
 	BotComponent map[string]*int         `json:"outfit_info,omitempty"` // 机器人当前已加载的组件及其附加值
 
 	FBToken    string `json:"token"`      // ...

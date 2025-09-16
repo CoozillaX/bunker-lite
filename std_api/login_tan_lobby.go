@@ -4,11 +4,10 @@ import (
 	"bunker-core/utils"
 	"bunker-lite/database"
 	"bunker-lite/define"
+	"bunker-lite/enhance"
 	cryptoRand "crypto/rand"
 	"fmt"
-	mathRand "math/rand"
 	"net/http"
-	"strconv"
 
 	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
@@ -30,9 +29,16 @@ type TanLobbyLoginResponse struct {
 	Success   bool   `json:"success"`
 	ErrorInfo string `json:"error_info"`
 
-	RoomOwnerID    uint32 `json:"room_owner_id"`
-	UserUniqueID   uint32 `json:"user_unique_id"`
-	UserPlayerName string `json:"user_player_name"`
+	UserUniqueID   uint32                  `json:"user_unique_id"`
+	UserPlayerName string                  `json:"user_player_name"`
+	BotLevel       int                     `json:"growth_level"`
+	BotSkin        enhance.PhoenixSkinInfo `json:"skin_info"`
+	BotComponent   map[string]*int         `json:"outfit_info,omitempty"`
+
+	RoomOwnerID        uint32   `json:"room_owner_id"`
+	RoomModDisplayName []string `json:"room_mod_display_name"`
+	RoomModDownloadURL []string `json:"room_mod_download_url"`
+	RoomModEncryptKey  [][]byte `json:"room_mod_encrypt_key"`
 
 	RaknetServerAddress string `json:"raknet_server_address"`
 	RaknetRand          []byte `json:"raknet_rand"`
@@ -88,8 +94,8 @@ func TanLobbyLogin(c *gin.Context) {
 		return
 	}
 
-	// parse user unique id (g79 user uid)
-	g79UserUID, err := strconv.ParseUint(gu.EntityID, 10, 32)
+	// query tan lobby room info
+	roomInfo, err := enhance.QueryTanLobbyRoomInfo(gu, request.RoomID)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			Success:   false,
@@ -98,17 +104,8 @@ func TanLobbyLogin(c *gin.Context) {
 		return
 	}
 
-	// get room info
-	reqBody, _ := json.Marshal(map[string]any{
-		"name": request.RoomID,
-		"uid":  g79UserUID,
-	})
-	reader, protocolErr := gu.CreateHttpClient().
-		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.TransferServerNewHttpUrl + "/room-with-name").
-		SetRawBody(reqBody).
-		SetTokenMode(g79.TOKEN_MODE_NORMAL).
-		Do()
+	// Get launcher level and current using mod
+	launcherLevel, _, _, protocolErr := enhance.GetLauncherLevel(gu)
 	if protocolErr != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			Success:   false,
@@ -116,88 +113,11 @@ func TanLobbyLogin(c *gin.Context) {
 		})
 		return
 	}
-	var query struct {
-		Code int `json:"code"`
-		List []struct {
-			HostID           int `json:"hid"`
-			RoomID           int `json:"rid"`
-			TransferServerID int `json:"srv"`
-		} `json:"list"`
-	}
-	if err := json.NewDecoder(reader).Decode(&query); err != nil {
+	currentUsingMod, protocolErr := enhance.GetCurrentUsingMod(gu)
+	if protocolErr != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
-		})
-		return
-	}
-
-	// get room onwer id and transfer server id
-	var roomOwnerID uint32
-	var roomTransferServerID int
-	for _, value := range query.List {
-		if fmt.Sprintf("%d", value.RoomID) == request.RoomID {
-			roomOwnerID = uint32(value.HostID)
-			roomTransferServerID = value.TransferServerID
-			break
-		}
-	}
-	if roomOwnerID == 0 {
-		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyLogin: 未查找到本地联机 (%v), 请在确认房间状态正常后重试", request.RoomID),
-		})
-		return
-	}
-
-	// query transfer server list
-	resp, err := http.Get(gameinfo.G79ServerList.TransferServerUrl)
-	if err != nil {
-		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyTransferServer: %v", err),
-		})
-		return
-	}
-	if resp.StatusCode != http.StatusOK {
-		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyTransferServer: API Server return a non-OK status code which is %d", resp.StatusCode),
-		})
-		return
-	}
-
-	// parse transfer server list
-	var serverList []struct {
-		Status         int    `json:"status"`
-		ServerIP       string `json:"ip"`
-		ServerID       int    `json:"id"`
-		SignalWebPort  int    `json:"SignalWebPort"`
-		WebsocketPorts []int  `json:"ports"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&serverList); err != nil {
-		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyTransferServer: %v", err),
-		})
-		return
-	}
-	_ = resp.Body.Close()
-
-	// ensure transfer server address
-	var raknetServerAddress string
-	var signalingServerAddress string
-	for _, value := range serverList {
-		if value.ServerID == roomTransferServerID {
-			raknetServerAddress = fmt.Sprintf("%s:%d", value.ServerIP, value.WebsocketPorts[mathRand.Intn(len(value.WebsocketPorts))])
-			signalingServerAddress = fmt.Sprintf("%s:%d", value.ServerIP, value.SignalWebPort)
-			break
-		}
-	}
-	if len(raknetServerAddress) == 0 || len(signalingServerAddress) == 0 {
-		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
-			ErrorInfo: "TanLobbyTransferServer: No available transfer server was found",
+			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolErr.Error()),
 		})
 		return
 	}
@@ -239,15 +159,21 @@ func TanLobbyLogin(c *gin.Context) {
 		http.StatusOK,
 		TanLobbyLoginResponse{
 			Success:                true,
-			RoomOwnerID:            roomOwnerID,
-			UserUniqueID:           uint32(g79UserUID),
+			UserUniqueID:           roomInfo.G79UserUID,
 			UserPlayerName:         gu.Username,
-			RaknetServerAddress:    raknetServerAddress,
+			BotLevel:               launcherLevel,
+			BotSkin:                currentUsingMod.AsPhoenixBotSkin(),
+			BotComponent:           currentUsingMod.AsPhoenixBotComponent(),
+			RoomOwnerID:            roomInfo.RoomOwnerID,
+			RoomModDisplayName:     roomInfo.RoomModDisplayName,
+			RoomModDownloadURL:     roomInfo.RoomModDownloadURL,
+			RoomModEncryptKey:      roomInfo.RoomModEncryptKey,
+			RaknetServerAddress:    roomInfo.RaknetServerAddress,
 			RaknetRand:             raknetRand,
 			RaknetAESRand:          raknetAESRand,
 			EncryptKeyBytes:        encryptKeyBytes,
 			DecryptKeyBytes:        decryptKeyBytes,
-			SignalingServerAddress: signalingServerAddress,
+			SignalingServerAddress: roomInfo.SignalingServerAddress,
 			SignalingSeed:          signalingSeed,
 			SignalingTicket:        signalingTicket,
 		},
