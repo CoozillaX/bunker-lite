@@ -34,6 +34,7 @@ func GetLobbyDownloadInfoByItemIDs(gu *g79.G79User, itemIDs []string) (
 	// 2. Parse response
 	var query struct {
 		Entities []struct {
+			ModItemID      string `json:"iid"`
 			ModDisplayName string `json:"res_name"`
 			LobbyResUrl    string `json:"lobby_res_url"`
 		} `json:"entities"`
@@ -43,11 +44,11 @@ func GetLobbyDownloadInfoByItemIDs(gu *g79.G79User, itemIDs []string) (
 	}
 
 	// 3. Get urls
-	for index, item := range query.Entities {
+	for _, item := range query.Entities {
 		if len(item.LobbyResUrl) > 0 {
 			modDisplayName = append(modDisplayName, item.ModDisplayName)
 			modDownloadURL = append(modDownloadURL, item.LobbyResUrl)
-			realItemIds = append(realItemIds, itemIDs[index])
+			realItemIds = append(realItemIds, item.ModItemID)
 		}
 	}
 
@@ -74,16 +75,19 @@ func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]b
 	// 2. Parse response
 	var query struct {
 		Entities []struct {
-			JWT string `json:"jwt"`
+			ModItemID  string `json:"item_id"`
+			DecryptJWT string `json:"jwt"`
 		} `json:"entities"`
 	}
 	if err := json.NewDecoder(reader).Decode(&query); err != nil {
 		return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: %v", err)
 	}
 
+	// 3. Get decrypt key
+	mapping := make(map[string][]byte)
 	for _, item := range query.Entities {
-		// 3. Decrypt jwt
-		token, _, err := new(jwt.Parser).ParseUnverified(item.JWT, jwt.MapClaims{})
+		// 3.1. Decrypt jwt
+		token, _, err := new(jwt.Parser).ParseUnverified(item.DecryptJWT, jwt.MapClaims{})
 		if err != nil {
 			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: %v", err)
 		}
@@ -91,13 +95,16 @@ func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]b
 		if !ok {
 			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: Invalid jwt (should nerver happened) (stage 0)")
 		}
-		// 4. Get key
+		// 3.2 Get key
 		contentKey, ok := claims["contentKey"].(string)
 		if !ok {
 			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: Invalid jwt (should nerver happened) (stage 1)")
 		}
-		// 5. Convert to encrypt key
-		result = append(result, utils.GetRecordEncryptKey(contentKey, gu.EntityID, gu.MpayUser.UrsUdid))
+		// 3.3 Convert to encrypt key
+		mapping[item.ModItemID] = utils.GetRecordEncryptKey(contentKey, gu.EntityID, gu.MpayUser.UrsUdid)
+	}
+	for _, value := range itemIDs {
+		result = append(result, mapping[value])
 	}
 
 	return
