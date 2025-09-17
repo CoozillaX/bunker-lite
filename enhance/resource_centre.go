@@ -86,7 +86,12 @@ func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]b
 	// 3. Get decrypt key
 	mapping := make(map[string][]byte)
 	for _, item := range query.Entities {
-		// 3.1. Decrypt jwt
+		// 3.1. No jwt, so set a nil key
+		if len(item.DecryptJWT) == 0 {
+			mapping[item.ModItemID] = make([]byte, 0)
+			continue
+		}
+		// 3.2. Decrypt jwt
 		token, _, err := new(jwt.Parser).ParseUnverified(item.DecryptJWT, jwt.MapClaims{})
 		if err != nil {
 			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: %v", err)
@@ -95,12 +100,11 @@ func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]b
 		if !ok {
 			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: Invalid jwt (should nerver happened) (stage 0)")
 		}
-		// 3.2 Get key
+		// 3.3 Get encrypt key
 		contentKey, ok := claims["contentKey"].(string)
 		if !ok {
 			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: Invalid jwt (should nerver happened) (stage 1)")
 		}
-		// 3.3 Convert to encrypt key
 		mapping[item.ModItemID] = utils.GetRecordEncryptKey(contentKey, gu.EntityID, gu.MpayUser.UrsUdid)
 	}
 	for _, value := range itemIDs {
