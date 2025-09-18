@@ -97,7 +97,7 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return TanLobbyRoomInfo{}, fmt.Errorf("TanLobbyTransferServer: API Server return a non-OK status code which is %d", resp.StatusCode)
+		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: API Server return a non-OK status code which is %d", resp.StatusCode)
 	}
 
 	// parse transfer server list
@@ -121,7 +121,7 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 		}
 	}
 	if len(result.RaknetServerAddress) == 0 || len(result.SignalingServerAddress) == 0 {
-		return TanLobbyRoomInfo{}, fmt.Errorf("TanLobbyTransferServer: No available transfer server was found")
+		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: No available transfer server was found")
 	}
 
 	// return
