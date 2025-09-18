@@ -25,6 +25,11 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 	var roomTransferServerID int
 	var roomModItemIDs []string
 
+	// check provided room id is empty or not
+	if len(roomID) == 0 {
+		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: Can not provide a room ID that is empty")
+	}
+
 	// parse user unique id (g79 user uid)
 	uid, err := strconv.ParseUint(gu.EntityID, 10, 32)
 	if err != nil {
