@@ -36,14 +36,9 @@ type AuthRequest struct {
 		填写的值正确时，用户将登录到用户中心，然后进入租赁服
 	*/
 	FBToken string `json:"login_token,omitempty"`
-	/*
-		仅赞颂者使用。
 
-		此字段可以是 JSON 字符串，
-		或者加密的字符串。
-		一切取决于用户。
-	*/
-	ProvidedPEAuthData string `json:"provided_pe_auth_data"`
+	ProvidedPEAuthData string `json:"provided_pe_auth_data"` // 仅赞颂者使用
+	ProvidedSaAuthData string `json:"provided_sa_auth_data"` // 仅赞颂者使用
 
 	UserName string `json:"username,omitempty"` // 用户在用户中心的用户名
 	Password string `json:"password,omitempty"` // 用户在用户中心的密码
@@ -103,7 +98,7 @@ type Message struct {
 
 // requestServerInfo ..
 func requestServerInfo(
-	isPeAuthRequest bool,
+	isSpecialRequest bool,
 	gu *g79.G79User,
 	req *AuthRequest,
 ) (
@@ -135,7 +130,7 @@ func requestServerInfo(
 	}
 	versionCache.SetDefault(req.ServerCode, currentGameInfo.EngineVersion)
 	// check version
-	if !isPeAuthRequest && gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
+	if !isSpecialRequest && gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
 		// need relogin with new engine version
 		return 0, enhance.UsingMod{}, nil, true, nil
 	}
@@ -241,10 +236,14 @@ func Login(c *gin.Context) {
 	var mu *defines.MpayUser = new(defines.MpayUser)
 	var gu *g79.G79User
 
-	if len(request.ProvidedPEAuthData) == 0 {
+	if len(request.ProvidedPEAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
 		err = json.Unmarshal(helper.MpayUserData, mu)
-	} else {
+	}
+	if len(request.ProvidedPEAuthData) > 0 {
 		gu, err = enhance.PEAuthLogin(request.ProvidedPEAuthData)
+	}
+	if len(request.ProvidedSaAuthData) > 0 {
+		gu, err = enhance.SaAuthLogin(request.ProvidedSaAuthData)
 	}
 	if err != nil {
 		c.JSON(http.StatusOK, AuthResponse{
@@ -258,7 +257,7 @@ func Login(c *gin.Context) {
 
 	for {
 		// g79 login if user not use PE Auth data
-		if len(request.ProvidedPEAuthData) == 0 {
+		if len(request.ProvidedPEAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
 			// change engine version by cache
 			engineVersion := gameinfo.DefaultEngineVersion
 			if value, ok := versionCache.Get(request.ServerCode); ok {
@@ -277,8 +276,8 @@ func Login(c *gin.Context) {
 		}
 
 		// request server info
-		isPeAuthRequest := len(request.ProvidedPEAuthData) > 0
-		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolErr := requestServerInfo(isPeAuthRequest, gu, &request)
+		isSpecialRequest := len(request.ProvidedPEAuthData) > 0 || len(request.ProvidedSaAuthData) > 0
+		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolErr := requestServerInfo(isSpecialRequest, gu, &request)
 		if protocolErr != nil {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
