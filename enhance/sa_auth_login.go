@@ -66,14 +66,8 @@ func SaAuthLogin(saAuthJsonData string) (gu *g79.G79User, err error) {
 	mu.MpayDevice.ROM = fmt.Sprintf("%d", rand.N(int64(115e9))+5e9)
 	mu.MpayDevice.Root = false
 
-	// Get base info
-	defaultBaseInfo, err := gameinfo.GetInfoByEngineVersion(gameinfo.DefaultEngineVersion)
-	if err != nil {
-		return nil, fmt.Errorf("SaAuthLogin: %v", err)
-	}
-
 	// g79 login
-	gu, protocolErr := g79.Login(defaultBaseInfo.EngineVersion, mu)
+	gu, protocolErr := g79.Login(gameinfo.DefaultEngineVersion, mu)
 	if protocolErr != nil {
 		return nil, fmt.Errorf("SaAuthLogin: %v", protocolErr.Error())
 	}
