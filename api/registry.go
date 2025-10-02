@@ -1,11 +1,34 @@
-package routers
+package api
 
 import (
-	"bunker-lite/eulogist_api"
+	eulogist_api "bunker-lite/api/eulogist"
+	std_api "bunker-lite/api/standard"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+// initStdRouter 初始化 Phoenix 标准接口的 API
+func initStdRouter(router *gin.Engine) *gin.Engine {
+	stdApiGroup := router.Group("/api")
+
+	// Phoenix Auth API (mv4, bunker, v2.6)
+	{
+		stdApiGroup.GET("/new", handlerWithMutex(std_api.New))
+		stdApiGroup.POST("/phoenix/login", handlerWithMutex(std_api.Login))
+		stdApiGroup.POST("/phoenix/tan_lobby_login", handlerWithMutex(std_api.TanLobbyLogin))
+		stdApiGroup.POST("/phoenix/tan_lobby_create", handlerWithMutex(std_api.TanLobbyCreate))
+		stdApiGroup.POST("/phoenix/transfer_check_num", handlerWithMutex(std_api.TransferCheckNum))
+		stdApiGroup.GET("/phoenix/transfer_start_type", handlerWithMutex(std_api.TransferStartType))
+	}
+
+	// No router
+	router.NoRoute(func(c *gin.Context) {
+		c.AbortWithStatus(http.StatusNotFound)
+	})
+
+	return router
+}
 
 // initEulogistRouter 初始化赞颂者服务的 API
 func initEulogistRouter(router *gin.Engine) *gin.Engine {
