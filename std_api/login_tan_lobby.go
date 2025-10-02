@@ -110,7 +110,7 @@ func TanLobbyLogin(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
 			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err.Error()),
+			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
 		})
 		return
 	}

@@ -125,7 +125,9 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 		Entity *g79.G79User `json:"entity"`
 	}
 	if err := json.NewDecoder(reader).Decode(&query); err != nil {
-		return nil, &defines.ProtocolError{Message: err.Error()}
+		return nil, &defines.ProtocolError{
+			Message: fmt.Sprintf("PEAuthLogin: %v", err),
+		}
 	}
 	gu = query.Entity
 	gu.MpayUser.MpayDevice.CPUDigit = cpuDigit
@@ -152,7 +154,9 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 			} `json:"entity"`
 		}
 		if err := json.NewDecoder(reader).Decode(&respEntity); err != nil {
-			return nil, &defines.ProtocolError{Message: err.Error()}
+			return nil, &defines.ProtocolError{
+				Message: fmt.Sprintf("PEAuthLogin: %v", err),
+			}
 		}
 		gu.Username = respEntity.Entity.Name
 	}

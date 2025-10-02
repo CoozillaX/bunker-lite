@@ -113,7 +113,9 @@ func requestServerInfo(
 	// cache version
 	currentGameInfo, err := gameinfo.GetInfoByGameVersion(rentalInfo.MCVersion)
 	if err != nil {
-		return 0, enhance.UsingMod{}, nil, false, &defines.ProtocolError{Message: err.Error()}
+		return 0, enhance.UsingMod{}, nil, false, &defines.ProtocolError{
+			Message: fmt.Sprintf("requestServerInfo: %v", err),
+		}
 	}
 	versionCache.SetDefault(req.ServerCode, currentGameInfo.EngineVersion)
 	// check version
