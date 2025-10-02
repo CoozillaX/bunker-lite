@@ -1,17 +1,11 @@
 package enhance
 
 import (
-	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
-	"bunker-core/utils"
+	"bunker-core/protocol/mpay"
 	"encoding/json"
 	"fmt"
-	"math/rand/v2"
-	"strconv"
-	"strings"
-
-	"github.com/google/uuid"
 )
 
 // SaAuthData ..
@@ -34,39 +28,13 @@ func SaAuthLogin(saAuthJsonData string) (gu *g79.G79User, err error) {
 	}
 
 	// 2. Create mu and sync data
-	mu := new(defines.MpayUser)
+	mu := mpay.GenerateMpayUser()
 	mu.Uid = saAuthData.Uid
 	mu.MpayToken = saAuthData.MpayToken
 	mu.MpayDevice.Udid = saAuthData.Udid
 	mu.MpayDevice.MpayID = saAuthData.MpayID
 
-	// 3. Generate device data
-	mu.MpayDevice.UniqueId = uuid.NewString() + utils.GenerateTimestampWithLength(13)
-	mu.MpayDevice.UrsUdid = utils.GenerateRandomString(39)
-	mu.MpayDevice.Mac = utils.GenerateRandomString(32)
-	mu.MpayDevice.MACAddr = "02:00:00:00:00:00"
-	mu.MpayDevice.InitUrsDevice = "0"
-	mu.MpayDevice.DeviceType = "mobile"
-	mu.MpayDevice.Brand = "Huawei"
-	mu.MpayDevice.DeviceName = strings.ToUpper("Huawei" + "_" + utils.GenerateRandomString(6))
-	mu.MpayDevice.DeviceModel = mu.MpayDevice.DeviceName
-	mu.MpayDevice.SystemName = "Android"
-	mu.MpayDevice.SystemVersion = strconv.Itoa(7 + rand.N(5))
-	mu.MpayDevice.CoreNum = "\\b"
-	mu.MpayDevice.CPUDigit = "64"
-	mu.MpayDevice.CPUHz = fmt.Sprintf("%d", (rand.N(2000)+6000)*100)
-	mu.MpayDevice.CPUName = "Snapdragon 888"
-	mu.MpayDevice.Resolution = "1920*1080"
-	mu.MpayDevice.DeviceWidth = strings.Split(mu.MpayDevice.Resolution, "*")[0]
-	mu.MpayDevice.DeviceHeight = strings.Split(mu.MpayDevice.Resolution, "*")[1]
-	mu.MpayDevice.Disk = ""
-	mu.MpayDevice.Emulator = 0
-	mu.MpayDevice.Network = "CHANNEL_UNKNOW"
-	mu.MpayDevice.RAM = fmt.Sprintf("%d", rand.N(int64(3e9))+1e9)
-	mu.MpayDevice.ROM = fmt.Sprintf("%d", rand.N(int64(115e9))+5e9)
-	mu.MpayDevice.Root = false
-
-	// g79 login
+	// 3. g79 login
 	gu, protocolError := g79.Login(gameinfo.DefaultEngineVersion, mu)
 	if protocolError != nil {
 		return nil, fmt.Errorf("SaAuthLogin: %v", protocolError.Error())
