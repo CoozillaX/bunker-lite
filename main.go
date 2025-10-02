@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bunker-lite/api"
+	"bunker-lite/routers"
 	"fmt"
 )
 
 func main() {
-	router.Run(fmt.Sprintf(":%d", 8080))
 	router := api.InitRouter()
+	router := routers.InitRouter()
 }

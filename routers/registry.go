@@ -1,8 +1,8 @@
-package api
+package routers
 
 import (
-	eulogist_api "bunker-lite/api/eulogist"
-	std_api "bunker-lite/api/standard"
+	eulogist_api "bunker-lite/routers/eulogist"
+	std_api "bunker-lite/routers/standard"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
