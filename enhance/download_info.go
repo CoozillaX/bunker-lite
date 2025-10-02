@@ -16,14 +16,14 @@ type DownloadInfo struct {
 
 func GetDownloadInfoByItemID(gu *g79.G79User, id string) (*DownloadInfo, *defines.ProtocolError) {
 	// 1. Do req
-	reader, protocolErr := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-download-item/get-download-info").
 		SetRawBody(fmt.Appendf(nil, `{"item_id":"%s"}`, id)).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
-	if protocolErr != nil {
-		return nil, protocolErr
+	if protocolError != nil {
+		return nil, protocolError
 	}
 
 	// 2. Parse response

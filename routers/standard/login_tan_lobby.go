@@ -81,7 +81,7 @@ func TanLobbyLogin(c *gin.Context) {
 	if len(request.ProvidedPEAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
 		// prepare
 		var mu *defines.MpayUser = new(defines.MpayUser)
-		var protocolErr *defines.ProtocolError
+		var protocolError *defines.ProtocolError
 		// decode to mpay user
 		if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
 			c.JSON(http.StatusOK, TanLobbyCreateResponse{
@@ -91,11 +91,11 @@ func TanLobbyLogin(c *gin.Context) {
 			return
 		}
 		// g79 login
-		if gu, protocolErr = g79.Login(gameinfo.DefaultEngineVersion, mu); protocolErr != nil {
+		if gu, protocolError = g79.Login(gameinfo.DefaultEngineVersion, mu); protocolError != nil {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
 				Message: Message{
-					Information: fmt.Sprintf("TanLobbyLogin: %v", protocolErr.Error()),
+					Information: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
 				},
 			})
 			return
@@ -126,19 +126,19 @@ func TanLobbyLogin(c *gin.Context) {
 	}
 
 	// Get launcher level and current using mod
-	launcherLevel, _, _, protocolErr := enhance.GetLauncherLevel(gu)
-	if protocolErr != nil {
+	launcherLevel, _, _, protocolError := enhance.GetLauncherLevel(gu)
+	if protocolError != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolErr.Error()),
+			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
 		})
 		return
 	}
-	currentUsingMod, protocolErr := enhance.GetCurrentUsingMod(gu)
-	if protocolErr != nil {
+	currentUsingMod, protocolError := enhance.GetCurrentUsingMod(gu)
+	if protocolError != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolErr.Error()),
+			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
 		})
 		return
 	}

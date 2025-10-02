@@ -110,14 +110,14 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 		},
 		GameInfo: defaultBaseInfo,
 	}
-	reader, protocolErr := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/pe-authentication").
 		SetRawBody(reqBody).
 		SetEncryptSuffix(0xc).
 		Do()
-	if protocolErr != nil {
-		return nil, protocolErr
+	if protocolError != nil {
+		return nil, protocolError
 	}
 
 	// 8. Parse response
@@ -139,14 +139,14 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 		reqBody, _ := json.Marshal(map[string]string{
 			"entity_id": gu.EntityID,
 		})
-		reader, protocolErr := gu.CreateHttpClient().
+		reader, protocolError := gu.CreateHttpClient().
 			SetMethod(http.MethodPost).
 			SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/pe-user-detail/get").
 			SetRawBody(reqBody).
 			SetTokenMode(g79.TOKEN_MODE_NORMAL).
 			Do()
-		if protocolErr != nil {
-			return nil, protocolErr
+		if protocolError != nil {
+			return nil, protocolError
 		}
 		var respEntity struct {
 			Entity *struct {

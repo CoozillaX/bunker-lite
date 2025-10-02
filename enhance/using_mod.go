@@ -41,14 +41,14 @@ type UsingMod struct {
 
 func GetCurrentUsingMod(gu *g79.G79User) (UsingMod, *defines.ProtocolError) {
 	// 1. Do req
-	reader, protocolErr := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79ServerList.WebServerUrl + "/pe-get-user-setting-list").
 		SetRawBody([]byte(currentUsingModRawBody)).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
-	if protocolErr != nil {
-		return UsingMod{}, protocolErr
+	if protocolError != nil {
+		return UsingMod{}, protocolError
 	}
 
 	// 2. Parse response
@@ -63,9 +63,9 @@ func GetCurrentUsingMod(gu *g79.G79User) (UsingMod, *defines.ProtocolError) {
 
 	// 3. Get skin download info
 	if !strings.HasPrefix(query.UsingMod.SkinData.ItemID, "-") {
-		query.UsingMod.SkinDownloadInfo, protocolErr = GetDownloadInfoByItemID(gu, query.UsingMod.SkinData.ItemID)
-		if protocolErr != nil {
-			return UsingMod{}, protocolErr
+		query.UsingMod.SkinDownloadInfo, protocolError = GetDownloadInfoByItemID(gu, query.UsingMod.SkinData.ItemID)
+		if protocolError != nil {
+			return UsingMod{}, protocolError
 		}
 	} else {
 		query.UsingMod.SkinDownloadInfo = &DownloadInfo{

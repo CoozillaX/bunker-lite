@@ -93,22 +93,22 @@ func requestServerInfo(
 	currentUsingMod enhance.UsingMod,
 	rentalServerInfo *g79.RentalServerInfo,
 	needRelogin bool,
-	protocolErr *defines.ProtocolError,
+	protocolError *defines.ProtocolError,
 ) {
 	// launcher level
-	launcherLevel, _, _, protocolErr = enhance.GetLauncherLevel(gu)
-	if protocolErr != nil {
-		return 0, enhance.UsingMod{}, nil, false, protocolErr
+	launcherLevel, _, _, protocolError = enhance.GetLauncherLevel(gu)
+	if protocolError != nil {
+		return 0, enhance.UsingMod{}, nil, false, protocolError
 	}
 	// using mod
-	currentUsingMod, protocolErr = enhance.GetCurrentUsingMod(gu)
-	if protocolErr != nil {
-		return 0, enhance.UsingMod{}, nil, false, protocolErr
+	currentUsingMod, protocolError = enhance.GetCurrentUsingMod(gu)
+	if protocolError != nil {
+		return 0, enhance.UsingMod{}, nil, false, protocolError
 	}
 	// chain info
-	rentalInfo, protocolErr := gu.ImpactRentalServer(req.ServerCode, req.ServerPassword, req.ClientPublicKey)
-	if protocolErr != nil {
-		return 0, enhance.UsingMod{}, nil, false, protocolErr
+	rentalInfo, protocolError := gu.ImpactRentalServer(req.ServerCode, req.ServerPassword, req.ClientPublicKey)
+	if protocolError != nil {
+		return 0, enhance.UsingMod{}, nil, false, protocolError
 	}
 	// cache version
 	currentGameInfo, err := gameinfo.GetInfoByGameVersion(rentalInfo.MCVersion)
@@ -221,7 +221,7 @@ func Login(c *gin.Context) {
 	}
 
 	// decode to mpay user
-	var protocolErr *defines.ProtocolError
+	var protocolError *defines.ProtocolError
 	var mu *defines.MpayUser = new(defines.MpayUser)
 	var gu *g79.G79User
 
@@ -253,11 +253,11 @@ func Login(c *gin.Context) {
 				engineVersion = value.(string)
 			}
 			// g79 login
-			if gu, protocolErr = g79.Login(engineVersion, mu); protocolErr != nil {
+			if gu, protocolError = g79.Login(engineVersion, mu); protocolError != nil {
 				c.JSON(http.StatusOK, AuthResponse{
 					SuccessStates: false,
 					Message: Message{
-						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", protocolErr.Error()),
+						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", protocolError.Error()),
 					},
 				})
 				return
@@ -266,12 +266,12 @@ func Login(c *gin.Context) {
 
 		// request server info
 		isSpecialRequest := len(request.ProvidedPEAuthData) > 0 || len(request.ProvidedSaAuthData) > 0
-		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolErr := requestServerInfo(isSpecialRequest, gu, &request)
-		if protocolErr != nil {
+		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolError := requestServerInfo(isSpecialRequest, gu, &request)
+		if protocolError != nil {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
 				Message: Message{
-					Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", protocolErr.Error()),
+					Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", protocolError.Error()),
 				},
 			})
 			return

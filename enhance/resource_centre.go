@@ -21,14 +21,14 @@ func GetLobbyDownloadInfoByItemIDs(gu *g79.G79User, itemIDs []string) (
 	reqBody, _ := json.Marshal(map[string]any{
 		"item_ids": itemIDs,
 	})
-	reader, protocolErr := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79ServerList.WebServerUrl + "/pe-item/query/search-lobby-by-id-list").
 		SetRawBody(reqBody).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
-	if protocolErr != nil {
-		return nil, nil, nil, fmt.Errorf("GetLobbyDownloadInfoByItemIDs: %v", protocolErr.Error())
+	if protocolError != nil {
+		return nil, nil, nil, fmt.Errorf("GetLobbyDownloadInfoByItemIDs: %v", protocolError.Error())
 	}
 
 	// 2. Parse response
@@ -61,15 +61,15 @@ func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]b
 		"device_id": gu.MpayUser.UrsUdid,
 		"item_ids":  itemIDs,
 	})
-	reader, protocolErr := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/pe-item/get-encryption-key-list-for-guests").
 		SetRawBody(reqBody).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		SetEncryptSuffix(0xc).
 		Do()
-	if protocolErr != nil {
-		return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: %v", protocolErr.Error())
+	if protocolError != nil {
+		return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: %v", protocolError.Error())
 	}
 
 	// 2. Parse response

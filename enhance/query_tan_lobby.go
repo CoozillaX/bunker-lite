@@ -42,14 +42,14 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 		"name": roomID,
 		"uid":  uid,
 	})
-	reader, protocolErr := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79ServerList.TransferServerNewHttpUrl + "/room-with-name").
 		SetRawBody(reqBody).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
-	if protocolErr != nil {
-		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", protocolErr.Error())
+	if protocolError != nil {
+		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", protocolError.Error())
 	}
 	var query struct {
 		Code int `json:"code"`

@@ -72,7 +72,7 @@ func TanLobbyCreate(c *gin.Context) {
 	if len(request.ProvidedPEAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
 		// prepare
 		var mu *defines.MpayUser = new(defines.MpayUser)
-		var protocolErr *defines.ProtocolError
+		var protocolError *defines.ProtocolError
 		// decode to mpay user
 		if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
 			c.JSON(http.StatusOK, TanLobbyCreateResponse{
@@ -82,11 +82,11 @@ func TanLobbyCreate(c *gin.Context) {
 			return
 		}
 		// g79 login
-		if gu, protocolErr = g79.Login(gameinfo.DefaultEngineVersion, mu); protocolErr != nil {
+		if gu, protocolError = g79.Login(gameinfo.DefaultEngineVersion, mu); protocolError != nil {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
 				Message: Message{
-					Information: fmt.Sprintf("TanLobbyLogin: %v", protocolErr.Error()),
+					Information: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
 				},
 			})
 			return
