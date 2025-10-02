@@ -66,19 +66,34 @@ func AddStdHelperSMS(c *gin.Context) {
 	}
 	user := database.GetUserByToken(request.Token, true)
 
-	if request.ActionType == ActionTypeOpenNewTransaction {
-		if len(request.Mobile) == 0 {
+	if request.ActionType != ActionTypeFinishLogin {
+		tran := loadOrCreateVerifyTransaction(request.TransactionUUID)
+
+		switch request.ActionType {
+		case ActionTypeOpenNewTransaction:
+			if len(request.Mobile) > 0 {
+				tran.Mobile = request.Mobile
+				break
+			}
 			c.JSON(http.StatusOK, SMSHelperAddResponse{
 				ErrorInfo:    "AddStdHelperSMS: 手机号的长度不得为 0",
 				ResponseType: ResponseTypeMeetError,
 			})
+			deleteVerifyTransaction(request.TransactionUUID)
+			return
+		case ActionTypeReLogin:
+			if len(tran.Mobile) > 0 {
+				break
+			}
+			c.JSON(http.StatusOK, SMSHelperAddResponse{
+				ErrorInfo:    "AddStdHelperSMS: 请求未找到, 可能已经过期, 请重试",
+				ResponseType: ResponseTypeMeetError,
+			})
+			deleteVerifyTransaction(request.TransactionUUID)
 			return
 		}
 
-		tran := loadOrCreateVerifyTransaction(request.TransactionUUID)
-		tran.Mobile = request.Mobile
-		tran.MobileVerifyCallback, protocolError = mpay.CreateLoginHelper(tran.MpayUser).SMSLogin(request.Mobile)
-
+		loginHelper, protocolError := mpay.CreateLoginHelper(tran.MpayUser)
 		if protocolError != nil {
 			if len(protocolError.VerifyUrl) == 0 {
 				c.JSON(http.StatusOK, SMSHelperAddResponse{
@@ -94,21 +109,7 @@ func AddStdHelperSMS(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, SMSHelperAddResponse{
-			ResponseType: ResponseTypeClientNeedReceiveSMS,
-		})
-		return
-	}
-
-	if request.ActionType == ActionTypeReLogin {
-		tran := loadOrCreateVerifyTransaction(request.TransactionUUID)
-		if tran.MobileVerifyCallback != nil {
-			if tran.MpayUser, _ = tran.MobileVerifyCallback(""); tran.MpayUser == nil {
-				tran.MpayUser = new(defines.MpayUser)
-			}
-		}
-
-		tran.MobileVerifyCallback, protocolError = mpay.CreateLoginHelper(tran.MpayUser).SMSLogin(tran.Mobile)
+		protocolError = loginHelper.GetSMSLoginCode(tran.Mobile)
 		if protocolError != nil {
 			if len(protocolError.VerifyUrl) == 0 {
 				c.JSON(http.StatusOK, SMSHelperAddResponse{
@@ -133,7 +134,7 @@ func AddStdHelperSMS(c *gin.Context) {
 	tran := loadOrCreateVerifyTransaction(request.TransactionUUID)
 	defer deleteVerifyTransaction(request.TransactionUUID)
 
-	if tran.MobileVerifyCallback == nil {
+	if len(tran.Mobile) == 0 {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
 			ErrorInfo:    "AddStdHelperSMS: 请求未找到, 可能已经过期, 请重试",
 			ResponseType: ResponseTypeMeetError,
@@ -141,7 +142,7 @@ func AddStdHelperSMS(c *gin.Context) {
 		return
 	}
 
-	mu, protocolError := tran.MobileVerifyCallback(request.SMSVerifyCode)
+	loginHelper, protocolError := mpay.CreateLoginHelper(tran.MpayUser)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
 			ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题, 原因是 %v (stage 1)", protocolError.Error()),
@@ -150,10 +151,19 @@ func AddStdHelperSMS(c *gin.Context) {
 		return
 	}
 
-	helperUniqueID, protocolError := database.CreateAuthHelper(mu, true)
+	protocolError = loginHelper.SMSLogin(tran.Mobile, request.SMSVerifyCode)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
 			ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题, 原因是 %v (stage 2)", protocolError.Error()),
+			ResponseType: ResponseTypeMeetError,
+		})
+		return
+	}
+
+	helperUniqueID, protocolError := database.CreateAuthHelper(tran.MpayUser, true)
+	if protocolError != nil {
+		c.JSON(http.StatusOK, SMSHelperAddResponse{
+			ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题, 原因是 %v (stage 3)", protocolError.Error()),
 			ResponseType: ResponseTypeMeetError,
 		})
 		return
