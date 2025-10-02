@@ -20,7 +20,9 @@ import (
 
 // TanLobbyCreateRequest ..
 type TanLobbyCreateRequest struct {
-	FBToken string `json:"login_token"`
+	FBToken            string `json:"login_token"`
+	ProvidedPEAuthData string `json:"provided_pe_auth_data"`
+	ProvidedSaAuthData string `json:"provided_sa_auth_data"`
 }
 
 // TanLobbyCreateResponse ..
@@ -65,22 +67,24 @@ func TanLobbyCreate(c *gin.Context) {
 	}
 	helper = database.GetAuthHelperByToken(request.FBToken, true)
 
-	// decode to mpay user
-	var mu *defines.MpayUser = new(defines.MpayUser)
-	if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
-		c.JSON(http.StatusOK, TanLobbyCreateResponse{
-			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
-		})
-		return
-	}
-
 	// g79 login
-	gu, protocolErr := g79.Login(gameinfo.DefaultEngineVersion, mu)
-	if protocolErr != nil {
+	var gu *g79.G79User
+	if len(request.ProvidedPEAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
+		var mu *defines.MpayUser = new(defines.MpayUser)
+		if err = json.Unmarshal(helper.MpayUserData, mu); err == nil {
+			gu, err = g79.Login(gameinfo.DefaultEngineVersion, mu)
+		}
+	}
+	if len(request.ProvidedPEAuthData) > 0 {
+		gu, err = enhance.PEAuthLogin(request.ProvidedPEAuthData)
+	}
+	if len(request.ProvidedSaAuthData) > 0 {
+		gu, err = enhance.SaAuthLogin(request.ProvidedSaAuthData)
+	}
+	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
 			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", protocolErr.Error()),
+			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err.Error()),
 		})
 		return
 	}

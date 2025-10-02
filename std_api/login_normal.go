@@ -28,25 +28,12 @@ var versionCache = cache.New(24*time.Hour, time.Hour)
 // 或使客户端登录到网易租赁服。
 // AuthResponse 是该请求体对应的响应体
 type AuthRequest struct {
-	/*
-		此字段非空时，则下方 UserName 和 Password 为空，
-		否则反之。
-
-		当 FBToken 或 UserName、Password 二者中任意一个
-		填写的值正确时，用户将登录到用户中心，然后进入租赁服
-	*/
-	FBToken string `json:"login_token,omitempty"`
-
-	ProvidedPEAuthData string `json:"provided_pe_auth_data"` // 仅赞颂者使用
-	ProvidedSaAuthData string `json:"provided_sa_auth_data"` // 仅赞颂者使用
-
-	UserName string `json:"username,omitempty"` // 用户在用户中心的用户名
-	Password string `json:"password,omitempty"` // 用户在用户中心的密码
-
-	ServerCode     string `json:"server_code"`     // 要进入的租赁服的 服务器号
-	ServerPassword string `json:"server_passcode"` // 该租赁服的 密码
-
-	ClientPublicKey string `json:"client_public_key"` // ...
+	FBToken            string `json:"login_token,omitempty"`
+	ProvidedPEAuthData string `json:"provided_pe_auth_data"`
+	ProvidedSaAuthData string `json:"provided_sa_auth_data"`
+	ServerCode         string `json:"server_code"`
+	ServerPassword     string `json:"server_passcode"`
+	ClientPublicKey    string `json:"client_public_key"`
 }
 
 // 验证服务器对 AuthRequest 的响应体
