@@ -98,12 +98,12 @@ func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]b
 		}
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: Invalid jwt (should nerver happened) (stage 0)")
+			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: Invalid jwt (should never happened) (stage 0)")
 		}
 		// 3.3 Get encrypt key
 		contentKey, ok := claims["contentKey"].(string)
 		if !ok {
-			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: Invalid jwt (should nerver happened) (stage 1)")
+			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: Invalid jwt (should never happened) (stage 1)")
 		}
 		mapping[item.ModItemID] = utils.GetRecordEncryptKey(contentKey, gu.EntityID, gu.MpayUser.UrsUdid)
 	}
