@@ -84,7 +84,7 @@ func TanLobbyLogin(c *gin.Context) {
 		var protocolError *defines.ProtocolError
 		// decode to mpay user
 		if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
-			c.JSON(http.StatusOK, TanLobbyCreateResponse{
+			c.JSON(http.StatusOK, TanLobbyLoginResponse{
 				Success:   false,
 				ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
 			})
@@ -92,7 +92,7 @@ func TanLobbyLogin(c *gin.Context) {
 		}
 		// g79 login
 		if gu, protocolError = g79.Login(gameinfo.DefaultEngineVersion, mu); protocolError != nil {
-			c.JSON(http.StatusOK, TanLobbyCreateResponse{
+			c.JSON(http.StatusOK, TanLobbyLoginResponse{
 				Success:   false,
 				ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
 			})
@@ -106,7 +106,7 @@ func TanLobbyLogin(c *gin.Context) {
 		gu, err = enhance.SaAuthLogin(request.ProvidedSaAuthData)
 	}
 	if err != nil {
-		c.JSON(http.StatusOK, TanLobbyCreateResponse{
+		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
 		})
