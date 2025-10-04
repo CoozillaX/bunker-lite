@@ -77,17 +77,15 @@ func TanLobbyCreate(c *gin.Context) {
 		if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
 			c.JSON(http.StatusOK, TanLobbyCreateResponse{
 				Success:   false,
-				ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
+				ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 			})
 			return
 		}
 		// g79 login
 		if gu, protocolError = g79.Login(gameinfo.DefaultEngineVersion, mu); protocolError != nil {
-			c.JSON(http.StatusOK, AuthResponse{
-				SuccessStates: false,
-				Message: Message{
-					Information: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
-				},
+			c.JSON(http.StatusOK, TanLobbyCreateResponse{
+				Success:   false,
+				ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 			})
 			return
 		}
@@ -101,7 +99,7 @@ func TanLobbyCreate(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
 			Success:   false,
-			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
+			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 		})
 		return
 	}

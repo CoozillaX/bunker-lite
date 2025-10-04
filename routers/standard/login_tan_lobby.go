@@ -92,11 +92,9 @@ func TanLobbyLogin(c *gin.Context) {
 		}
 		// g79 login
 		if gu, protocolError = g79.Login(gameinfo.DefaultEngineVersion, mu); protocolError != nil {
-			c.JSON(http.StatusOK, AuthResponse{
-				SuccessStates: false,
-				Message: Message{
-					Information: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
-				},
+			c.JSON(http.StatusOK, TanLobbyCreateResponse{
+				Success:   false,
+				ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
 			})
 			return
 		}
