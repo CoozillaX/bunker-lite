@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	router := api.InitRouter()
 	router := routers.InitRouter()
+	router.Run(fmt.Sprintf(":%d", 80))
 }
