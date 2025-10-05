@@ -50,7 +50,7 @@ func ChangeUserInfo(c *gin.Context) {
 	user := database.GetUserByToken(request.Token, true)
 	user.UserName = request.NewName
 	if len(request.NewPasswordSum256) > 0 {
-		emptyUserPasswordSum256 := sha256.Sum256([]byte(define.UserPasswordSlat))
+		emptyUserPasswordSum256 := sha256.Sum256([]byte(define.UserPasswordSalt))
 		if slices.Equal(request.NewPasswordSum256, emptyUserPasswordSum256[:]) {
 			c.JSON(http.StatusOK, UserInfoChangeResponse{
 				ErrorInfo: "ChangeUserInfo: 新密码不得为空",

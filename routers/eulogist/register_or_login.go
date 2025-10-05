@@ -40,7 +40,7 @@ func RegisterOrLogin(c *gin.Context) {
 	}
 
 	if request.IsRegister {
-		emptyUserPasswordSum256 := sha256.Sum256([]byte(define.UserPasswordSlat))
+		emptyUserPasswordSum256 := sha256.Sum256([]byte(define.UserPasswordSalt))
 
 		if len(request.UserName) == 0 || len(request.UserPasswordSum256) == 0 {
 			c.JSON(http.StatusOK, LoginResponse{
