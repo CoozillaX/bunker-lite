@@ -15,7 +15,7 @@ type HelperDeleteRequest struct {
 	Index uint   `json:"index"`
 }
 
-// HelperAddResponse ..
+// HelperDeleteResponse ..
 type HelperDeleteResponse struct {
 	ErrorInfo string `json:"error_info"`
 	Success   bool   `json:"success"`

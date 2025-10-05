@@ -14,7 +14,7 @@ type HelperInfoRequest struct {
 	Token string `json:"token,omitempty"`
 }
 
-// UserInfoResponse ..
+// HelperInfoResponse ..
 type HelperInfoResponse struct {
 	ErrorInfo            string `json:"error_info"`
 	NetEaseRequireVerify bool   `json:"netease_require_verify"`

@@ -29,7 +29,7 @@ func GetBuiltInSkin(c *gin.Context) {
 
 	err := c.Bind(&request)
 	if err != nil {
-		c.JSON(http.StatusOK, AllowListGetResponse{
+		c.JSON(http.StatusOK, BuiltInSkinResponse{
 			ErrorInfo: fmt.Sprintf("GetBuiltInSkin: Failed to get built in skin due to %v", err),
 			Success:   false,
 		})

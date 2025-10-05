@@ -90,7 +90,7 @@ func ModifyCustomHelper(c *gin.Context) {
 		break
 	}
 	if isRepeat {
-		c.JSON(http.StatusOK, HelperAddResponse{
+		c.JSON(http.StatusOK, CustomHelperModifyResponse{
 			ErrorInfo: "ModifyCustomHelper: 目标 MC 账号已经存在, 不能将当前 MC 账户修改为已经存在的 MC 账号",
 			Success:   false,
 		})

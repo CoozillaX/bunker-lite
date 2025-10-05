@@ -19,7 +19,7 @@ type AllowListUpdateRequest struct {
 	CanGetGameSavesKeyCipher bool   `json:"can_get_game_saves_key_cipher"`
 }
 
-// UserSearchResponse ..
+// AllowListUpdateResponse ..
 type AllowListUpdateResponse struct {
 	ErrorInfo string `json:"error_info"`
 	Success   bool   `json:"success"`
