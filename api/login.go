@@ -88,15 +88,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if mu == nil {
 		mu = mpay.GenerateMpayUser()
 	}
-	// dry login
-	if req.ServerCode == "::DRY::" && req.ServerPasscode == "::DRY::" {
-		json.NewEncoder(w).Encode(&LoginResponse{
-			Success: true,
-			Message: "ok",
-			Token:   utils.EncodeFBToken(mu),
-		})
-		return
-	}
 	// try mpay login
 	if mu.MpayToken == "" {
 		helper, protocolErr := mpay.CreateLoginHelper(mu)
@@ -117,6 +108,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
+	}
+	// dry login
+	if req.ServerCode == "::DRY::" && req.ServerPasscode == "::DRY::" {
+		json.NewEncoder(w).Encode(&LoginResponse{
+			Success: true,
+			Message: "ok",
+			Token:   utils.EncodeFBToken(mu),
+		})
+		return
 	}
 	// g79 login and request server info
 	gu, serverInfo, protocolErr := requestServerInfo(mu, &req)
