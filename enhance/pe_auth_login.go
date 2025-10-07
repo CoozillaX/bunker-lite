@@ -12,6 +12,45 @@ import (
 	"github.com/google/uuid"
 )
 
+// ParseHttpEncrypt ..
+func ParseHttpEncrypt(body string) (result map[string]any, err error) {
+	// err is nil is means the user directly provided
+	// captured encrypt http packet (request/response).
+	// Therefore, we need decrypt it and do some prefix.
+	if encryptedBytes, err := hex.DecodeString(body); err == nil {
+		// decrypt the packet
+		originData, err := g79.HttpDecrypt(encryptedBytes)
+		if err != nil {
+			return nil, fmt.Errorf("ParseHttpEncrypt: %v", err)
+		}
+		// do prefix
+		validData := string(originData)
+		for {
+			if len(validData) == 0 {
+				break
+			}
+			if validData[len(validData)-1] == '}' {
+				if err = json.Unmarshal([]byte(validData), &result); err == nil {
+					break
+				}
+			}
+			validData = validData[:len(validData)-1]
+		}
+		// check error
+		if err != nil {
+			return nil, fmt.Errorf("ParseHttpEncrypt: %v", err)
+		}
+	}
+	// Or the user provide the pe auth JSON, and we can directly use it.
+	if result == nil {
+		if err = json.Unmarshal([]byte(body), &result); err != nil {
+			return nil, fmt.Errorf("ParseHttpEncrypt: %v", err)
+		}
+	}
+	// Return
+	return
+}
+
 // PEAuthLogin make user login by peAuthStringData.
 // This option will have no matters to the data that
 // saved in the eulogist database.
@@ -25,44 +64,15 @@ import (
 // that the returned g79 user only can be used once.
 func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	// 0. Prepare
-	var saAuthData map[string]any
 	var saDataInCookie map[string]any
-	var validData string
 
-	// 1. Unmarshal json string
-	err = json.Unmarshal([]byte(peAuthStringData), &saAuthData)
+	// 1. Parse PE auth data
+	saAuthData, err := ParseHttpEncrypt(peAuthStringData)
 	if err != nil {
-		// err is not nil is maybe the user directly provided captured
-		// pe-authentication packet.
-		// Therefore, we need decrypt it and do some prefix.
-		encryptedBytes, err := hex.DecodeString(peAuthStringData)
-		if err != nil {
-			return nil, fmt.Errorf("PEAuthLogin: %v", err)
-		}
-		// decrypt the packet
-		originData, err := g79.HttpDecrypt(encryptedBytes)
-		if err != nil {
-			return nil, fmt.Errorf("PEAuthLogin: %v", err)
-		}
-		// do prefix
-		validData = string(originData)
-		for {
-			if len(validData) == 0 {
-				break
-			}
-			if validData[len(validData)-1] == '}' {
-				break
-			}
-			validData = validData[:len(validData)-1]
-		}
-		// unmarshal again
-		err = json.Unmarshal([]byte(validData), &saAuthData)
-		if err != nil {
-			return nil, fmt.Errorf("PEAuthLogin: %v", err)
-		}
+		return nil, fmt.Errorf("PEAuthLogin: %v", err)
 	}
 
-	// 2. Get and basic data
+	// 2. Get basic data
 	engineVersion, exist1 := saAuthData["engine_version"].(string)
 	patchVersion, exist2 := saAuthData["patch_version"].(string)
 	saDataString, _ := saAuthData["sa_data"].(string)
