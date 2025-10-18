@@ -23,7 +23,7 @@ func GetLobbyDownloadInfoByItemIDs(gu *g79.G79User, itemIDs []string) (
 	})
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.WebServerUrl + "/pe-item/query/search-lobby-by-id-list").
+		SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-item/query/search-lobby-by-id-list").
 		SetRawBody(reqBody).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()

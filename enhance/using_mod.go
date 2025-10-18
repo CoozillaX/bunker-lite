@@ -43,7 +43,7 @@ func GetCurrentUsingMod(gu *g79.G79User) (UsingMod, *defines.ProtocolError) {
 	// 1. Do req
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.WebServerUrl + "/pe-get-user-setting-list").
+		SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-get-user-setting-list").
 		SetRawBody([]byte(currentUsingModRawBody)).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()

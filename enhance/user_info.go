@@ -15,7 +15,7 @@ func ChangeName(gu *g79.G79User, userNewName string) *defines.ProtocolError {
 	})
 	_, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.WebServerUrl + "/pe-nickname-setting/update").
+		SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-nickname-setting/update").
 		SetRawBody(reqBody).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
