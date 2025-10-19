@@ -12,9 +12,8 @@ import (
 
 // ServerTimeRequest ..
 type ServerTimeRequest struct {
-	Token          string `json:"token,omitempty"`
-	SessionID      string `json:"session_id,omitempty"`
-	ForceOperation bool   `json:"force_operation,omitempty"`
+	Token     string `json:"token,omitempty"`
+	SessionID string `json:"session_id,omitempty"`
 }
 
 // ServerTimeResponse ..
@@ -61,7 +60,7 @@ func RequestServerTime(c *gin.Context) {
 		})
 		return
 	}
-	if !request.ForceOperation && request.SessionID != activeGu.SessionID {
+	if request.SessionID != activeGu.SessionID {
 		c.JSON(http.StatusOK, ServerTimeResponse{
 			ErrorInfo: fmt.Sprintf(
 				"RequestServerTime: Session ID not matched (expect = %#v, provided = %#v)",

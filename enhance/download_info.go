@@ -30,7 +30,7 @@ func GetDownloadInfoByItemID(gu *g79.G79User, id string) (*DownloadInfo, *define
 	var query struct {
 		Entity DownloadInfo `json:"entity"`
 	}
-	if err := json.Unmarshal(reader.Bytes(), &query); err != nil {
+	if err := json.NewDecoder(reader).Decode(&query); err != nil {
 		return nil, &defines.ProtocolError{
 			Message: fmt.Sprintf("GetDownloadInfoByItemID: %v", err),
 		}

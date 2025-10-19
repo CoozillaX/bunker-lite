@@ -134,7 +134,7 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	var query struct {
 		Entity *g79.G79User `json:"entity"`
 	}
-	if err := json.NewDecoder(reader).Decode(&query); err != nil {
+	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		return nil, &defines.ProtocolError{
 			Message: fmt.Sprintf("PEAuthLogin: %v", err),
 		}
@@ -163,7 +163,7 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 				Name string `json:"name"`
 			} `json:"entity"`
 		}
-		if err := json.NewDecoder(reader).Decode(&respEntity); err != nil {
+		if err = json.NewDecoder(reader).Decode(&respEntity); err != nil {
 			return nil, &defines.ProtocolError{
 				Message: fmt.Sprintf("PEAuthLogin: %v", err),
 			}

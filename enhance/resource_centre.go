@@ -39,7 +39,7 @@ func GetLobbyDownloadInfoByItemIDs(gu *g79.G79User, itemIDs []string) (
 			LobbyResUrl    string `json:"lobby_res_url"`
 		} `json:"entities"`
 	}
-	if err := json.NewDecoder(reader).Decode(&query); err != nil {
+	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		return nil, nil, nil, fmt.Errorf("GetLobbyDownloadInfoByItemIDs: %v", err)
 	}
 
@@ -79,7 +79,7 @@ func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]b
 			DecryptJWT string `json:"jwt"`
 		} `json:"entities"`
 	}
-	if err := json.NewDecoder(reader).Decode(&query); err != nil {
+	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: %v", err)
 	}
 

@@ -60,7 +60,7 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 			ModItemIDs       []string `json:"item_ids"`
 		} `json:"list"`
 	}
-	if err := json.NewDecoder(reader).Decode(&query); err != nil {
+	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", err)
 	}
 
@@ -108,7 +108,7 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 		SignalWebPort  int    `json:"SignalWebPort"`
 		WebsocketPorts []int  `json:"ports"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&serverList); err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&serverList); err != nil {
 		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", err)
 	}
 

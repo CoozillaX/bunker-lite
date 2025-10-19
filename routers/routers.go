@@ -22,5 +22,6 @@ func InitRouter() *gin.Engine {
 	router := gin.Default()
 	router = initStdRouter(router)
 	router = initEulogistRouter(router)
+	router = initVitalityRouter(router)
 	return router
 }

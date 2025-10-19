@@ -12,9 +12,8 @@ import (
 
 // KeepGuAliveRequest ..
 type KeepGuAliveRequest struct {
-	Token          string `json:"token,omitempty"`
-	SessionID      string `json:"session_id,omitempty"`
-	ForceOperation bool   `json:"force_operation,omitempty"`
+	Token     string `json:"token,omitempty"`
+	SessionID string `json:"session_id,omitempty"`
 }
 
 // KeepGuAliveResponse ..
@@ -62,7 +61,7 @@ func KeepGuAlive(c *gin.Context) {
 		})
 		return
 	}
-	if !request.ForceOperation && request.SessionID != activeGu.SessionID {
+	if request.SessionID != activeGu.SessionID {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
 			ErrorInfo: fmt.Sprintf(
 				"KeepGuAlive: Session ID not matched (expect = %#v, provided = %#v)",
@@ -92,7 +91,7 @@ func KeepGuAlive(c *gin.Context) {
 			Token string `json:"token"`
 		} `json:"entity"`
 	}
-	if err := json.Unmarshal(reader.Bytes(), &query); err != nil {
+	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
 			Success:   false,
 			ErrorInfo: fmt.Sprintf("KeepGuAlive: %v", protocolError.Error()),

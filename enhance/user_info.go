@@ -43,7 +43,7 @@ func GetLauncherLevel(gu *g79.G79User) (level int, exp int, needExp int, protoco
 			NeedExp int `json:"need_exp"`
 		} `json:"entity"`
 	}
-	if err := json.Unmarshal(reader.Bytes(), &query); err != nil {
+	if err := json.NewDecoder(reader).Decode(&query); err != nil {
 		return 0, 0, 0, &defines.ProtocolError{
 			Message: fmt.Sprintf("GetLauncherLevel: %v", err),
 		}

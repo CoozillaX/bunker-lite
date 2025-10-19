@@ -36,7 +36,7 @@ func SelectTransferServer(gu *g79.G79User) (g79UserUID uint32, raknetServerAddre
 		SignalWebPort  int    `json:"SignalWebPort"`
 		WebsocketPorts []int  `json:"ports"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&serverList); err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&serverList); err != nil {
 		return 0, "", "", fmt.Errorf("SelectTransferServer: %v", err)
 	}
 

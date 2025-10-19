@@ -13,9 +13,8 @@ import (
 
 // CurrencyOnlineRequest ..
 type CurrencyOnlineRequest struct {
-	Token          string `json:"token,omitempty"`
-	SessionID      string `json:"session_id,omitempty"`
-	ForceOperation bool   `json:"force_operation,omitempty"`
+	Token     string `json:"token,omitempty"`
+	SessionID string `json:"session_id,omitempty"`
 }
 
 // CurrencyOnlineResponse ..
@@ -64,7 +63,7 @@ func GetCurrencyOnline(c *gin.Context) {
 		})
 		return
 	}
-	if !request.ForceOperation && request.SessionID != activeGu.SessionID {
+	if request.SessionID != activeGu.SessionID {
 		c.JSON(http.StatusOK, CurrencyOnlineResponse{
 			ErrorInfo: fmt.Sprintf(
 				"GetCurrencyOnline: Session ID not matched (expect = %#v, provided = %#v)",
@@ -94,7 +93,7 @@ func GetCurrencyOnline(c *gin.Context) {
 		RestCurrencyTime int    `json:"rest_currency_time"`
 		Date             string `json:"date"`
 	}
-	if err := json.Unmarshal(reader.Bytes(), &query); err != nil {
+	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		c.JSON(http.StatusOK, CurrencyOnlineResponse{
 			Success:   false,
 			ErrorInfo: fmt.Sprintf("GetCurrencyOnline: %v", protocolError.Error()),

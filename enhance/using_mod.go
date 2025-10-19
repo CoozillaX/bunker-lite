@@ -55,7 +55,7 @@ func GetCurrentUsingMod(gu *g79.G79User) (UsingMod, *defines.ProtocolError) {
 	var query struct {
 		UsingMod UsingMod `json:"entity"`
 	}
-	if err := json.Unmarshal(reader.Bytes(), &query); err != nil {
+	if err := json.NewDecoder(reader).Decode(&query); err != nil {
 		return UsingMod{}, &defines.ProtocolError{
 			Message: fmt.Sprintf("GetCurrentUsingMod: %v", err),
 		}
