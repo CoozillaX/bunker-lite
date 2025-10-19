@@ -1,6 +1,7 @@
 package std_api
 
 import (
+	"bunker-core/protocol/gameinfo"
 	"bunker-core/utils"
 	"bunker-lite/database"
 	"bunker-lite/define"
@@ -8,12 +9,6 @@ import (
 	cryptoRand "crypto/rand"
 	"fmt"
 	"net/http"
-
-	"bunker-core/protocol/defines"
-	"bunker-core/protocol/g79"
-	"bunker-core/protocol/gameinfo"
-
-	"encoding/json"
 
 	"github.com/gin-gonic/gin"
 )
@@ -77,34 +72,13 @@ func TanLobbyLogin(c *gin.Context) {
 	helper = database.GetAuthHelperByToken(request.FBToken, true)
 
 	// g79 login
-	var gu *g79.G79User
-	if len(request.ProvidedPEAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
-		// prepare
-		var mu *defines.MpayUser = new(defines.MpayUser)
-		var protocolError *defines.ProtocolError
-		// decode to mpay user
-		if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
-			c.JSON(http.StatusOK, TanLobbyLoginResponse{
-				Success:   false,
-				ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
-			})
-			return
-		}
-		// g79 login
-		if gu, protocolError = g79.Login(gameinfo.DefaultEngineVersion, mu); protocolError != nil {
-			c.JSON(http.StatusOK, TanLobbyLoginResponse{
-				Success:   false,
-				ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
-			})
-			return
-		}
-	}
-	if len(request.ProvidedPEAuthData) > 0 {
-		gu, err = enhance.PEAuthLogin(request.ProvidedPEAuthData)
-	}
-	if len(request.ProvidedSaAuthData) > 0 {
-		gu, err = enhance.SaAuthLogin(request.ProvidedSaAuthData)
-	}
+	gu, _, err := database.LoadOrRegisterActiveG79User(
+		helper,
+		gameinfo.DefaultEngineVersion,
+		request.ProvidedPEAuthData,
+		request.ProvidedSaAuthData,
+		true,
+	)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			Success:   false,

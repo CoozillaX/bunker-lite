@@ -110,18 +110,21 @@ func requestServerInfo(
 	if protocolError != nil {
 		return 0, enhance.UsingMod{}, nil, false, protocolError
 	}
-	// cache version
+	// get version
 	currentGameInfo, err := gameinfo.GetInfoByGameVersion(rentalInfo.MCVersion)
 	if err != nil {
 		return 0, enhance.UsingMod{}, nil, false, &defines.ProtocolError{
 			Message: fmt.Sprintf("requestServerInfo: %v", err),
 		}
 	}
-	versionCache.SetDefault(req.ServerCode, currentGameInfo.EngineVersion)
-	// check version
-	if !isSpecialRequest && gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
+	// cache and check version
+	if !isSpecialRequest {
+		// do cache
+		versionCache.SetDefault(req.ServerCode, currentGameInfo.EngineVersion)
 		// need relogin with new engine version
-		return 0, enhance.UsingMod{}, nil, true, nil
+		if gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
+			return 0, enhance.UsingMod{}, nil, true, nil
+		}
 	}
 	return launcherLevel, currentUsingMod, rentalInfo, false, nil
 }
@@ -220,20 +223,24 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// decode to mpay user
-	var protocolError *defines.ProtocolError
-	var mu *defines.MpayUser = new(defines.MpayUser)
-	var gu *g79.G79User
-
+	// ensure engine version
+	engineVersion := gameinfo.DefaultEngineVersion
 	if len(request.ProvidedPEAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
-		err = json.Unmarshal(helper.MpayUserData, mu)
+		// change version by cache if we use mpay user to login
+		value, ok := versionCache.Get(request.ServerCode)
+		if ok {
+			engineVersion = value.(string)
+		}
 	}
-	if len(request.ProvidedPEAuthData) > 0 {
-		gu, err = enhance.PEAuthLogin(request.ProvidedPEAuthData)
-	}
-	if len(request.ProvidedSaAuthData) > 0 {
-		gu, err = enhance.SaAuthLogin(request.ProvidedSaAuthData)
-	}
+
+	// g79 login
+	gu, _, err := database.LoadOrRegisterActiveG79User(
+		helper,
+		engineVersion,
+		request.ProvidedPEAuthData,
+		request.ProvidedSaAuthData,
+		true,
+	)
 	if err != nil {
 		c.JSON(http.StatusOK, AuthResponse{
 			SuccessStates: false,
@@ -244,26 +251,9 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	for {
-		// g79 login if user not use PE Auth data
-		if len(request.ProvidedPEAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
-			// change engine version by cache
-			engineVersion := gameinfo.DefaultEngineVersion
-			if value, ok := versionCache.Get(request.ServerCode); ok {
-				engineVersion = value.(string)
-			}
-			// g79 login
-			if gu, protocolError = g79.Login(engineVersion, mu); protocolError != nil {
-				c.JSON(http.StatusOK, AuthResponse{
-					SuccessStates: false,
-					Message: Message{
-						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", protocolError.Error()),
-					},
-				})
-				return
-			}
-		}
-
+	// At least loop for two times. If all failed, then
+	// result in can not switch to the correct version.
+	for range 2 {
 		// request server info
 		isSpecialRequest := len(request.ProvidedPEAuthData) > 0 || len(request.ProvidedSaAuthData) > 0
 		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolError := requestServerInfo(isSpecialRequest, gu, &request)
@@ -279,10 +269,26 @@ func Login(c *gin.Context) {
 
 		// the rental server version is not match, and need relogin
 		if needRelogin {
+			gu, _, err = database.RegisterActiveG79User(
+				helper,
+				engineVersion,
+				request.ProvidedPEAuthData,
+				request.ProvidedSaAuthData,
+				true,
+			)
+			if err != nil {
+				c.JSON(http.StatusOK, AuthResponse{
+					SuccessStates: false,
+					Message: Message{
+						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
+					},
+				})
+				return
+			}
 			continue
 		}
 
-		// get session
+		// get tradition session
 		session := utils.GetSessionByBearer(c)
 		if session == nil {
 			c.JSON(http.StatusOK, AuthResponse{
@@ -345,4 +351,11 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusOK, resp)
 		return
 	}
+
+	c.JSON(http.StatusOK, AuthResponse{
+		SuccessStates: false,
+		Message: Message{
+			Information: "Login: 目标版本的租赁服不支持, 请等待地堡适配",
+		},
+	})
 }

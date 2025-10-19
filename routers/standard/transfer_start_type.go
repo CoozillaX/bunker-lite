@@ -16,7 +16,7 @@ type TransferStartTypeResponse struct {
 }
 
 func TransferStartType(c *gin.Context) {
-	// get session
+	// get tradition session
 	session := utils.GetSessionByBearer(c)
 
 	// get entityID

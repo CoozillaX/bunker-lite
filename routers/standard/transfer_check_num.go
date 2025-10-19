@@ -32,7 +32,7 @@ func TransferCheckNum(c *gin.Context) {
 		return
 	}
 
-	// get session
+	// get tradition session
 	session := utils.GetSessionByBearer(c)
 
 	// get engineVersion

@@ -22,7 +22,6 @@ type EulogistUser struct {
 	InternalIncreasingAccountID uint32
 
 	CurrentAuthServerAccount   protocol.Optional[AuthServerAccount]
-	ProvidedPeAuthData         string
 	DisableGlobalOpertorVerify bool
 	CanAccessAnyRentalServer   bool
 	CanGetGameSavesKeyCipher   bool
@@ -41,7 +40,6 @@ func EncodeEulogistUser(user EulogistUser) []byte {
 	writer.String(&user.EulogistToken)
 	writer.Varint64(&user.UnbanUnixTime)
 	writer.Varuint32(&user.InternalIncreasingAccountID)
-	writer.String(&user.ProvidedPeAuthData)
 	writer.Bool(&user.DisableGlobalOpertorVerify)
 	writer.Bool(&user.CanAccessAnyRentalServer)
 	writer.Bool(&user.CanGetGameSavesKeyCipher)
@@ -82,7 +80,6 @@ func DecodeEulogistUser(payload []byte) (user EulogistUser) {
 	reader.String(&user.EulogistToken)
 	reader.Varint64(&user.UnbanUnixTime)
 	reader.Varuint32(&user.InternalIncreasingAccountID)
-	reader.String(&user.ProvidedPeAuthData)
 	reader.Bool(&user.DisableGlobalOpertorVerify)
 	reader.Bool(&user.CanAccessAnyRentalServer)
 	reader.Bool(&user.CanGetGameSavesKeyCipher)

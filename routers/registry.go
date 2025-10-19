@@ -3,6 +3,7 @@ package routers
 import (
 	eulogist_api "bunker-lite/routers/eulogist"
 	std_api "bunker-lite/routers/standard"
+	vitality_api "bunker-lite/routers/vitality"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -54,7 +55,7 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 		eulogistApiGroup.POST("/modify_custom_helper", handlerWithMutex(eulogist_api.ModifyCustomHelper))
 		eulogistApiGroup.POST("/delete_helper", handlerWithMutex(eulogist_api.DeleteHelper))
 		eulogistApiGroup.POST("/dev_ask_token", handlerWithMutex(eulogist_api.DeveloperAskToken))
-		eulogistApiGroup.POST("/set_pe_auth", handlerWithMutex(eulogist_api.SetPEAuth))
+		eulogistApiGroup.POST("/set_auth_data", handlerWithMutex(eulogist_api.SetAuthData))
 	}
 
 	// Rental Server Manage
@@ -74,6 +75,26 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 	{
 		eulogistApiGroup.POST("/get_built_in_skin", handlerWithMutex(eulogist_api.GetBuiltInSkin))
 		eulogistApiGroup.POST("/set_skin_cache", handlerWithMutex(eulogist_api.SetSkinCache))
+	}
+
+	// No router
+	router.NoRoute(func(c *gin.Context) {
+		c.AbortWithStatus(http.StatusNotFound)
+	})
+
+	return router
+}
+
+// initVitalityRouter ..
+func initVitalityRouter(router *gin.Engine) *gin.Engine {
+	vitalityApiGroup := router.Group("/vitality_api")
+
+	// Vitality API
+	{
+		vitalityApiGroup.POST("/registry_active_gu", handlerWithMutex(vitality_api.RegisterActiveGu))
+		vitalityApiGroup.POST("/request_server_time", vitality_api.RequestServerTime)
+		vitalityApiGroup.POST("/get_currency_online", vitality_api.GetCurrencyOnline)
+		vitalityApiGroup.POST("/keep_gu_alive", vitality_api.KeepGuAlive)
 	}
 
 	// No router

@@ -2,7 +2,6 @@ package enhance
 
 import (
 	"bunker-core/protocol/g79"
-	"bunker-core/protocol/gameinfo"
 	"bunker-core/protocol/mpay"
 	"encoding/json"
 	"fmt"
@@ -17,7 +16,7 @@ type SaAuthData struct {
 }
 
 // SaAuthLogin ..
-func SaAuthLogin(saAuthJsonData string) (gu *g79.G79User, err error) {
+func SaAuthLogin(engineVersion string, saAuthJsonData string) (gu *g79.G79User, err error) {
 	// 0. Prepare
 	var saAuthData SaAuthData
 
@@ -35,7 +34,7 @@ func SaAuthLogin(saAuthJsonData string) (gu *g79.G79User, err error) {
 	mu.MpayDevice.MpayID = saAuthData.MpayID
 
 	// 3. g79 login
-	gu, protocolError := g79.Login(gameinfo.DefaultEngineVersion, mu)
+	gu, protocolError := g79.Login(engineVersion, mu)
 	if protocolError != nil {
 		return nil, fmt.Errorf("SaAuthLogin: %v", protocolError.Error())
 	}

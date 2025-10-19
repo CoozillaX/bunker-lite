@@ -9,14 +9,15 @@ import (
 const DatabseFileName = "eulogist-bunker-lite.db"
 
 const (
-	DATABASE_KEY_EULOGIST_USER = "EULOGIST_USER" // map[UserUniqueID]define.EulogistUser
-	DATABASE_KEY_AUTH_HELPER   = "AUTH_HELPER"   // map[HelperUniqueID]define.AuthServerHelper
+	DATABASE_KEY_EULOGIST_USER   = "EULOGIST_USER"   // map[UserUniqueID]define.EulogistUser
+	DATABASE_KEY_AUTH_HELPER     = "AUTH_HELPER"     // map[HelperUniqueID]define.AuthServerHelper
+	DATABASE_KEY_ACTIVE_G79_USER = "ACTIVE_G79_USER" // map[HelperToken]define.ActiveG79User
 )
 
 const (
 	DATABASE_KEY_NTEU_MAPPING = "NAME_TO_EULOGIST_USER"  // map[EulogistUserName]UserUniqueID
 	DATABSE_KEY_TTEU_MAPPING  = "TOKEN_TO_EULOGIST_USER" // map[EulogistToken]UserUniqueID
-	DATABASE_KEY_TTAH_MAPPING = "TOEKN_TO_AUTH_HELPER"   // map[AuthServerHelperToken]HelperUniqueID
+	DATABASE_KEY_TTAH_MAPPING = "TOEKN_TO_AUTH_HELPER"   // map[HelperToken]HelperUniqueID
 )
 
 const (
@@ -46,6 +47,9 @@ func init() {
 			return err
 		}
 		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_AUTH_HELPER)); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_ACTIVE_G79_USER)); err != nil {
 			return err
 		}
 		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_NTEU_MAPPING)); err != nil {
