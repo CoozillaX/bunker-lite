@@ -144,31 +144,10 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	gu.MpayUser.MpayDevice.SystemName = osName
 	gu.GameInfo = defaultBaseInfo
 
-	// 9. Get user name
-	{
-		reqBody, _ := json.Marshal(map[string]string{
-			"entity_id": gu.EntityID,
-		})
-		reader, protocolError := gu.CreateHttpClient().
-			SetMethod(http.MethodPost).
-			SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/pe-user-detail/get").
-			SetRawBody(reqBody).
-			SetTokenMode(g79.TOKEN_MODE_NORMAL).
-			Do()
-		if protocolError != nil {
-			return nil, protocolError
-		}
-		var respEntity struct {
-			Entity *struct {
-				Name string `json:"name"`
-			} `json:"entity"`
-		}
-		if err = json.NewDecoder(reader).Decode(&respEntity); err != nil {
-			return nil, &defines.ProtocolError{
-				Message: fmt.Sprintf("PEAuthLogin: %v", err),
-			}
-		}
-		gu.Username = respEntity.Entity.Name
+	// 9. Get username
+	gu.Username, err = GetName(gu)
+	if err != nil {
+		return nil, fmt.Errorf("PEAuthLogin: %v", err)
 	}
 
 	return gu, nil
