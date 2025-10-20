@@ -56,16 +56,16 @@ func TanLobbyLogin(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
+			Success:   false,
 		})
 		return
 	}
 
 	if !database.CheckAuthHelperByToken(request.FBToken, true) {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
 			ErrorInfo: "TanLobbyLogin: Invalid token was provided",
+			Success:   false,
 		})
 		return
 	}
@@ -81,8 +81,8 @@ func TanLobbyLogin(c *gin.Context) {
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
+			Success:   false,
 		})
 		return
 	}
@@ -91,8 +91,8 @@ func TanLobbyLogin(c *gin.Context) {
 	roomInfo, err := enhance.QueryTanLobbyRoomInfo(gu, request.RoomID)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
+			Success:   false,
 		})
 		return
 	}
@@ -101,16 +101,16 @@ func TanLobbyLogin(c *gin.Context) {
 	launcherLevel, _, _, protocolError := enhance.GetLauncherLevel(gu)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
+			Success:   false,
 		})
 		return
 	}
 	currentUsingMod, protocolError := enhance.GetCurrentUsingMod(gu)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
+			Success:   false,
 		})
 		return
 	}
@@ -130,8 +130,8 @@ func TanLobbyLogin(c *gin.Context) {
 	raknetAESRand, err := utils.AES_ECB_PKCS7Encrypt(encryptedUserToken, raknetRand)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
+			Success:   false,
 		})
 		return
 	}
@@ -141,8 +141,8 @@ func TanLobbyLogin(c *gin.Context) {
 	signalingTicket, err := utils.AES_ECB_PKCS7Encrypt([]byte(gu.G79Token), signalingSeed)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
+			Success:   false,
 		})
 		return
 	}

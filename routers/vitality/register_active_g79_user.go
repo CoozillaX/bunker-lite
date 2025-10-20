@@ -30,7 +30,7 @@ type RegisterActiveGuResponse struct {
 // RegisterActiveGu ..
 func RegisterActiveGu(c *gin.Context) {
 	var request RegisterActiveGuRequest
-	var activeGu *define.ActiveG79User
+	var activeGu define.ActiveG79User
 
 	err := c.Bind(&request)
 	if err != nil {
@@ -84,6 +84,6 @@ func RegisterActiveGu(c *gin.Context) {
 	c.JSON(http.StatusOK, RegisterActiveGuResponse{
 		Success:           true,
 		SessionID:         activeGu.SessionID,
-		SessionExpireTime: activeGu.G79UserExpireTime,
+		SessionExpireTime: activeGu.SessionExpireTime,
 	})
 }

@@ -33,16 +33,16 @@ func TanLobbyDebug(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyDebugResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyDebug: %v", err),
+			Success:   false,
 		})
 		return
 	}
 
 	if !database.CheckAuthHelperByToken(request.FBToken, true) {
 		c.JSON(http.StatusOK, TanLobbyDebugResponse{
-			Success:   false,
 			ErrorInfo: "TanLobbyDebug: Invalid token was provided",
+			Success:   false,
 		})
 		return
 	}
@@ -50,8 +50,8 @@ func TanLobbyDebug(c *gin.Context) {
 	resp, err := enhance.ParseHttpEncrypt(request.LoginResponse)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyDebugResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyDebug: %v", err),
+			Success:   false,
 		})
 		return
 	}
@@ -62,8 +62,8 @@ func TanLobbyDebug(c *gin.Context) {
 	}
 	if !ok {
 		c.JSON(http.StatusOK, TanLobbyDebugResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("TanLobbyDebug: Bad PE auth login response; resp = %#v", resp),
+			Success:   false,
 		})
 		return
 	}

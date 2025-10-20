@@ -83,27 +83,29 @@ func GetCurrencyOnline(c *gin.Context) {
 	if protocolError != nil {
 		_ = database.DeleteActiveG79User(request.Token, false)
 		c.JSON(http.StatusOK, CurrencyOnlineResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("GetCurrencyOnline: %v", protocolError.Error()),
+			Success:   false,
 		})
 		return
 	}
 
 	var query struct {
-		RestCurrencyTime int    `json:"rest_currency_time"`
-		Date             string `json:"date"`
+		Entity struct {
+			RestCurrencyTime int    `json:"rest_currency_time"`
+			Date             string `json:"date"`
+		} `json:"entity"`
 	}
 	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		c.JSON(http.StatusOK, CurrencyOnlineResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("GetCurrencyOnline: %v", protocolError.Error()),
+			Success:   false,
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, CurrencyOnlineResponse{
 		Success:          true,
-		RestCurrencyTime: query.RestCurrencyTime,
-		FormatDateString: query.Date,
+		RestCurrencyTime: query.Entity.RestCurrencyTime,
+		FormatDateString: query.Entity.Date,
 	})
 }

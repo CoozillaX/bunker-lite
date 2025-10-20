@@ -1,7 +1,7 @@
 package define
 
 const (
-	StdAuthServerAddress = "http://127.0.0.1:8080"
+	StdAuthServerAddress = "https://yorha.eulogist-api.icu"
 	UserPasswordSalt     = "YoRHa"
 )
 

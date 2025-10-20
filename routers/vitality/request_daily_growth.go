@@ -82,8 +82,8 @@ func RequestDailyGrowth(c *gin.Context) {
 	if protocolError != nil {
 		_ = database.DeleteActiveG79User(request.Token, false)
 		c.JSON(http.StatusOK, DailyGrowthResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("RequestDailyGrowth: %v", protocolError.Error()),
+			Success:   false,
 		})
 		return
 	}
@@ -96,8 +96,8 @@ func RequestDailyGrowth(c *gin.Context) {
 	}
 	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		c.JSON(http.StatusOK, DailyGrowthResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("RequestDailyGrowth: %v", protocolError.Error()),
+			Success:   false,
 		})
 		return
 	}

@@ -33,8 +33,8 @@ func TransferStartType(c *gin.Context) {
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, TransferStartTypeResponse{
-			Success: false,
 			Message: fmt.Sprintf("TransferStartType: 获取 StartType 时出现问题, 原因是 %s", err),
+			Success: false,
 		})
 		return
 	}

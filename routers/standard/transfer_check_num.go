@@ -70,8 +70,8 @@ func TransferCheckNum(c *gin.Context) {
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, TransferCheckNumResponse{
-			Success: false,
 			Message: fmt.Sprintf("TransferCheckNum: 获取 CheckNum 时出现问题, 原因是 %v", err),
+			Success: false,
 		})
 		return
 	}

@@ -1,6 +1,7 @@
 package vitality_api
 
 import (
+	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
 	"bunker-lite/database"
 	"encoding/json"
@@ -75,13 +76,14 @@ func KeepGuAlive(c *gin.Context) {
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/authentication/update").
+		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		SetEncryptSuffix(0xc).
 		Do()
 	if protocolError != nil {
 		_ = database.DeleteActiveG79User(request.Token, false)
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("KeepGuAlive: %v", protocolError.Error()),
+			Success:   false,
 		})
 		return
 	}
@@ -93,8 +95,8 @@ func KeepGuAlive(c *gin.Context) {
 	}
 	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
-			Success:   false,
 			ErrorInfo: fmt.Sprintf("KeepGuAlive: %v", protocolError.Error()),
+			Success:   false,
 		})
 		return
 	}
@@ -110,6 +112,6 @@ func KeepGuAlive(c *gin.Context) {
 
 	c.JSON(http.StatusOK, KeepGuAliveResponse{
 		Success:           true,
-		SessionExpireTime: activeGu.G79UserExpireTime,
+		SessionExpireTime: activeGu.SessionExpireTime,
 	})
 }
