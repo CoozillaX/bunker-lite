@@ -2,9 +2,15 @@ package main
 
 // ------------------------- Register G79 User Transaction -------------------------
 
+const (
+	RequestTypeRegisterSession uint8 = iota
+	RequestTypeCleanUpSession
+)
+
 // RegisterActiveGuRequest ..
 type RegisterActiveGuRequest struct {
 	Token              string `json:"token,omitempty"`
+	RequestType        uint8  `json:"request_type,omitempty"`
 	OverrideSession    bool   `json:"override_session,omitempty"`
 	EngineVersion      string `json:"engine_version,omitempty"`
 	ProvidedPeAuthData string `json:"provided_pe_auth_data,omitempty"`

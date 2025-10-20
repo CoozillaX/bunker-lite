@@ -10,9 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	RequestTypeRegisterSession uint8 = iota
+	RequestTypeCleanUpSession
+)
+
 // RegisterActiveGuRequest ..
 type RegisterActiveGuRequest struct {
 	Token              string `json:"token,omitempty"`
+	RequestType        uint8  `json:"request_type,omitempty"`
 	OverrideSession    bool   `json:"override_session,omitempty"`
 	EngineVersion      string `json:"engine_version,omitempty"`
 	ProvidedPeAuthData string `json:"provided_pe_auth_data,omitempty"`
@@ -53,37 +59,53 @@ func RegisterActiveGu(c *gin.Context) {
 	database.LockG79Transaction(request.Token)
 	defer database.UnlockG79Transaction(request.Token)
 
-	if len(request.EngineVersion) == 0 {
-		request.EngineVersion = gameinfo.DefaultEngineVersion
-	}
-	if request.OverrideSession {
-		_, activeGu, err = database.RegisterActiveG79User(
-			helper,
-			request.EngineVersion,
-			request.ProvidedPeAuthData,
-			request.ProvidedSaAuthData,
-			false,
-		)
-	} else {
-		_, activeGu, err = database.LoadOrRegisterActiveG79User(
-			helper,
-			request.EngineVersion,
-			request.ProvidedPeAuthData,
-			request.ProvidedSaAuthData,
-			false,
-		)
-	}
-	if err != nil {
+	switch request.RequestType {
+	case RequestTypeRegisterSession:
+		if len(request.EngineVersion) == 0 {
+			request.EngineVersion = gameinfo.DefaultEngineVersion
+		}
+		if request.OverrideSession {
+			_, activeGu, err = database.RegisterActiveG79User(
+				helper,
+				request.EngineVersion,
+				request.ProvidedPeAuthData,
+				request.ProvidedSaAuthData,
+				false,
+			)
+		} else {
+			_, activeGu, err = database.LoadOrRegisterActiveG79User(
+				helper,
+				request.EngineVersion,
+				request.ProvidedPeAuthData,
+				request.ProvidedSaAuthData,
+				false,
+			)
+		}
+		if err != nil {
+			c.JSON(http.StatusOK, RegisterActiveGuResponse{
+				ErrorInfo: fmt.Sprintf("RegisterActiveGu: %v", err),
+				Success:   false,
+			})
+			return
+		}
 		c.JSON(http.StatusOK, RegisterActiveGuResponse{
-			ErrorInfo: fmt.Sprintf("RegisterActiveGu: %v", err),
+			Success:           true,
+			SessionID:         activeGu.SessionID,
+			SessionExpireTime: activeGu.SessionExpireTime,
+		})
+	case RequestTypeCleanUpSession:
+		if err = database.DeleteActiveG79User(helper.HelperToken, false); err != nil {
+			c.JSON(http.StatusOK, RegisterActiveGuResponse{
+				ErrorInfo: fmt.Sprintf("RegisterActiveGu: %v", err),
+				Success:   false,
+			})
+			return
+		}
+		c.JSON(http.StatusOK, RegisterActiveGuResponse{Success: true})
+	default:
+		c.JSON(http.StatusOK, RegisterActiveGuResponse{
+			ErrorInfo: fmt.Sprintf("RegisterActiveGu: Invalid request type %d", request.RequestType),
 			Success:   false,
 		})
-		return
 	}
-
-	c.JSON(http.StatusOK, RegisterActiveGuResponse{
-		Success:           true,
-		SessionID:         activeGu.SessionID,
-		SessionExpireTime: activeGu.SessionExpireTime,
-	})
 }

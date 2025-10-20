@@ -33,6 +33,7 @@ func main() {
 			fmt.Sprintf("%s/vitality_api/registry_active_gu", authServerAddress),
 			RegisterActiveGuRequest{
 				Token:              authServerToken,
+				RequestType:        RequestTypeRegisterSession,
 				OverrideSession:    true,
 				EngineVersion:      engineVersion,
 				ProvidedPeAuthData: peAuthData,
