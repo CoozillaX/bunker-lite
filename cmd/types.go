@@ -21,6 +21,11 @@ type RegisterActiveGuResponse struct {
 
 // ------------------------- Keep G79 User Alive -------------------------
 
+const (
+	KeepGuAliveErrorMeetError uint8 = iota
+	KeepGuAliveErrorLifeLimit
+)
+
 // KeepGuAliveRequest ..
 type KeepGuAliveRequest struct {
 	Token     string `json:"token,omitempty"`
@@ -29,6 +34,7 @@ type KeepGuAliveRequest struct {
 
 // KeepGuAliveResponse ..
 type KeepGuAliveResponse struct {
+	ErrorType         uint8  `json:"error_type"`
 	ErrorInfo         string `json:"error_info"`
 	Success           bool   `json:"success"`
 	SessionExpireTime int64  `json:"session_expire_time"`

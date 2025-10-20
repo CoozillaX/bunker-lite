@@ -12,6 +12,7 @@ import (
 // ActiveG79User ..
 type ActiveG79User struct {
 	SessionID         string
+	SessionStartTime  int64
 	SessionExpireTime int64
 	RecordG79UserData *g79.G79User
 }
@@ -22,6 +23,7 @@ func EncodeActiveG79User(user ActiveG79User) []byte {
 	writer := protocol.NewWriter(buf, 0)
 
 	writer.String(&user.SessionID)
+	writer.Int64(&user.SessionStartTime)
 	writer.Int64(&user.SessionExpireTime)
 
 	writer.String(&user.RecordG79UserData.EntityID)
@@ -49,7 +51,9 @@ func DecodeActiveG79User(payload []byte) (user ActiveG79User) {
 	reader := protocol.NewReader(buf, 0, false)
 
 	reader.String(&user.SessionID)
+	reader.Int64(&user.SessionStartTime)
 	reader.Int64(&user.SessionExpireTime)
+
 	reader.String(&user.RecordG79UserData.EntityID)
 	reader.String(&user.RecordG79UserData.Account)
 	reader.String(&user.RecordG79UserData.G79Token)

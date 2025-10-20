@@ -7,8 +7,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+)
+
+const SessionLifeLimitSecond = 60 * 60 * 12
+
+const (
+	KeepGuAliveErrorMeetError uint8 = iota
+	KeepGuAliveErrorLifeLimit
 )
 
 // KeepGuAliveRequest ..
@@ -19,6 +27,7 @@ type KeepGuAliveRequest struct {
 
 // KeepGuAliveResponse ..
 type KeepGuAliveResponse struct {
+	ErrorType         uint8  `json:"error_type"`
 	ErrorInfo         string `json:"error_info"`
 	Success           bool   `json:"success"`
 	SessionExpireTime int64  `json:"session_expire_time"`
@@ -31,6 +40,7 @@ func KeepGuAlive(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
+			ErrorType: KeepGuAliveErrorMeetError,
 			ErrorInfo: fmt.Sprintf("KeepGuAlive: %v", err),
 			Success:   false,
 		})
@@ -39,6 +49,7 @@ func KeepGuAlive(c *gin.Context) {
 
 	if !database.CheckAuthHelperByToken(request.Token, true) {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
+			ErrorType: KeepGuAliveErrorMeetError,
 			ErrorInfo: "KeepGuAlive: Invalid token was provided",
 			Success:   false,
 		})
@@ -50,6 +61,7 @@ func KeepGuAlive(c *gin.Context) {
 	gu, activeGu, found, err := database.LoadActiveG79User(request.Token, false)
 	if err != nil {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
+			ErrorType: KeepGuAliveErrorMeetError,
 			ErrorInfo: fmt.Sprintf("KeepGuAlive: %v", err),
 			Success:   false,
 		})
@@ -57,6 +69,7 @@ func KeepGuAlive(c *gin.Context) {
 	}
 	if !found {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
+			ErrorType: KeepGuAliveErrorMeetError,
 			ErrorInfo: "KeepGuAlive: Session not found or is expired",
 			Success:   false,
 		})
@@ -64,11 +77,19 @@ func KeepGuAlive(c *gin.Context) {
 	}
 	if request.SessionID != activeGu.SessionID {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
+			ErrorType: KeepGuAliveErrorMeetError,
 			ErrorInfo: fmt.Sprintf(
 				"KeepGuAlive: Session ID not matched (expect = %#v, provided = %#v)",
 				activeGu.SessionID, request.SessionID,
 			),
 			Success: false,
+		})
+		return
+	}
+	if time.Now().Unix()-activeGu.SessionStartTime >= SessionLifeLimitSecond {
+		c.JSON(http.StatusOK, KeepGuAliveResponse{
+			ErrorType: KeepGuAliveErrorLifeLimit,
+			Success:   false,
 		})
 		return
 	}
@@ -82,6 +103,7 @@ func KeepGuAlive(c *gin.Context) {
 	if protocolError != nil {
 		_ = database.DeleteActiveG79User(request.Token, false)
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
+			ErrorType: KeepGuAliveErrorMeetError,
 			ErrorInfo: fmt.Sprintf("KeepGuAlive: %v", protocolError.Error()),
 			Success:   false,
 		})
@@ -95,6 +117,7 @@ func KeepGuAlive(c *gin.Context) {
 	}
 	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
+			ErrorType: KeepGuAliveErrorMeetError,
 			ErrorInfo: fmt.Sprintf("KeepGuAlive: %v", protocolError.Error()),
 			Success:   false,
 		})
@@ -104,6 +127,7 @@ func KeepGuAlive(c *gin.Context) {
 	_, activeGu, err = database.ExtendG79UserLifeTime(request.Token, query.Entity.Token, activeGu.SessionID, false)
 	if err != nil {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
+			ErrorType: KeepGuAliveErrorMeetError,
 			ErrorInfo: fmt.Sprintf("KeepGuAlive: %v", err),
 			Success:   false,
 		})

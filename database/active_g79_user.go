@@ -14,6 +14,8 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+const SessionExpireTimeSecond = 60 * 30
+
 var activeGuTranMutex = new(sync.Mutex)
 var activeGuTranMapping = make(map[string]*g79Transaction)
 
@@ -88,7 +90,7 @@ func RegisterActiveG79User(helper define.AuthServerHelper, engineVersion string,
 	}
 
 	if len(peAuthData) == 0 && len(saAuthData) == 0 {
-		var mu *defines.MpayUser
+		var mu = new(defines.MpayUser)
 		var protocolError *defines.ProtocolError
 		if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
 			return nil, define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", err)
@@ -107,11 +109,14 @@ func RegisterActiveG79User(helper define.AuthServerHelper, engineVersion string,
 		return nil, define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", err)
 	}
 
+	currentTime := time.Now().Unix()
 	activeG79User := define.ActiveG79User{
 		SessionID:         uuid.NewString(),
-		SessionExpireTime: time.Now().Unix() + 1800,
+		SessionStartTime:  currentTime,
+		SessionExpireTime: currentTime + SessionExpireTimeSecond,
 		RecordG79UserData: gu,
 	}
+
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
 		return tx.
 			Bucket([]byte(DATABASE_KEY_ACTIVE_G79_USER)).
@@ -223,7 +228,7 @@ func ExtendG79UserLifeTime(helperToken string, newG79UserToken string, sessionID
 
 	gu.G79Token = newG79UserToken
 	activeGu.RecordG79UserData = gu
-	activeGu.SessionExpireTime = time.Now().Unix() + 1800
+	activeGu.SessionExpireTime = time.Now().Unix() + SessionExpireTimeSecond
 
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
 		return tx.

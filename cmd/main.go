@@ -101,7 +101,12 @@ func main() {
 				}
 
 				if !resp.Success {
-					pterm.Error.Printfln("[KeepGuAlive] %v", resp.ErrorInfo)
+					switch resp.ErrorType {
+					case KeepGuAliveErrorMeetError:
+						pterm.Error.Printfln("[KeepGuAlive] %v", resp.ErrorInfo)
+					case KeepGuAliveErrorLifeLimit:
+						pterm.Info.Printfln("[KeepGuAlive] This session reach its max life time limit. Do refresh.")
+					}
 					cancel()
 					return
 				}
