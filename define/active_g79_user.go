@@ -9,9 +9,16 @@ import (
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 )
 
+const (
+	SessionTypeMpayUser uint8 = iota
+	SessionTypePeAuth
+	SessionTypeSaAuth
+)
+
 // ActiveG79User ..
 type ActiveG79User struct {
 	SessionID         string
+	SessionType       uint8
 	SessionStartTime  int64
 	SessionExpireTime int64
 	RecordG79UserData *g79.G79User
@@ -23,6 +30,7 @@ func EncodeActiveG79User(user ActiveG79User) []byte {
 	writer := protocol.NewWriter(buf, 0)
 
 	writer.String(&user.SessionID)
+	writer.Uint8(&user.SessionType)
 	writer.Int64(&user.SessionStartTime)
 	writer.Int64(&user.SessionExpireTime)
 
@@ -51,6 +59,7 @@ func DecodeActiveG79User(payload []byte) (user ActiveG79User) {
 	reader := protocol.NewReader(buf, 0, false)
 
 	reader.String(&user.SessionID)
+	reader.Uint8(&user.SessionType)
 	reader.Int64(&user.SessionStartTime)
 	reader.Int64(&user.SessionExpireTime)
 

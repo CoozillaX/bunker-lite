@@ -234,7 +234,7 @@ func Login(c *gin.Context) {
 	}
 
 	// g79 login
-	gu, _, err := database.LoadOrRegisterActiveG79User(
+	gu, activeGu, err := database.LoadOrRegisterActiveG79User(
 		helper,
 		engineVersion,
 		request.ProvidedPEAuthData,
@@ -255,7 +255,7 @@ func Login(c *gin.Context) {
 	// result in can not switch to the correct version.
 	for range 2 {
 		// request server info
-		isSpecialRequest := len(request.ProvidedPEAuthData) > 0 || len(request.ProvidedSaAuthData) > 0
+		isSpecialRequest := (activeGu.SessionType != define.SessionTypeMpayUser)
 		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolError := requestServerInfo(isSpecialRequest, gu, &request)
 		if protocolError != nil {
 			c.JSON(http.StatusOK, AuthResponse{
@@ -269,11 +269,17 @@ func Login(c *gin.Context) {
 
 		// the rental server version is not match, and need relogin
 		if needRelogin {
-			gu, _, err = database.RegisterActiveG79User(
+			// change version by cache
+			value, ok := versionCache.Get(request.ServerCode)
+			if ok {
+				engineVersion = value.(string)
+			}
+			// relogin g79 user
+			gu, activeGu, err = database.RegisterActiveG79User(
 				helper,
 				engineVersion,
-				request.ProvidedPEAuthData,
-				request.ProvidedSaAuthData,
+				"",
+				"",
 				true,
 			)
 			if err != nil {
@@ -285,6 +291,8 @@ func Login(c *gin.Context) {
 				})
 				return
 			}
+			// continue the loop so that we
+			// can re-request server info
 			continue
 		}
 

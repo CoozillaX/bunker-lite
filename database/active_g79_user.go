@@ -84,6 +84,7 @@ func RegisterActiveG79User(helper define.AuthServerHelper, engineVersion string,
 	activeGu define.ActiveG79User,
 	err error,
 ) {
+	var sessionType uint8
 	if useLock {
 		LockG79Transaction(helper.HelperToken)
 		defer UnlockG79Transaction(helper.HelperToken)
@@ -98,12 +99,15 @@ func RegisterActiveG79User(helper define.AuthServerHelper, engineVersion string,
 		if gu, protocolError = g79.Login(engineVersion, mu); protocolError != nil {
 			return nil, define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", protocolError.Error())
 		}
+		sessionType = define.SessionTypeMpayUser
 	}
 	if len(peAuthData) > 0 {
 		gu, err = enhance.PEAuthLogin(peAuthData)
+		sessionType = define.SessionTypePeAuth
 	}
 	if len(saAuthData) > 0 {
 		gu, err = enhance.SaAuthLogin(engineVersion, saAuthData)
+		sessionType = define.SessionTypeSaAuth
 	}
 	if err != nil {
 		return nil, define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", err)
@@ -112,6 +116,7 @@ func RegisterActiveG79User(helper define.AuthServerHelper, engineVersion string,
 	currentTime := time.Now().Unix()
 	activeG79User := define.ActiveG79User{
 		SessionID:         uuid.NewString(),
+		SessionType:       sessionType,
 		SessionStartTime:  currentTime,
 		SessionExpireTime: currentTime + SessionExpireTimeSecond,
 		RecordG79UserData: gu,
