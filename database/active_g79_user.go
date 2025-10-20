@@ -177,6 +177,11 @@ func LoadActiveG79User(helperToken string, useLock bool) (gu *g79.G79User, activ
 		return nil, define.ActiveG79User{}, false, nil
 	}
 
+	activeGu.RecordG79UserData.Username, err = enhance.GetName(activeGu.RecordG79UserData)
+	if err != nil {
+		_ = DeleteActiveG79User(helperToken, false)
+		return nil, define.ActiveG79User{}, false, fmt.Errorf("LoadActiveG79User: %v", err)
+	}
 	return activeGu.RecordG79UserData, activeGu, true, nil
 }
 

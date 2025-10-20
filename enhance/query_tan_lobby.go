@@ -52,7 +52,6 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", protocolError.Error())
 	}
 	var query struct {
-		Code int `json:"code"`
 		List []struct {
 			HostID           int      `json:"hid"`
 			RoomID           int      `json:"rid"`

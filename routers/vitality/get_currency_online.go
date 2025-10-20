@@ -81,7 +81,6 @@ func GetCurrencyOnline(c *gin.Context) {
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
 	if protocolError != nil {
-		_ = database.DeleteActiveG79User(request.Token, false)
 		c.JSON(http.StatusOK, CurrencyOnlineResponse{
 			ErrorInfo: fmt.Sprintf("GetCurrencyOnline: %v", protocolError.Error()),
 			Success:   false,

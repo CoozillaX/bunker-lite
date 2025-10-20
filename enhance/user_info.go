@@ -9,6 +9,32 @@ import (
 	"net/http"
 )
 
+func GetName(gu *g79.G79User) (name string, err error) {
+	reqBody, _ := json.Marshal(map[string]string{
+		"entity_id": gu.EntityID,
+	})
+	reader, protocolError := gu.CreateHttpClient().
+		SetMethod(http.MethodPost).
+		SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/pe-user-detail/get").
+		SetRawBody(reqBody).
+		SetTokenMode(g79.TOKEN_MODE_NORMAL).
+		Do()
+	if protocolError != nil {
+		return "", fmt.Errorf("GetName: %v", protocolError.Error())
+	}
+
+	var query struct {
+		Entity *struct {
+			Name string `json:"name"`
+		} `json:"entity"`
+	}
+	if err := json.NewDecoder(reader).Decode(&query); err != nil {
+		return "", fmt.Errorf("GetName: %v", err)
+	}
+
+	return query.Entity.Name, nil
+}
+
 func ChangeName(gu *g79.G79User, userNewName string) *defines.ProtocolError {
 	reqBody, _ := json.Marshal(map[string]any{
 		"name": userNewName,

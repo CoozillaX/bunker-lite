@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
@@ -185,33 +184,6 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, g79User
 			return "", "", &defines.ProtocolError{
 				Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err),
 			}
-		}
-	}
-
-	// get user name
-	reqBody, _ := json.Marshal(map[string]string{
-		"entity_id": gu.EntityID,
-	})
-	reader, protocolError := gu.CreateHttpClient().
-		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/pe-user-detail/get").
-		SetRawBody(reqBody).
-		SetTokenMode(g79.TOKEN_MODE_NORMAL).
-		Do()
-	if protocolError != nil {
-		_ = DeleteActiveG79User(helper.HelperToken, false)
-		return "", "", &defines.ProtocolError{
-			Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", protocolError.Error()),
-		}
-	}
-	var query struct {
-		Entity *struct {
-			Name string `json:"name"`
-		} `json:"entity"`
-	}
-	if err := json.NewDecoder(reader).Decode(&query); err != nil {
-		return "", "", &defines.ProtocolError{
-			Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err),
 		}
 	}
 	helper.GameNickName = gu.Username

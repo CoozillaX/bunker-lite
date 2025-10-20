@@ -101,7 +101,6 @@ func KeepGuAlive(c *gin.Context) {
 		SetEncryptSuffix(0xc).
 		Do()
 	if protocolError != nil {
-		_ = database.DeleteActiveG79User(request.Token, false)
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
 			ErrorType: KeepGuAliveErrorMeetError,
 			ErrorInfo: fmt.Sprintf("KeepGuAlive: %v", protocolError.Error()),

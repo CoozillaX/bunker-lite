@@ -80,7 +80,6 @@ func RequestDailyGrowth(c *gin.Context) {
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
 	if protocolError != nil {
-		_ = database.DeleteActiveG79User(request.Token, false)
 		c.JSON(http.StatusOK, DailyGrowthResponse{
 			ErrorInfo: fmt.Sprintf("RequestDailyGrowth: %v", protocolError.Error()),
 			Success:   false,
