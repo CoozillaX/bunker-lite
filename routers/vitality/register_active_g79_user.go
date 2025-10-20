@@ -94,7 +94,7 @@ func RegisterActiveGu(c *gin.Context) {
 			SessionExpireTime: activeGu.SessionExpireTime,
 		})
 	case RequestTypeCleanUpSession:
-		if err = database.DeleteActiveG79User(helper.HelperToken, false); err != nil {
+		if err = database.DeleteActiveG79User(request.Token, false); err != nil {
 			c.JSON(http.StatusOK, RegisterActiveGuResponse{
 				ErrorInfo: fmt.Sprintf("RegisterActiveGu: %v", err),
 				Success:   false,
