@@ -29,6 +29,7 @@ type RegisterActiveGuRequest struct {
 type RegisterActiveGuResponse struct {
 	ErrorInfo         string `json:"error_info"`
 	Success           bool   `json:"success"`
+	SessionType       uint8  `json:"session_type"`
 	SessionID         string `json:"session_id"`
 	SessionExpireTime int64  `json:"session_expire_time"`
 }
@@ -90,6 +91,7 @@ func RegisterActiveGu(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, RegisterActiveGuResponse{
 			Success:           true,
+			SessionType:       activeGu.SessionType,
 			SessionID:         activeGu.SessionID,
 			SessionExpireTime: activeGu.SessionExpireTime,
 		})
