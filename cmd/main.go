@@ -33,7 +33,6 @@ func main() {
 			fmt.Sprintf("%s/vitality_api/registry_active_gu", authServerAddress),
 			RegisterActiveGuRequest{
 				Token:              authServerToken,
-				RequestType:        RequestTypeRegisterSession,
 				OverrideSession:    true,
 				EngineVersion:      engineVersion,
 				ProvidedPeAuthData: peAuthData,
@@ -107,6 +106,7 @@ func main() {
 						pterm.Error.Printfln("[KeepGuAlive] %v", resp.ErrorInfo)
 					case KeepGuAliveErrorLifeLimit:
 						pterm.Info.Printfln("[KeepGuAlive] This session reach its max life time limit. Do refresh.")
+						cleanUpSession(authServerAddress, authServerToken, registerActiveGuResp.SessionID)
 					}
 					cancel()
 					return
@@ -155,5 +155,29 @@ func main() {
 
 		// Wait all goroutine done
 		waitGroup.Wait()
+	}
+}
+
+func cleanUpSession(address string, token string, sessionID string) {
+	for {
+		resp, err := SendAndGetHttpResponse[CleanUpSessionResponse](
+			fmt.Sprintf("%s/vitality_api/clean_up_session", address),
+			CleanUpSessionRequest{
+				Token:     token,
+				SessionID: sessionID,
+			},
+		)
+		if err != nil {
+			pterm.Warning.Printfln("[CleanUpSession] %v", err)
+			continue
+		}
+
+		if resp.Success {
+			pterm.Success.Printfln("[CleanUpSession] %#v", resp)
+		} else {
+			pterm.Error.Printfln("[CleanUpSession] %v", err)
+		}
+
+		break
 	}
 }

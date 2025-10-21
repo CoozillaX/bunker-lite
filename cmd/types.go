@@ -2,15 +2,9 @@ package main
 
 // ------------------------- Register G79 User Transaction -------------------------
 
-const (
-	RequestTypeRegisterSession uint8 = iota
-	RequestTypeCleanUpSession
-)
-
 // RegisterActiveGuRequest ..
 type RegisterActiveGuRequest struct {
 	Token              string `json:"token,omitempty"`
-	RequestType        uint8  `json:"request_type,omitempty"`
 	OverrideSession    bool   `json:"override_session,omitempty"`
 	EngineVersion      string `json:"engine_version,omitempty"`
 	ProvidedPeAuthData string `json:"provided_pe_auth_data,omitempty"`
@@ -24,6 +18,20 @@ type RegisterActiveGuResponse struct {
 	SessionType       uint8  `json:"session_type"`
 	SessionID         string `json:"session_id"`
 	SessionExpireTime int64  `json:"session_expire_time"`
+}
+
+// ------------------------- Clean Up Session -------------------------
+
+// CleanUpSessionRequest ..
+type CleanUpSessionRequest struct {
+	Token     string `json:"token,omitempty"`
+	SessionID string `json:"session_id,omitempty"`
+}
+
+// CleanUpSessionResponse ..
+type CleanUpSessionResponse struct {
+	ErrorInfo string `json:"error_info"`
+	Success   bool   `json:"success"`
 }
 
 // ------------------------- Keep G79 User Alive -------------------------
