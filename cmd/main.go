@@ -14,7 +14,7 @@ const EnableDebug = true
 
 func main() {
 	// prepare 1
-	authServerAddress := define.StdAuthServerAddress
+	authServerAddress := define.StdAuthServerPhoenixAPI
 	authServerToken := "YOUR FB TOKEN"
 
 	// prepare 2
@@ -40,14 +40,14 @@ func main() {
 			},
 		)
 		if err != nil {
-			pterm.Warning.Printfln("[RegisterActive] %v", err)
+			pterm.Warning.Printfln("[RegisterActiveGu] %v", err)
 			continue
 		}
 
 		if !registerActiveGuResp.Success {
 			panic(fmt.Sprintf("RegisterActive: %v", registerActiveGuResp.ErrorInfo))
 		}
-		pterm.Info.Printfln("[RegisterActive] %#v", registerActiveGuResp)
+		pterm.Info.Printfln("[RegisterActiveGu] %#v", registerActiveGuResp)
 
 		// Init variable
 		sessionExpireTime = registerActiveGuResp.SessionExpireTime
