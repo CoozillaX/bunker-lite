@@ -2,11 +2,18 @@ package eulogist_api
 
 import (
 	"bunker-lite/database"
+	"bunker-lite/define"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
+)
+
+const (
+	AccountTypeMpayUser uint8 = iota
+	AccountTypePeAuth
+	AccountTypeSaAuth
 )
 
 // HelperInfoRequest ..
@@ -16,12 +23,12 @@ type HelperInfoRequest struct {
 
 // HelperInfoResponse ..
 type HelperInfoResponse struct {
-	ErrorInfo            string `json:"error_info"`
-	NetEaseRequireVerify bool   `json:"netease_require_verify"`
-	VerifyURL            string `json:"verify_url"`
-	Success              bool   `json:"success"`
-	GameNickName         string `json:"game_nick_name"`
-	G79UserUID           string `json:"g79_user_uid"`
+	ErrorInfo         string `json:"error_info"`
+	Success           bool   `json:"success"`
+	AccountType       uint8  `json:"account_type"`
+	AccountExpireTime int64  `json:"account_expire_time"`
+	GameNickName      string `json:"game_nick_name"`
+	G79UserUID        string `json:"g79_user_uid"`
 }
 
 // GetStdHelperInfo ..
@@ -62,15 +69,22 @@ func GetStdHelperInfo(c *gin.Context) {
 		return
 	}
 
-	nickName, g79UserUID, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
+	sessionType, sessionExpireTime, nickName, g79UserUID, protocolError := database.GetHelperBasicInfo(
+		account.AuthServerSecret(),
+		true,
+	)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo:            fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题, 原因是 %s", protocolError.Error()),
-			NetEaseRequireVerify: len(protocolError.VerifyUrl) != 0,
-			VerifyURL:            protocolError.VerifyUrl,
-			Success:              false,
+			ErrorInfo: fmt.Sprintf(
+				"GetStdHelperInfo: 请求 MC 账号信息时出现问题, 原因是 %s",
+				protocolError.Error(),
+			),
+			Success: false,
 		})
 		return
+	}
+	if sessionType == define.SessionTypeMpayUser {
+		sessionExpireTime = 0
 	}
 
 	account.UpdateData(map[string]any{
@@ -99,8 +113,10 @@ func GetStdHelperInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, HelperInfoResponse{
-		Success:      true,
-		GameNickName: nickName,
-		G79UserUID:   g79UserUID,
+		Success:           true,
+		AccountType:       sessionType,
+		AccountExpireTime: sessionExpireTime,
+		GameNickName:      nickName,
+		G79UserUID:        g79UserUID,
 	})
 }

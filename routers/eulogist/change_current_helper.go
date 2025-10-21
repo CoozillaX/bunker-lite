@@ -17,12 +17,10 @@ type HelperChangeRequest struct {
 
 // HelperChangeResponse ..
 type HelperChangeResponse struct {
-	ErrorInfo            string `json:"error_info"`
-	NetEaseRequireVerify bool   `json:"netease_require_verify"`
-	VerifyURL            string `json:"verify_url"`
-	Success              bool   `json:"success"`
-	GameNickName         string `json:"game_nick_name"`
-	G79UserUID           string `json:"g79_user_uid"`
+	ErrorInfo    string `json:"error_info"`
+	Success      bool   `json:"success"`
+	GameNickName string `json:"game_nick_name"`
+	G79UserUID   string `json:"g79_user_uid"`
 }
 
 // ChangeCurrentHelper ..
@@ -75,13 +73,14 @@ func ChangeCurrentHelper(c *gin.Context) {
 		return
 	}
 
-	nickName, g79UserUID, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
+	_, _, nickName, g79UserUID, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperChangeResponse{
-			ErrorInfo:            fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题, 原因是 %s", protocolError.Error()),
-			NetEaseRequireVerify: len(protocolError.VerifyUrl) != 0,
-			VerifyURL:            protocolError.VerifyUrl,
-			Success:              false,
+			ErrorInfo: fmt.Sprintf(
+				"ChangeCurrentHelper: 切换 MC 账号时出现问题, 原因是 %s",
+				protocolError.Error(),
+			),
+			Success: false,
 		})
 		return
 	}

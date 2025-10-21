@@ -154,7 +154,13 @@ func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (uniqueID string
 }
 
 // GetHelperBasicInfo ..
-func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, g79UserUID string, protocolError *defines.ProtocolError) {
+func GetHelperBasicInfo(uniqueID string, useLock bool) (
+	sessionType uint8,
+	sessionExpireTime int64,
+	nickName string,
+	g79UserUID string,
+	protocolError *defines.ProtocolError,
+) {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -162,7 +168,7 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, g79User
 
 	// check auth helper
 	if !CheckAuthHelperByUniqueID(uniqueID, false) {
-		return "", "", &defines.ProtocolError{
+		return 0, 0, "", "", &defines.ProtocolError{
 			Message: "GetHelperBasicInfo: 无法找到目标 MC 账号",
 		}
 	}
@@ -175,15 +181,8 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, g79User
 	// g79 login
 	gu, activeGu, err := LoadOrRegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", false)
 	if err != nil {
-		return "", "", &defines.ProtocolError{
+		return 0, 0, "", "", &defines.ProtocolError{
 			Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err),
-		}
-	}
-	if activeGu.SessionType != define.SessionTypeMpayUser {
-		if gu, _, err = RegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", false); err != nil {
-			return "", "", &defines.ProtocolError{
-				Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err),
-			}
 		}
 	}
 	helper.GameNickName = gu.Username
@@ -207,12 +206,12 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, g79User
 		return nil
 	})
 	if err != nil {
-		return "", "", &defines.ProtocolError{
+		return 0, 0, "", "", &defines.ProtocolError{
 			Message: fmt.Sprintf("UpdateAuthHelper: 更新 MC 账号信息时出现问题, 原因是 %v", err),
 		}
 	}
 
-	return helper.GameNickName, helper.G79UserUID, nil
+	return activeGu.SessionType, activeGu.SessionExpireTime, helper.GameNickName, helper.G79UserUID, nil
 }
 
 // UpdateHelperToken ..
