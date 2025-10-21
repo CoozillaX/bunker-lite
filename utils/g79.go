@@ -17,7 +17,7 @@ func init() {
 	g79UserCache = cache.New(25*time.Minute, 5*time.Minute)
 	g79UserCache.OnEvicted(func(uid string, value any) {
 		gu := value.(*g79.G79User)
-		gu.AccOnlineExp()
+		gu.Logout()
 	})
 }
 
@@ -29,7 +29,6 @@ func HandleG79Login(engineVersion string, mu *defines.MpayUser) (*g79.G79User, *
 		if gu.GameInfo.EngineVersion == engineVersion {
 			// if expired?
 			if ginerr := gu.Update(); ginerr == nil {
-				gu.AccOnlineExp()
 				g79UserCache.SetDefault(mu.Uid, gu)
 				return gu, nil
 			}
