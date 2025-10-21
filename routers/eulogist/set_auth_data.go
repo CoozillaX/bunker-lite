@@ -30,7 +30,7 @@ func SetAuthData(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, AuthDataSetResponse{
-			ErrorInfo: fmt.Sprintf("SetAuthData: 设置 PE Auth 时出现问题, 原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("SetAuthData: 设置 Pe Auth 时出现问题, 原因是 %v", err),
 			Success:   false,
 		})
 		return
@@ -73,7 +73,7 @@ func SetAuthData(c *gin.Context) {
 	if request.DoClean {
 		if err = database.DeleteActiveG79User(helper.HelperToken, true); err != nil {
 			c.JSON(http.StatusOK, AuthDataSetResponse{
-				ErrorInfo: fmt.Sprintf("SetAuthData: 设置 PE Auth 时出现问题, 原因是 %v", err),
+				ErrorInfo: fmt.Sprintf("SetAuthData: 设置 Pe Auth 时出现问题, 原因是 %v", err),
 				Success:   false,
 			})
 			return
@@ -84,7 +84,7 @@ func SetAuthData(c *gin.Context) {
 
 	if len(request.PeAuth) == 0 && len(request.SaAuth) == 0 {
 		c.JSON(http.StatusOK, AuthDataSetResponse{
-			ErrorInfo: "SetAuthData: 提供的 PE Auth 或 Sa Auth 的长度不得为 0",
+			ErrorInfo: "SetAuthData: 提供的 Pe Auth 或 Sa Auth 的长度不得为 0",
 			Success:   false,
 		})
 		return
@@ -98,7 +98,7 @@ func SetAuthData(c *gin.Context) {
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, AuthDataSetResponse{
-			ErrorInfo: fmt.Sprintf("SetAuthData: 设置 PE Auth 时出现问题, 原因是 %v", err),
+			ErrorInfo: fmt.Sprintf("SetAuthData: 设置 Pe Auth 时出现问题, 原因是 %v", err),
 			Success:   false,
 		})
 		return

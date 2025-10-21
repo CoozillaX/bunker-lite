@@ -62,7 +62,7 @@ func TanLobbyDebug(c *gin.Context) {
 	}
 	if !ok {
 		c.JSON(http.StatusOK, TanLobbyDebugResponse{
-			ErrorInfo: fmt.Sprintf("TanLobbyDebug: Bad PE auth login response; resp = %#v", resp),
+			ErrorInfo: fmt.Sprintf("TanLobbyDebug: Bad pe auth login response; resp = %#v", resp),
 			Success:   false,
 		})
 		return

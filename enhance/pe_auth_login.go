@@ -66,7 +66,7 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	// 0. Prepare
 	var saDataInCookie map[string]any
 
-	// 1. Parse PE auth data
+	// 1. Parse Pe auth data
 	saAuthData, err := ParseHttpEncrypt(peAuthStringData)
 	if err != nil {
 		return nil, fmt.Errorf("PeAuthLogin: %v", err)
@@ -80,7 +80,7 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	cpuDigit, exist3 := saDataInCookie["cpu_digit"].(string)
 	osName, exist4 := saDataInCookie["os_name"].(string)
 	if !exist1 || !exist2 || !exist3 || !exist4 {
-		return nil, fmt.Errorf("PeAuthLogin: Wrong PE Auth data string %#v", peAuthStringData)
+		return nil, fmt.Errorf("PeAuthLogin: Wrong Pe Auth data string %#v", peAuthStringData)
 	}
 
 	// 3. Sync part of basic data
