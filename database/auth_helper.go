@@ -154,13 +154,7 @@ func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (uniqueID string
 }
 
 // GetHelperBasicInfo ..
-func GetHelperBasicInfo(uniqueID string, useLock bool) (
-	sessionType uint8,
-	sessionExpireTime int64,
-	nickName string,
-	g79UserUID string,
-	protocolError *defines.ProtocolError,
-) {
+func GetHelperBasicInfo(uniqueID string, useLock bool) (activeGu define.ActiveG79User, protocolError *defines.ProtocolError) {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -168,7 +162,7 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (
 
 	// check auth helper
 	if !CheckAuthHelperByUniqueID(uniqueID, false) {
-		return 0, 0, "", "", &defines.ProtocolError{
+		return define.ActiveG79User{}, &defines.ProtocolError{
 			Message: "GetHelperBasicInfo: 无法找到目标 MC 账号",
 		}
 	}
@@ -177,7 +171,7 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (
 	// g79 login
 	gu, activeGu, err := LoadOrRegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", useLock)
 	if err != nil {
-		return 0, 0, "", "", &defines.ProtocolError{
+		return define.ActiveG79User{}, &defines.ProtocolError{
 			Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err),
 		}
 	}
@@ -202,12 +196,12 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (
 		return nil
 	})
 	if err != nil {
-		return 0, 0, "", "", &defines.ProtocolError{
+		return define.ActiveG79User{}, &defines.ProtocolError{
 			Message: fmt.Sprintf("UpdateAuthHelper: 更新 MC 账号信息时出现问题, 原因是 %v", err),
 		}
 	}
 
-	return activeGu.SessionType, activeGu.SessionExpireTime, helper.GameNickName, helper.G79UserUID, nil
+	return activeGu, nil
 }
 
 // UpdateHelperToken ..

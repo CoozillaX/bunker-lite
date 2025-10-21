@@ -73,7 +73,7 @@ func ChangeCurrentHelper(c *gin.Context) {
 		return
 	}
 
-	_, _, nickName, g79UserUID, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
+	activeGu, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperChangeResponse{
 			ErrorInfo: fmt.Sprintf(
@@ -86,8 +86,8 @@ func ChangeCurrentHelper(c *gin.Context) {
 	}
 
 	account.UpdateData(map[string]any{
-		"gameNickName":       nickName,
-		"g79UserUID":         g79UserUID,
+		"gameNickName":       activeGu.RecordG79UserData.Username,
+		"g79UserUID":         activeGu.RecordG79UserData.EntityID,
 		"authHelperUniqueID": account.AuthServerSecret(),
 	})
 	user.CurrentAuthServerAccount = protocol.Option(account)
@@ -112,7 +112,7 @@ func ChangeCurrentHelper(c *gin.Context) {
 
 	c.JSON(http.StatusOK, HelperChangeResponse{
 		Success:      true,
-		GameNickName: nickName,
-		G79UserUID:   g79UserUID,
+		GameNickName: activeGu.RecordG79UserData.Username,
+		G79UserUID:   activeGu.RecordG79UserData.EntityID,
 	})
 }

@@ -2,7 +2,6 @@ package eulogist_api
 
 import (
 	"bunker-lite/database"
-	"bunker-lite/define"
 	"fmt"
 	"net/http"
 
@@ -69,10 +68,7 @@ func GetStdHelperInfo(c *gin.Context) {
 		return
 	}
 
-	sessionType, sessionExpireTime, nickName, g79UserUID, protocolError := database.GetHelperBasicInfo(
-		account.AuthServerSecret(),
-		true,
-	)
+	activeGu, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperInfoResponse{
 			ErrorInfo: fmt.Sprintf(
@@ -83,13 +79,10 @@ func GetStdHelperInfo(c *gin.Context) {
 		})
 		return
 	}
-	if sessionType == define.SessionTypeMpayUser {
-		sessionExpireTime = 0
-	}
 
 	account.UpdateData(map[string]any{
-		"gameNickName":       nickName,
-		"g79UserUID":         g79UserUID,
+		"gameNickName":       activeGu.RecordG79UserData.Username,
+		"g79UserUID":         activeGu.RecordG79UserData.EntityID,
 		"authHelperUniqueID": account.AuthServerSecret(),
 	})
 	user.CurrentAuthServerAccount = protocol.Option(account)
@@ -114,9 +107,9 @@ func GetStdHelperInfo(c *gin.Context) {
 
 	c.JSON(http.StatusOK, HelperInfoResponse{
 		Success:           true,
-		AccountType:       sessionType,
-		AccountExpireTime: sessionExpireTime,
-		GameNickName:      nickName,
-		G79UserUID:        g79UserUID,
+		AccountType:       activeGu.SessionType,
+		AccountExpireTime: activeGu.SessionExpireTime,
+		GameNickName:      activeGu.RecordG79UserData.Username,
+		G79UserUID:        activeGu.RecordG79UserData.EntityID,
 	})
 }
