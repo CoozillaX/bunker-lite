@@ -106,7 +106,7 @@ func KeepGuAlive(c *gin.Context) {
 		return
 	}
 
-	sessionExpireTime, err := database.ExtendG79UserLifeTime(request.Token, activeGu, false)
+	activeGu, err = database.ExtendG79UserLifeTime(request.Token, activeGu, false)
 	if err != nil {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
 			ErrorType: KeepGuAliveErrorMeetError,
@@ -118,6 +118,6 @@ func KeepGuAlive(c *gin.Context) {
 
 	c.JSON(http.StatusOK, KeepGuAliveResponse{
 		Success:           true,
-		SessionExpireTime: sessionExpireTime,
+		SessionExpireTime: activeGu.SessionExpireTime,
 	})
 }

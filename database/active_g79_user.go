@@ -239,10 +239,7 @@ func LoadOrRegisterActiveG79User(helper define.AuthServerHelper, engineVersion s
 }
 
 // ExtendG79UserLifeTime ..
-func ExtendG79UserLifeTime(helperToken string, activeGu define.ActiveG79User, useLock bool) (
-	sessionExpireTime int64,
-	err error,
-) {
+func ExtendG79UserLifeTime(helperToken string, activeGu define.ActiveG79User, useLock bool) (define.ActiveG79User, error) {
 	if useLock {
 		LockG79Transaction(helperToken)
 		defer UnlockG79Transaction(helperToken)
@@ -250,14 +247,14 @@ func ExtendG79UserLifeTime(helperToken string, activeGu define.ActiveG79User, us
 
 	activeGu.SessionExpireTime =
 		time.Now().Unix() + SessionExpireTimeSecond
-	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
+	err := serverDatabase.Update(func(tx *bbolt.Tx) error {
 		return tx.
 			Bucket([]byte(DATABASE_KEY_ACTIVE_G79_USER)).
 			Put([]byte(helperToken), define.EncodeActiveG79User(activeGu))
 	})
 	if err != nil {
-		return 0, fmt.Errorf("ExtendG79UserLifeTime: %v", err)
+		return define.ActiveG79User{}, fmt.Errorf("ExtendG79UserLifeTime: %v", err)
 	}
 
-	return activeGu.SessionExpireTime, nil
+	return activeGu, nil
 }
