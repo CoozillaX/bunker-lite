@@ -78,11 +78,15 @@ func (s *StdAuthServerAccount) FormatInGame() string {
 }
 
 func (s *StdAuthServerAccount) AuthServerAddress() string {
-	return StdAuthServerAddress
+	return StdAuthServerPhoenixAPI
 }
 
 func (s *StdAuthServerAccount) AuthServerSecret() string {
 	return s.authHelperUniqueID
+}
+
+func (s *StdAuthServerAccount) GameNickName() string {
+	return s.gameNickName
 }
 
 func (s *StdAuthServerAccount) G79UserUID() string {

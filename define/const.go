@@ -1,8 +1,9 @@
 package define
 
 const (
-	StdAuthServerAddress = "https://yorha.eulogist-api.icu"
-	UserPasswordSalt     = "YoRHa"
+	StdAuthServerPhoenixAPI = "https://yorha.eulogist-api.icu"
+	StdAuthServerAddress    = "https://yorha.eulogist-api.icu/eulogist_api"
+	UserPasswordSalt        = "YoRHa"
 )
 
 const (

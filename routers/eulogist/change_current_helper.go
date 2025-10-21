@@ -2,6 +2,7 @@ package eulogist_api
 
 import (
 	"bunker-lite/database"
+	"bunker-lite/define"
 	"fmt"
 	"net/http"
 
@@ -26,6 +27,8 @@ type HelperChangeResponse struct {
 // ChangeCurrentHelper ..
 func ChangeCurrentHelper(c *gin.Context) {
 	var request HelperChangeRequest
+	var gameNickName string
+	var g79UserUID string
 
 	err := c.Bind(&request)
 	if err != nil {
@@ -85,9 +88,18 @@ func ChangeCurrentHelper(c *gin.Context) {
 		return
 	}
 
+	if activeGu.SessionType == define.SessionTypeMpayUser {
+		gameNickName = activeGu.RecordG79UserData.Username
+		g79UserUID = activeGu.RecordG79UserData.EntityID
+	} else {
+		stdAccount := account.(*define.StdAuthServerAccount)
+		gameNickName = stdAccount.GameNickName()
+		g79UserUID = stdAccount.G79UserUID()
+	}
+
 	account.UpdateData(map[string]any{
-		"gameNickName":       activeGu.RecordG79UserData.Username,
-		"g79UserUID":         activeGu.RecordG79UserData.EntityID,
+		"gameNickName":       gameNickName,
+		"g79UserUID":         g79UserUID,
 		"authHelperUniqueID": account.AuthServerSecret(),
 	})
 	user.CurrentAuthServerAccount = protocol.Option(account)
@@ -112,7 +124,7 @@ func ChangeCurrentHelper(c *gin.Context) {
 
 	c.JSON(http.StatusOK, HelperChangeResponse{
 		Success:      true,
-		GameNickName: activeGu.RecordG79UserData.Username,
-		G79UserUID:   activeGu.RecordG79UserData.EntityID,
+		GameNickName: gameNickName,
+		G79UserUID:   g79UserUID,
 	})
 }

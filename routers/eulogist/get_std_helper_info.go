@@ -2,6 +2,7 @@ package eulogist_api
 
 import (
 	"bunker-lite/database"
+	"bunker-lite/define"
 	"fmt"
 	"net/http"
 
@@ -80,29 +81,31 @@ func GetStdHelperInfo(c *gin.Context) {
 		return
 	}
 
-	account.UpdateData(map[string]any{
-		"gameNickName":       activeGu.RecordG79UserData.Username,
-		"g79UserUID":         activeGu.RecordG79UserData.EntityID,
-		"authHelperUniqueID": account.AuthServerSecret(),
-	})
-	user.CurrentAuthServerAccount = protocol.Option(account)
-
-	for index, value := range user.MultipleAuthServerAccounts {
-		if !value.IsStdAccount() {
-			continue
-		}
-		if value.AuthServerSecret() == account.AuthServerSecret() {
-			user.MultipleAuthServerAccounts[index] = account
-		}
-	}
-
-	err = database.UpdateUserInfo(user, true)
-	if !account.IsStdAccount() {
-		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo: fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题, 原因是 %s", err),
-			Success:   false,
+	if activeGu.SessionType == define.SessionTypeMpayUser {
+		account.UpdateData(map[string]any{
+			"gameNickName":       activeGu.RecordG79UserData.Username,
+			"g79UserUID":         activeGu.RecordG79UserData.EntityID,
+			"authHelperUniqueID": account.AuthServerSecret(),
 		})
-		return
+		user.CurrentAuthServerAccount = protocol.Option(account)
+
+		for index, value := range user.MultipleAuthServerAccounts {
+			if !value.IsStdAccount() {
+				continue
+			}
+			if value.AuthServerSecret() == account.AuthServerSecret() {
+				user.MultipleAuthServerAccounts[index] = account
+			}
+		}
+
+		err = database.UpdateUserInfo(user, true)
+		if !account.IsStdAccount() {
+			c.JSON(http.StatusOK, HelperInfoResponse{
+				ErrorInfo: fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题, 原因是 %s", err),
+				Success:   false,
+			})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, HelperInfoResponse{
