@@ -174,12 +174,8 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (
 	}
 	helper := GetAuthHelperByUniqueID(uniqueID, false)
 
-	// lock g79 transaction
-	LockG79Transaction(helper.HelperToken)
-	defer UnlockG79Transaction(helper.HelperToken)
-
 	// g79 login
-	gu, activeGu, err := LoadOrRegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", false)
+	gu, activeGu, err := LoadOrRegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", useLock)
 	if err != nil {
 		return 0, 0, "", "", &defines.ProtocolError{
 			Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err),
