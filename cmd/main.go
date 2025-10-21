@@ -55,7 +55,17 @@ func main() {
 		ctx, cancel = context.WithCancel(context.Background())
 
 		// Debug
-		{
+		if true {
+			resp, _ := SendAndGetHttpResponse[SessionInfoResponse](
+				fmt.Sprintf("%s/vitality_api/request_session_info", authServerAddress),
+				SessionInfoRequest{
+					Token: authServerToken,
+				},
+			)
+			fmt.Printf("%#v\n", resp)
+			// return
+		}
+		if true {
 			resp, _ := SendAndGetHttpResponse[DailyGrowthResponse](
 				fmt.Sprintf("%s/vitality_api/request_daily_growth", authServerAddress),
 				DailyGrowthRequest{

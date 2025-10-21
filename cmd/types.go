@@ -20,6 +20,28 @@ type RegisterActiveGuResponse struct {
 	SessionExpireTime int64  `json:"session_expire_time"`
 }
 
+// ------------------------- Request Session Info -------------------------
+
+const (
+	ResponseTypeFindSession uint8 = iota
+	ResponseTypeNoSession
+)
+
+// SessionInfoRequest ..
+type SessionInfoRequest struct {
+	Token string `json:"token,omitempty"`
+}
+
+// SessionInfoResponse ..
+type SessionInfoResponse struct {
+	ErrorInfo         string `json:"error_info"`
+	Success           bool   `json:"success"`
+	ResponseType      uint8  `json:"response_type"`
+	SessionID         string `json:"session_id"`
+	SessionType       uint8  `json:"session_type"`
+	SessionExpireTime int64  `json:"session_expire_time"`
+}
+
 // ------------------------- Clean Up Session -------------------------
 
 // CleanUpSessionRequest ..
