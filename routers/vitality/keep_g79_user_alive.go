@@ -1,11 +1,8 @@
 package vitality_api
 
 import (
-	"bunker-core/protocol/g79"
-	"bunker-core/protocol/gameinfo"
 	"bunker-lite/database"
 	"bunker-lite/utils"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -99,12 +96,7 @@ func KeepGuAlive(c *gin.Context) {
 		return
 	}
 
-	reader, protocolError := activeGu.RecordG79UserData.CreateHttpClient().
-		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/authentication/update").
-		SetTokenMode(g79.TOKEN_MODE_NORMAL).
-		SetEncryptSuffix(0xc).
-		Do()
+	protocolError := activeGu.RecordG79UserData.Update()
 	if protocolError != nil {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
 			ErrorType: KeepGuAliveErrorMeetError,
@@ -114,21 +106,7 @@ func KeepGuAlive(c *gin.Context) {
 		return
 	}
 
-	var query struct {
-		Entity struct {
-			Token string `json:"token"`
-		} `json:"entity"`
-	}
-	if err = json.NewDecoder(reader).Decode(&query); err != nil {
-		c.JSON(http.StatusOK, KeepGuAliveResponse{
-			ErrorType: KeepGuAliveErrorMeetError,
-			ErrorInfo: fmt.Sprintf("KeepGuAlive: %v", protocolError.Error()),
-			Success:   false,
-		})
-		return
-	}
-
-	activeGu, err = database.ExtendG79UserLifeTime(request.Token, query.Entity.Token, activeGu.SessionID, false)
+	sessionExpireTime, err := database.ExtendG79UserLifeTime(request.Token, activeGu, false)
 	if err != nil {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
 			ErrorType: KeepGuAliveErrorMeetError,
@@ -140,6 +118,6 @@ func KeepGuAlive(c *gin.Context) {
 
 	c.JSON(http.StatusOK, KeepGuAliveResponse{
 		Success:           true,
-		SessionExpireTime: activeGu.SessionExpireTime,
+		SessionExpireTime: sessionExpireTime,
 	})
 }

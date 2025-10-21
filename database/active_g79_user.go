@@ -239,8 +239,8 @@ func LoadOrRegisterActiveG79User(helper define.AuthServerHelper, engineVersion s
 }
 
 // ExtendG79UserLifeTime ..
-func ExtendG79UserLifeTime(helperToken string, newG79UserToken string, sessionID string, useLock bool) (
-	activeGu define.ActiveG79User,
+func ExtendG79UserLifeTime(helperToken string, activeGu define.ActiveG79User, useLock bool) (
+	sessionExpireTime int64,
 	err error,
 ) {
 	if useLock {
@@ -248,31 +248,16 @@ func ExtendG79UserLifeTime(helperToken string, newG79UserToken string, sessionID
 		defer UnlockG79Transaction(helperToken)
 	}
 
-	activeGu, found, err := LoadActiveG79User(helperToken, false)
-	if err != nil {
-		return define.ActiveG79User{}, fmt.Errorf("ExtendG79UserLifeTime: %v", err)
-	}
-	if !found {
-		return define.ActiveG79User{}, fmt.Errorf("ExtendG79UserLifeTime: Session not found or is expired")
-	}
-	if sessionID != activeGu.SessionID {
-		return define.ActiveG79User{}, fmt.Errorf(
-			"ExtendG79UserLifeTime: Session ID not matched (expect = %#v, provided = %#v)",
-			activeGu.SessionID, sessionID,
-		)
-	}
-
-	activeGu.RecordG79UserData.G79Token = newG79UserToken
-	activeGu.SessionExpireTime = time.Now().Unix() + SessionExpireTimeSecond
-
+	activeGu.SessionExpireTime =
+		time.Now().Unix() + SessionExpireTimeSecond
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
 		return tx.
 			Bucket([]byte(DATABASE_KEY_ACTIVE_G79_USER)).
 			Put([]byte(helperToken), define.EncodeActiveG79User(activeGu))
 	})
 	if err != nil {
-		return define.ActiveG79User{}, fmt.Errorf("ExtendG79UserLifeTime: %v", err)
+		return 0, fmt.Errorf("ExtendG79UserLifeTime: %v", err)
 	}
 
-	return activeGu, nil
+	return activeGu.SessionExpireTime, nil
 }
