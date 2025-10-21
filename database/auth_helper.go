@@ -167,7 +167,7 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (activeGu define.ActiveG7
 	helper := GetAuthHelperByUniqueID(uniqueID, false)
 
 	// g79 login
-	gu, activeGu, err := LoadOrRegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", useLock)
+	activeGu, err = LoadOrRegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", useLock)
 	if err != nil {
 		return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
 	}
@@ -175,7 +175,7 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (activeGu define.ActiveG7
 	// update database
 	if activeGu.SessionType == define.SessionTypeMpayUser {
 		err = serverDatabase.Update(func(tx *bbolt.Tx) error {
-			helper.GameNickName = gu.Username
+			helper.GameNickName = activeGu.RecordG79UserData.Username
 
 			buf := bytes.NewBuffer(nil)
 			writer := protocol.NewWriter(buf, 0)

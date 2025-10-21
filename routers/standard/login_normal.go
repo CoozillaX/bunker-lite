@@ -234,7 +234,7 @@ func Login(c *gin.Context) {
 	}
 
 	// g79 login
-	gu, activeGu, err := database.LoadOrRegisterActiveG79User(
+	activeGu, err := database.LoadOrRegisterActiveG79User(
 		helper,
 		engineVersion,
 		request.ProvidedPeAuthData,
@@ -255,8 +255,11 @@ func Login(c *gin.Context) {
 	// result in can not switch to the correct version.
 	for range 2 {
 		// request server info
-		isSpecialRequest := (activeGu.SessionType != define.SessionTypeMpayUser)
-		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolError := requestServerInfo(isSpecialRequest, gu, &request)
+		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolError := requestServerInfo(
+			activeGu.SessionType != define.SessionTypeMpayUser,
+			activeGu.RecordG79UserData,
+			&request,
+		)
 		if protocolError != nil {
 			c.JSON(http.StatusOK, AuthResponse{
 				Message: Message{
@@ -275,7 +278,7 @@ func Login(c *gin.Context) {
 				engineVersion = value.(string)
 			}
 			// relogin g79 user
-			gu, activeGu, err = database.RegisterActiveG79User(
+			activeGu, err = database.RegisterActiveG79User(
 				helper,
 				engineVersion,
 				"",
@@ -312,9 +315,9 @@ func Login(c *gin.Context) {
 		}
 
 		// save info for anti-cheat callback
-		session.Store(session_key_entity_id, gu.EntityID)
-		session.Store(session_key_engine_version, gu.GameInfo.EngineVersion)
-		session.Store(session_key_patch_version, gu.GameInfo.PatchVersion)
+		session.Store(session_key_entity_id, activeGu.RecordG79UserData.EntityID)
+		session.Store(session_key_engine_version, activeGu.RecordG79UserData.GameInfo.EngineVersion)
+		session.Store(session_key_patch_version, activeGu.RecordG79UserData.GameInfo.PatchVersion)
 
 		// response
 		resp := AuthResponse{
@@ -324,7 +327,7 @@ func Login(c *gin.Context) {
 			BotSkin:        currentUsingMod.AsPhoenixBotSkin(),
 			BotComponent:   currentUsingMod.AsPhoenixBotComponent(),
 			FBToken:        request.FBToken,
-			MasterName:     gu.Username,
+			MasterName:     activeGu.RecordG79UserData.Username,
 			RentalServerIP: serverInfo.IPAddress,
 			ChainInfo:      serverInfo.ChainInfo,
 		}

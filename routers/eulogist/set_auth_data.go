@@ -89,7 +89,7 @@ func SetAuthData(c *gin.Context) {
 		})
 		return
 	}
-	_, _, err = database.RegisterActiveG79User(
+	_, err = database.RegisterActiveG79User(
 		helper,
 		gameinfo.DefaultEngineVersion,
 		request.PeAuth,

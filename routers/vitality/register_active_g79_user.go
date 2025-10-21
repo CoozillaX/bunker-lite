@@ -63,7 +63,7 @@ func RegisterActiveGu(c *gin.Context) {
 		request.EngineVersion = gameinfo.DefaultEngineVersion
 	}
 	if request.OverrideSession {
-		_, activeGu, err = database.RegisterActiveG79User(
+		activeGu, err = database.RegisterActiveG79User(
 			helper,
 			request.EngineVersion,
 			request.ProvidedPeAuthData,
@@ -71,7 +71,7 @@ func RegisterActiveGu(c *gin.Context) {
 			false,
 		)
 	} else {
-		_, activeGu, err = database.LoadOrRegisterActiveG79User(
+		activeGu, err = database.LoadOrRegisterActiveG79User(
 			helper,
 			request.EngineVersion,
 			request.ProvidedPeAuthData,

@@ -56,7 +56,7 @@ func RequestSessionInfo(c *gin.Context) {
 	database.LockG79Transaction(request.Token)
 	defer database.UnlockG79Transaction(request.Token)
 
-	_, activeGu, found, err := database.LoadActiveG79User(request.Token, false)
+	activeGu, found, err := database.LoadActiveG79User(request.Token, false)
 	if err != nil {
 		c.JSON(http.StatusOK, SessionInfoResponse{
 			ErrorInfo: fmt.Sprintf("RequestSessionInfo: %v", err),

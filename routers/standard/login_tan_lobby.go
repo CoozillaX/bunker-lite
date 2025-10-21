@@ -72,7 +72,7 @@ func TanLobbyLogin(c *gin.Context) {
 	helper = database.GetAuthHelperByToken(request.FBToken, true)
 
 	// g79 login
-	gu, _, err := database.LoadOrRegisterActiveG79User(
+	activeGu, err := database.LoadOrRegisterActiveG79User(
 		helper,
 		gameinfo.DefaultEngineVersion,
 		request.ProvidedPeAuthData,
@@ -88,7 +88,7 @@ func TanLobbyLogin(c *gin.Context) {
 	}
 
 	// query tan lobby room info
-	roomInfo, err := enhance.QueryTanLobbyRoomInfo(gu, request.RoomID)
+	roomInfo, err := enhance.QueryTanLobbyRoomInfo(activeGu.RecordG79UserData, request.RoomID)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
@@ -98,7 +98,7 @@ func TanLobbyLogin(c *gin.Context) {
 	}
 
 	// Get launcher level and current using mod
-	launcherLevel, _, _, protocolError := enhance.GetLauncherLevel(gu)
+	launcherLevel, _, _, protocolError := enhance.GetLauncherLevel(activeGu.RecordG79UserData)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
@@ -106,7 +106,7 @@ func TanLobbyLogin(c *gin.Context) {
 		})
 		return
 	}
-	currentUsingMod, protocolError := enhance.GetCurrentUsingMod(gu)
+	currentUsingMod, protocolError := enhance.GetCurrentUsingMod(activeGu.RecordG79UserData)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", protocolError.Error()),
@@ -122,7 +122,7 @@ func TanLobbyLogin(c *gin.Context) {
 	_, _ = cryptoRand.Read(signalingSeed)
 
 	// compute encrypted token and key to encrypt/decrypt raknet session
-	encryptedUserToken := utils.MD5Sum([]byte(gu.G79Token))
+	encryptedUserToken := utils.MD5Sum([]byte(activeGu.RecordG79UserData.G79Token))
 	encryptKeyBytes := []byte(string(encryptedUserToken) + string(raknetRand))
 	decryptKeyBytes := []byte(string(raknetRand) + string(encryptedUserToken))
 
@@ -138,7 +138,7 @@ func TanLobbyLogin(c *gin.Context) {
 	raknetAESRand = raknetAESRand[0:16]
 
 	// compute signaling ticket by g79 token and seed
-	signalingTicket, err := utils.AES_ECB_PKCS7Encrypt([]byte(gu.G79Token), signalingSeed)
+	signalingTicket, err := utils.AES_ECB_PKCS7Encrypt([]byte(activeGu.RecordG79UserData.G79Token), signalingSeed)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			ErrorInfo: fmt.Sprintf("TanLobbyLogin: %v", err),
@@ -153,7 +153,7 @@ func TanLobbyLogin(c *gin.Context) {
 		TanLobbyLoginResponse{
 			Success:                true,
 			UserUniqueID:           roomInfo.G79UserUID,
-			UserPlayerName:         gu.Username,
+			UserPlayerName:         activeGu.RecordG79UserData.Username,
 			BotLevel:               launcherLevel,
 			BotSkin:                currentUsingMod.AsPhoenixBotSkin(),
 			BotComponent:           currentUsingMod.AsPhoenixBotComponent(),

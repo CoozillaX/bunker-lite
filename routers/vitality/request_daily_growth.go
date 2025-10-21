@@ -53,7 +53,7 @@ func RequestDailyGrowth(c *gin.Context) {
 	database.LockG79Transaction(request.Token)
 	defer database.UnlockG79Transaction(request.Token)
 
-	gu, activeGu, found, err := database.LoadActiveG79User(request.Token, false)
+	activeGu, found, err := database.LoadActiveG79User(request.Token, false)
 	if err != nil {
 		c.JSON(http.StatusOK, DailyGrowthResponse{
 			ErrorInfo: fmt.Sprintf("RequestDailyGrowth: %v", err),
@@ -79,7 +79,7 @@ func RequestDailyGrowth(c *gin.Context) {
 		return
 	}
 
-	reader, protocolError := gu.CreateHttpClient().
+	reader, protocolError := activeGu.RecordG79UserData.CreateHttpClient().
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-get-daily-growth-info").
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).

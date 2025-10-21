@@ -80,11 +80,9 @@ func UnlockG79Transaction(helperToken string) {
 
 // RegisterActiveG79User ..
 func RegisterActiveG79User(helper define.AuthServerHelper, engineVersion string, peAuthData string, saAuthData string, useLock bool) (
-	gu *g79.G79User,
 	activeGu define.ActiveG79User,
 	err error,
 ) {
-	var sessionType uint8
 	if useLock {
 		LockG79Transaction(helper.HelperToken)
 		defer UnlockG79Transaction(helper.HelperToken)
@@ -94,44 +92,40 @@ func RegisterActiveG79User(helper define.AuthServerHelper, engineVersion string,
 		var mu = new(defines.MpayUser)
 		var protocolError *defines.ProtocolError
 		if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
-			return nil, define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", err)
+			return define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", err)
 		}
-		if gu, protocolError = g79.Login(engineVersion, mu); protocolError != nil {
-			return nil, define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", protocolError.Error())
+		if activeGu.RecordG79UserData, protocolError = g79.Login(engineVersion, mu); protocolError != nil {
+			return define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", protocolError.Error())
 		}
-		sessionType = define.SessionTypeMpayUser
+		activeGu.SessionType = define.SessionTypeMpayUser
 	}
 	if len(peAuthData) > 0 {
-		gu, err = enhance.PeAuthLogin(peAuthData)
-		sessionType = define.SessionTypePeAuth
+		activeGu.RecordG79UserData, err = enhance.PeAuthLogin(peAuthData)
+		activeGu.SessionType = define.SessionTypePeAuth
 	}
 	if len(saAuthData) > 0 {
-		gu, err = enhance.SaAuthLogin(engineVersion, saAuthData)
-		sessionType = define.SessionTypeSaAuth
+		activeGu.RecordG79UserData, err = enhance.SaAuthLogin(engineVersion, saAuthData)
+		activeGu.SessionType = define.SessionTypeSaAuth
 	}
 	if err != nil {
-		return nil, define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", err)
+		return define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", err)
 	}
 
 	currentTime := time.Now().Unix()
-	activeG79User := define.ActiveG79User{
-		SessionID:         uuid.NewString(),
-		SessionType:       sessionType,
-		SessionStartTime:  currentTime,
-		SessionExpireTime: currentTime + SessionExpireTimeSecond,
-		RecordG79UserData: gu,
-	}
+	activeGu.SessionID = uuid.NewString()
+	activeGu.SessionStartTime = currentTime
+	activeGu.SessionExpireTime = currentTime + SessionExpireTimeSecond
 
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
 		return tx.
 			Bucket([]byte(DATABASE_KEY_ACTIVE_G79_USER)).
-			Put([]byte(helper.HelperToken), define.EncodeActiveG79User(activeG79User))
+			Put([]byte(helper.HelperToken), define.EncodeActiveG79User(activeGu))
 	})
 	if err != nil {
-		return nil, define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", err)
+		return define.ActiveG79User{}, fmt.Errorf("RegisterActiveG79User: %v", err)
 	}
 
-	return gu, activeG79User, nil
+	return activeGu, nil
 }
 
 // DeleteActiveG79User ..
@@ -188,7 +182,7 @@ func MigrateActiveG79User(legacyHelperToken string, newHelperToken string, useLo
 }
 
 // LoadActiveG79User ..
-func LoadActiveG79User(helperToken string, useLock bool) (gu *g79.G79User, activeGu define.ActiveG79User, found bool, err error) {
+func LoadActiveG79User(helperToken string, useLock bool) (activeGu define.ActiveG79User, found bool, err error) {
 	if useLock {
 		LockG79Transaction(helperToken)
 		defer UnlockG79Transaction(helperToken)
@@ -202,26 +196,25 @@ func LoadActiveG79User(helperToken string, useLock bool) (gu *g79.G79User, activ
 		return nil
 	})
 	if len(activeGu.SessionID) == 0 {
-		return nil, define.ActiveG79User{}, false, nil
+		return define.ActiveG79User{}, false, nil
 	}
 	if activeGu.SessionExpireTime <= time.Now().Unix() {
 		if err = DeleteActiveG79User(helperToken, false); err != nil {
-			return nil, define.ActiveG79User{}, false, fmt.Errorf("LoadActiveG79User: %v", err)
+			return define.ActiveG79User{}, false, fmt.Errorf("LoadActiveG79User: %v", err)
 		}
-		return nil, define.ActiveG79User{}, false, nil
+		return define.ActiveG79User{}, false, nil
 	}
 
 	activeGu.RecordG79UserData.Username, err = enhance.GetName(activeGu.RecordG79UserData)
 	if err != nil {
 		_ = DeleteActiveG79User(helperToken, false)
-		return nil, define.ActiveG79User{}, false, fmt.Errorf("LoadActiveG79User: %v", err)
+		return define.ActiveG79User{}, false, fmt.Errorf("LoadActiveG79User: %v", err)
 	}
-	return activeGu.RecordG79UserData, activeGu, true, nil
+	return activeGu, true, nil
 }
 
 // LoadOrRegisterActiveG79User ..
 func LoadOrRegisterActiveG79User(helper define.AuthServerHelper, engineVersion string, peAuthData string, saAuthData string, useLock bool) (
-	gu *g79.G79User,
 	activeGu define.ActiveG79User,
 	err error,
 ) {
@@ -230,24 +223,23 @@ func LoadOrRegisterActiveG79User(helper define.AuthServerHelper, engineVersion s
 		defer UnlockG79Transaction(helper.HelperToken)
 	}
 
-	gu, activeGu, found, err := LoadActiveG79User(helper.HelperToken, false)
+	activeGu, found, err := LoadActiveG79User(helper.HelperToken, false)
 	if err != nil {
-		return nil, define.ActiveG79User{}, fmt.Errorf("LoadOrRegisterActiveG79User: %v", err)
+		return define.ActiveG79User{}, fmt.Errorf("LoadOrRegisterActiveG79User: %v", err)
 	}
 	if found {
-		return gu, activeGu, nil
+		return activeGu, nil
 	}
 
-	gu, activeGu, err = RegisterActiveG79User(helper, engineVersion, peAuthData, saAuthData, false)
+	activeGu, err = RegisterActiveG79User(helper, engineVersion, peAuthData, saAuthData, false)
 	if err != nil {
-		return nil, define.ActiveG79User{}, fmt.Errorf("LoadOrRegisterActiveG79User: %v", err)
+		return define.ActiveG79User{}, fmt.Errorf("LoadOrRegisterActiveG79User: %v", err)
 	}
-	return gu, activeGu, nil
+	return activeGu, nil
 }
 
 // ExtendG79UserLifeTime ..
 func ExtendG79UserLifeTime(helperToken string, newG79UserToken string, sessionID string, useLock bool) (
-	gu *g79.G79User,
 	activeGu define.ActiveG79User,
 	err error,
 ) {
@@ -256,22 +248,21 @@ func ExtendG79UserLifeTime(helperToken string, newG79UserToken string, sessionID
 		defer UnlockG79Transaction(helperToken)
 	}
 
-	gu, activeGu, found, err := LoadActiveG79User(helperToken, false)
+	activeGu, found, err := LoadActiveG79User(helperToken, false)
 	if err != nil {
-		return nil, define.ActiveG79User{}, fmt.Errorf("ExtendG79UserLifeTime: %v", err)
+		return define.ActiveG79User{}, fmt.Errorf("ExtendG79UserLifeTime: %v", err)
 	}
 	if !found {
-		return nil, define.ActiveG79User{}, fmt.Errorf("ExtendG79UserLifeTime: Session not found or is expired")
+		return define.ActiveG79User{}, fmt.Errorf("ExtendG79UserLifeTime: Session not found or is expired")
 	}
 	if sessionID != activeGu.SessionID {
-		return nil, define.ActiveG79User{}, fmt.Errorf(
+		return define.ActiveG79User{}, fmt.Errorf(
 			"ExtendG79UserLifeTime: Session ID not matched (expect = %#v, provided = %#v)",
 			activeGu.SessionID, sessionID,
 		)
 	}
 
-	gu.G79Token = newG79UserToken
-	activeGu.RecordG79UserData = gu
+	activeGu.RecordG79UserData.G79Token = newG79UserToken
 	activeGu.SessionExpireTime = time.Now().Unix() + SessionExpireTimeSecond
 
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
@@ -280,8 +271,8 @@ func ExtendG79UserLifeTime(helperToken string, newG79UserToken string, sessionID
 			Put([]byte(helperToken), define.EncodeActiveG79User(activeGu))
 	})
 	if err != nil {
-		return nil, define.ActiveG79User{}, fmt.Errorf("ExtendG79UserLifeTime: %v", err)
+		return define.ActiveG79User{}, fmt.Errorf("ExtendG79UserLifeTime: %v", err)
 	}
 
-	return gu, activeGu, nil
+	return activeGu, nil
 }
