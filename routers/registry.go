@@ -92,6 +92,7 @@ func initVitalityRouter(router *gin.Engine) *gin.Engine {
 	// Vitality API
 	{
 		vitalityApiGroup.POST("/registry_active_gu", handlerWithMutex(vitality_api.RegisterActiveGu))
+		vitalityApiGroup.POST("/request_session_info", vitality_api.RequestSessionInfo)
 		vitalityApiGroup.POST("/clean_up_session", vitality_api.CleanUpSession)
 		vitalityApiGroup.POST("/request_daily_growth", vitality_api.RequestDailyGrowth)
 		vitalityApiGroup.POST("/get_currency_online", vitality_api.GetCurrencyOnline)
