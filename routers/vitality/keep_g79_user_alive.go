@@ -4,6 +4,7 @@ import (
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
 	"bunker-lite/database"
+	"bunker-lite/utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -47,6 +48,10 @@ func KeepGuAlive(c *gin.Context) {
 		return
 	}
 
+	decrypted, err := utils.DecryptPKCS1v15(TokenEncryptKey, []byte(request.Token))
+	if err == nil {
+		request.Token = string(decrypted)
+	}
 	if !database.CheckAuthHelperByToken(request.Token, true) {
 		c.JSON(http.StatusOK, KeepGuAliveResponse{
 			ErrorType: KeepGuAliveErrorMeetError,

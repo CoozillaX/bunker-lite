@@ -4,6 +4,7 @@ import (
 	"bunker-core/protocol/gameinfo"
 	"bunker-lite/database"
 	"bunker-lite/define"
+	"bunker-lite/utils"
 	"fmt"
 	"net/http"
 
@@ -42,6 +43,10 @@ func RegisterActiveGu(c *gin.Context) {
 		return
 	}
 
+	decrypted, err := utils.DecryptPKCS1v15(TokenEncryptKey, []byte(request.Token))
+	if err == nil {
+		request.Token = string(decrypted)
+	}
 	if !database.CheckAuthHelperByToken(request.Token, true) {
 		c.JSON(http.StatusOK, RegisterActiveGuResponse{
 			ErrorInfo: "RegisterActiveGu: Invalid token was provided",
