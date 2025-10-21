@@ -29,6 +29,8 @@ func HandleG79Login(engineVersion string, mu *defines.MpayUser) (*g79.G79User, *
 		if gu.GameInfo.EngineVersion == engineVersion {
 			// if expired?
 			if ginerr := gu.Update(); ginerr == nil {
+				gu.AccOnlineExp()
+				g79UserCache.SetDefault(mu.Uid, gu)
 				return gu, nil
 			}
 		}
