@@ -16,7 +16,7 @@ import (
 // TanLobbyLoginRequest ..
 type TanLobbyLoginRequest struct {
 	FBToken            string `json:"login_token"`
-	ProvidedPEAuthData string `json:"provided_pe_auth_data"`
+	ProvidedPeAuthData string `json:"provided_pe_auth_data"`
 	ProvidedSaAuthData string `json:"provided_sa_auth_data"`
 	RoomID             string `json:"room_id"`
 }
@@ -75,7 +75,7 @@ func TanLobbyLogin(c *gin.Context) {
 	gu, _, err := database.LoadOrRegisterActiveG79User(
 		helper,
 		gameinfo.DefaultEngineVersion,
-		request.ProvidedPEAuthData,
+		request.ProvidedPeAuthData,
 		request.ProvidedSaAuthData,
 		true,
 	)

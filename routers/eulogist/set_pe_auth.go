@@ -13,7 +13,7 @@ import (
 type AuthDataSetRequest struct {
 	Token   string `json:"token,omitempty"`
 	DoClean bool   `json:"do_clean,omitempty"`
-	PEAuth  string `json:"pe_auth,omitempty"`
+	PeAuth  string `json:"pe_auth,omitempty"`
 	SaAuth  string `json:"sa_auth,omitempty"`
 }
 
@@ -82,7 +82,7 @@ func SetAuthData(c *gin.Context) {
 		return
 	}
 
-	if len(request.PEAuth) == 0 || len(request.SaAuth) == 0 {
+	if len(request.PeAuth) == 0 || len(request.SaAuth) == 0 {
 		c.JSON(http.StatusOK, AuthDataSetResponse{
 			ErrorInfo: "SetAuthData: 提供的 PE Auth 或 Sa Auth 的长度不得为 0",
 			Success:   false,
@@ -92,7 +92,7 @@ func SetAuthData(c *gin.Context) {
 	_, _, err = database.RegisterActiveG79User(
 		helper,
 		gameinfo.DefaultEngineVersion,
-		request.PEAuth,
+		request.PeAuth,
 		request.SaAuth,
 		true,
 	)

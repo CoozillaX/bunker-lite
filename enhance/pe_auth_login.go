@@ -51,7 +51,7 @@ func ParseHttpEncrypt(body string) (result map[string]any, err error) {
 	return
 }
 
-// PEAuthLogin make user login by peAuthStringData.
+// PeAuthLogin make user login by peAuthStringData.
 // This option will have no matters to the data that
 // saved in the eulogist database.
 //
@@ -62,14 +62,14 @@ func ParseHttpEncrypt(body string) (result map[string]any, err error) {
 //
 // Note that gu.MpayUser is not very completely, so
 // that the returned g79 user only can be used once.
-func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
+func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	// 0. Prepare
 	var saDataInCookie map[string]any
 
 	// 1. Parse PE auth data
 	saAuthData, err := ParseHttpEncrypt(peAuthStringData)
 	if err != nil {
-		return nil, fmt.Errorf("PEAuthLogin: %v", err)
+		return nil, fmt.Errorf("PeAuthLogin: %v", err)
 	}
 
 	// 2. Get basic data
@@ -80,13 +80,13 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	cpuDigit, exist3 := saDataInCookie["cpu_digit"].(string)
 	osName, exist4 := saDataInCookie["os_name"].(string)
 	if !exist1 || !exist2 || !exist3 || !exist4 {
-		return nil, fmt.Errorf("PEAuthLogin: Wrong PE Auth data string %#v", peAuthStringData)
+		return nil, fmt.Errorf("PeAuthLogin: Wrong PE Auth data string %#v", peAuthStringData)
 	}
 
 	// 3. Sync part of basic data
 	defaultBaseInfo, err := gameinfo.GetInfoByEngineVersion(gameinfo.DefaultEngineVersion)
 	if err != nil {
-		return nil, fmt.Errorf("PEAuthLogin: %v", err)
+		return nil, fmt.Errorf("PeAuthLogin: %v", err)
 	}
 	copiedBaseInfo := *defaultBaseInfo
 	defaultBaseInfo = &copiedBaseInfo
@@ -96,7 +96,7 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	// 4. Get auth message but not included seed
 	authMessage, exist := saAuthData["message"].(string)
 	if !exist || len(authMessage) < 36 {
-		return nil, fmt.Errorf("PEAuthLogin: Wrong auth message %#v was found", authMessage)
+		return nil, fmt.Errorf("PeAuthLogin: Wrong auth message %#v was found", authMessage)
 	}
 	authMessage = authMessage[:len(authMessage)-36]
 
@@ -136,7 +136,7 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	}
 	if err = json.NewDecoder(reader).Decode(&query); err != nil {
 		return nil, &defines.ProtocolError{
-			Message: fmt.Sprintf("PEAuthLogin: %v", err),
+			Message: fmt.Sprintf("PeAuthLogin: %v", err),
 		}
 	}
 	gu = query.Entity
@@ -147,7 +147,7 @@ func PEAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	// 9. Get username
 	gu.Username, err = GetName(gu)
 	if err != nil {
-		return nil, fmt.Errorf("PEAuthLogin: %v", err)
+		return nil, fmt.Errorf("PeAuthLogin: %v", err)
 	}
 
 	return gu, nil

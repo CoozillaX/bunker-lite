@@ -102,7 +102,7 @@ func RegisterActiveG79User(helper define.AuthServerHelper, engineVersion string,
 		sessionType = define.SessionTypeMpayUser
 	}
 	if len(peAuthData) > 0 {
-		gu, err = enhance.PEAuthLogin(peAuthData)
+		gu, err = enhance.PeAuthLogin(peAuthData)
 		sessionType = define.SessionTypePeAuth
 	}
 	if len(saAuthData) > 0 {

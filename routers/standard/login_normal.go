@@ -29,7 +29,7 @@ var versionCache = cache.New(24*time.Hour, time.Hour)
 // AuthResponse 是该请求体对应的响应体
 type AuthRequest struct {
 	FBToken            string `json:"login_token,omitempty"`
-	ProvidedPEAuthData string `json:"provided_pe_auth_data"`
+	ProvidedPeAuthData string `json:"provided_pe_auth_data"`
 	ProvidedSaAuthData string `json:"provided_sa_auth_data"`
 	ServerCode         string `json:"server_code"`
 	ServerPassword     string `json:"server_passcode"`
@@ -225,7 +225,7 @@ func Login(c *gin.Context) {
 
 	// ensure engine version
 	engineVersion := gameinfo.DefaultEngineVersion
-	if len(request.ProvidedPEAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
+	if len(request.ProvidedPeAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
 		// change version by cache if we use mpay user to login
 		value, ok := versionCache.Get(request.ServerCode)
 		if ok {
@@ -237,7 +237,7 @@ func Login(c *gin.Context) {
 	gu, activeGu, err := database.LoadOrRegisterActiveG79User(
 		helper,
 		engineVersion,
-		request.ProvidedPEAuthData,
+		request.ProvidedPeAuthData,
 		request.ProvidedSaAuthData,
 		true,
 	)
