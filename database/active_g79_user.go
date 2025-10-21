@@ -153,6 +153,40 @@ func DeleteActiveG79User(helperToken string, useLock bool) error {
 	return nil
 }
 
+// MigrateActiveG79User ..
+func MigrateActiveG79User(legacyHelperToken string, newHelperToken string, useLock bool) error {
+	if useLock {
+		LockG79Transaction(legacyHelperToken)
+		LockG79Transaction(newHelperToken)
+		defer UnlockG79Transaction(legacyHelperToken)
+		defer UnlockG79Transaction(newHelperToken)
+	}
+
+	err := serverDatabase.Update(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(DATABASE_KEY_ACTIVE_G79_USER))
+
+		payload := bucket.Get([]byte(legacyHelperToken))
+		if len(payload) == 0 {
+			return nil
+		}
+
+		err := bucket.Delete([]byte(legacyHelperToken))
+		if err != nil {
+			return err
+		}
+
+		return bucket.Put(
+			[]byte(newHelperToken),
+			payload,
+		)
+	})
+	if err != nil {
+		return fmt.Errorf("MigrateActiveG79User: %v", err)
+	}
+
+	return nil
+}
+
 // LoadActiveG79User ..
 func LoadActiveG79User(helperToken string, useLock bool) (gu *g79.G79User, activeGu define.ActiveG79User, found bool, err error) {
 	if useLock {

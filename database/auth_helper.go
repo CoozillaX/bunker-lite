@@ -216,26 +216,26 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (nickName string, g79User
 }
 
 // UpdateHelperToken ..
-func UpdateHelperToken(uniqueID string, useLock bool) error {
+func UpdateHelperToken(uniqueID string, useLock bool) (legacyToken string, newToken string, err error) {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
 	}
 
 	if !CheckAuthHelperByUniqueID(uniqueID, false) {
-		return fmt.Errorf("UpdateHelperToken: 目标 MC 账号不存在")
+		return "", "", fmt.Errorf("UpdateHelperToken: 目标 MC 账号不存在")
 	}
 
 	helper := GetAuthHelperByUniqueID(uniqueID, false)
-	legacyToken := helper.HelperToken
+	legacyToken = helper.HelperToken
 	helper.HelperToken = uuid.NewString()
 
-	err := serverDatabase.Update(func(tx *bbolt.Tx) error {
+	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
 		buf := bytes.NewBuffer(nil)
 		writer := protocol.NewWriter(buf, 0)
 		helper.Marshal(writer)
 
-		err := tx.
+		err = tx.
 			Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).
 			Put(
 				[]byte(helper.HelperUniqueID),
@@ -245,7 +245,9 @@ func UpdateHelperToken(uniqueID string, useLock bool) error {
 			return err
 		}
 
-		err = tx.Bucket([]byte(DATABASE_KEY_TTAH_MAPPING)).Delete([]byte(legacyToken))
+		err = tx.
+			Bucket([]byte(DATABASE_KEY_TTAH_MAPPING)).
+			Delete([]byte(legacyToken))
 		if err != nil {
 			return err
 		}
@@ -263,25 +265,25 @@ func UpdateHelperToken(uniqueID string, useLock bool) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("UpdateHelperToken: 更新 MC 账号的令牌时出现问题, 原因是 %v", err)
+		return "", "", fmt.Errorf("UpdateHelperToken: 更新 MC 账号的令牌时出现问题, 原因是 %v", err)
 	}
 
-	return nil
+	return legacyToken, helper.HelperToken, nil
 }
 
 // DeleteAuthHelper ..
-func DeleteAuthHelper(uniqueID string, useLock bool) error {
+func DeleteAuthHelper(uniqueID string, useLock bool) (helperToken string, err error) {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
 	}
 
 	if !CheckAuthHelperByUniqueID(uniqueID, false) {
-		return fmt.Errorf("DeleteAuthHelper: 目标 MC 账号不存在")
+		return "", fmt.Errorf("DeleteAuthHelper: 目标 MC 账号不存在")
 	}
 	helper := GetAuthHelperByUniqueID(uniqueID, false)
 
-	err := serverDatabase.Update(func(tx *bbolt.Tx) error {
+	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
 		err := tx.Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).Delete([]byte(helper.HelperUniqueID))
 		if err != nil {
 			return err
@@ -293,8 +295,8 @@ func DeleteAuthHelper(uniqueID string, useLock bool) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("DeleteAuthHelper: 删除 MC 账号时出现问题, 原因是 %v", err)
+		return "", fmt.Errorf("DeleteAuthHelper: 删除 MC 账号时出现问题, 原因是 %v", err)
 	}
 
-	return nil
+	return helper.HelperToken, nil
 }
