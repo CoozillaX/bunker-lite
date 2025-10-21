@@ -76,14 +76,11 @@ func ChangeCurrentHelper(c *gin.Context) {
 		return
 	}
 
-	activeGu, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
-	if protocolError != nil {
+	activeGu, err := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
+	if err != nil {
 		c.JSON(http.StatusOK, HelperChangeResponse{
-			ErrorInfo: fmt.Sprintf(
-				"ChangeCurrentHelper: 切换 MC 账号时出现问题, 原因是 %s",
-				protocolError.Error(),
-			),
-			Success: false,
+			ErrorInfo: fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题, 原因是 %v", err),
+			Success:   false,
 		})
 		return
 	}

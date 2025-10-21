@@ -69,14 +69,11 @@ func GetStdHelperInfo(c *gin.Context) {
 		return
 	}
 
-	activeGu, protocolError := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
-	if protocolError != nil {
+	activeGu, err := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
+	if err != nil {
 		c.JSON(http.StatusOK, HelperInfoResponse{
-			ErrorInfo: fmt.Sprintf(
-				"GetStdHelperInfo: 请求 MC 账号信息时出现问题, 原因是 %s",
-				protocolError.Error(),
-			),
-			Success: false,
+			ErrorInfo: fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题, 原因是 %v", err),
+			Success:   false,
 		})
 		return
 	}

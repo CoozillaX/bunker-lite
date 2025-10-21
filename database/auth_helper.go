@@ -154,7 +154,7 @@ func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (uniqueID string
 }
 
 // GetHelperBasicInfo ..
-func GetHelperBasicInfo(uniqueID string, useLock bool) (activeGu define.ActiveG79User, protocolError *defines.ProtocolError) {
+func GetHelperBasicInfo(uniqueID string, useLock bool) (activeGu define.ActiveG79User, err error) {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -162,42 +162,39 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (activeGu define.ActiveG7
 
 	// check auth helper
 	if !CheckAuthHelperByUniqueID(uniqueID, false) {
-		return define.ActiveG79User{}, &defines.ProtocolError{
-			Message: "GetHelperBasicInfo: 无法找到目标 MC 账号",
-		}
+		return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 无法找到目标 MC 账号")
 	}
 	helper := GetAuthHelperByUniqueID(uniqueID, false)
 
 	// g79 login
 	gu, activeGu, err := LoadOrRegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", useLock)
 	if err != nil {
-		return define.ActiveG79User{}, &defines.ProtocolError{
-			Message: fmt.Sprintf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err),
-		}
+		return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
 	}
-	helper.GameNickName = gu.Username
 
 	// update database
-	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
-		buf := bytes.NewBuffer(nil)
-		writer := protocol.NewWriter(buf, 0)
-		helper.Marshal(writer)
+	if activeGu.SessionType == define.SessionTypeMpayUser {
+		err = serverDatabase.Update(func(tx *bbolt.Tx) error {
+			helper.GameNickName = gu.Username
 
-		err = tx.
-			Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).
-			Put(
-				[]byte(helper.HelperUniqueID),
-				buf.Bytes(),
-			)
+			buf := bytes.NewBuffer(nil)
+			writer := protocol.NewWriter(buf, 0)
+			helper.Marshal(writer)
+
+			err = tx.
+				Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).
+				Put(
+					[]byte(helper.HelperUniqueID),
+					buf.Bytes(),
+				)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
 		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil {
-		return define.ActiveG79User{}, &defines.ProtocolError{
-			Message: fmt.Sprintf("UpdateAuthHelper: 更新 MC 账号信息时出现问题, 原因是 %v", err),
+			return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
 		}
 	}
 
