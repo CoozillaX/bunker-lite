@@ -25,11 +25,12 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Success   bool   `json:"success"`
-	Message   string `json:"message"`
-	ChainInfo string `json:"chainInfo,omitempty"`
-	IPAddress string `json:"ip_address,omitempty"`
-	Token     string `json:"token,omitempty"`
+	Success     bool   `json:"success"`
+	Message     string `json:"message"`
+	ChainInfo   string `json:"chainInfo,omitempty"`
+	IPAddress   string `json:"ip_address,omitempty"`
+	GrowthLevel int    `json:"growth_level,omitempty"`
+	Token       string `json:"token,omitempty"`
 }
 
 var versionCache = cache.New(24*time.Hour, time.Hour) // cache[serverCode]serverVersion
@@ -44,7 +45,7 @@ func requestServerInfo(
 		engineVersion = value.(string)
 	}
 	// g79 login
-	gu, protocolErr := g79.Login(engineVersion, mu)
+	gu, protocolErr := utils.HandleG79Login(engineVersion, mu)
 	if protocolErr != nil {
 		return nil, nil, protocolErr
 	}
@@ -127,6 +128,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	// fetch growth level
+	growthLevel, _ := utils.GetG79LauncherLevel(gu)
 	// save info for anti-cheat callback
 	session := utils.GetSessionByBearer(r)
 	session.Store(session_key_entity_id, gu.EntityID)
@@ -134,9 +137,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	session.Store(session_key_patch_version, gu.GameInfo.PatchVersion)
 	// response
 	json.NewEncoder(w).Encode(&LoginResponse{
-		Success:   true,
-		Message:   "ok",
-		ChainInfo: serverInfo.ChainInfo,
-		IPAddress: serverInfo.IPAddress,
+		Success:     true,
+		Message:     "ok",
+		ChainInfo:   serverInfo.ChainInfo,
+		IPAddress:   serverInfo.IPAddress,
+		GrowthLevel: growthLevel,
 	})
 }
