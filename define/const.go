@@ -3,6 +3,7 @@ package define
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	_ "embed"
 	"encoding/pem"
 )
 
