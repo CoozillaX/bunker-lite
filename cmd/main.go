@@ -14,7 +14,7 @@ const EnableDebug = true
 
 func main() {
 	// prepare 1
-	authServerAddress := define.StdAuthServerPhoenixAPI
+	authServerAddress := define.AddressVitalityAPI
 	authServerToken := "YOUR FB TOKEN"
 
 	// prepare 2
@@ -29,7 +29,7 @@ func main() {
 
 		// Register new session
 		registerActiveGuResp, err := SendAndGetHttpResponse[RegisterActiveGuResponse](
-			fmt.Sprintf("%s/vitality_api/registry_active_gu", authServerAddress),
+			fmt.Sprintf("%s/registry_active_gu", authServerAddress),
 			RegisterActiveGuRequest{
 				Token:              authServerToken,
 				OverrideSession:    true,
@@ -55,7 +55,7 @@ func main() {
 		// Debug
 		if true {
 			resp, _ := SendAndGetHttpResponse[SessionInfoResponse](
-				fmt.Sprintf("%s/vitality_api/request_session_info", authServerAddress),
+				fmt.Sprintf("%s/request_session_info", authServerAddress),
 				SessionInfoRequest{
 					Token: authServerToken,
 				},
@@ -65,7 +65,7 @@ func main() {
 		}
 		if true {
 			resp, _ := SendAndGetHttpResponse[DailyGrowthResponse](
-				fmt.Sprintf("%s/vitality_api/request_daily_growth", authServerAddress),
+				fmt.Sprintf("%s/request_daily_growth", authServerAddress),
 				DailyGrowthRequest{
 					Token:     authServerToken,
 					SessionID: registerActiveGuResp.SessionID,
@@ -97,7 +97,7 @@ func main() {
 				}
 
 				resp, err := SendAndGetHttpResponse[KeepGuAliveResponse](
-					fmt.Sprintf("%s/vitality_api/keep_gu_alive", authServerAddress),
+					fmt.Sprintf("%s/keep_gu_alive", authServerAddress),
 					KeepGuAliveRequest{
 						Token:     authServerToken,
 						SessionID: registerActiveGuResp.SessionID,
@@ -135,7 +135,7 @@ func main() {
 
 			for {
 				resp, err := SendAndGetHttpResponse[CurrencyOnlineResponse](
-					fmt.Sprintf("%s/vitality_api/get_currency_online", authServerAddress),
+					fmt.Sprintf("%s/get_currency_online", authServerAddress),
 					CurrencyOnlineRequest{
 						Token:     authServerToken,
 						SessionID: registerActiveGuResp.SessionID,
@@ -169,7 +169,7 @@ func main() {
 func cleanUpSession(address string, token string, sessionID string) {
 	for {
 		resp, err := SendAndGetHttpResponse[CleanUpSessionResponse](
-			fmt.Sprintf("%s/vitality_api/clean_up_session", address),
+			fmt.Sprintf("%s/clean_up_session", address),
 			CleanUpSessionRequest{
 				Token:     token,
 				SessionID: sessionID,

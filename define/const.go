@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	StdAuthServerPhoenixAPI = "https://yorha.eulogist-api.icu"
-	StdAuthServerAddress    = "https://yorha.eulogist-api.icu/eulogist_api"
-	UserPasswordSalt        = "YoRHa"
+	AddressPhoenixAPI  = "https://yorha.eulogist-api.icu"
+	AddressEulogistAPI = "https://yorha.eulogist-api.icu/eulogist_api"
+	AddressVitalityAPI = "https://yorha.eulogist-api.icu/vitality_api"
+	UserPasswordSalt   = "YoRHa"
 )
 
 const (
