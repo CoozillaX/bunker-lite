@@ -14,6 +14,7 @@ import (
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
 
+	"encoding/hex"
 	"encoding/json"
 
 	"github.com/gin-gonic/gin"
@@ -320,6 +321,18 @@ func Login(c *gin.Context) {
 		session.Store(session_key_engine_version, activeGu.RecordG79UserData.GameInfo.EngineVersion)
 		session.Store(session_key_patch_version, activeGu.RecordG79UserData.GameInfo.PatchVersion)
 
+		// get encrypted token
+		encryptedToken, err := utils.EncryptPKCS1v15(&define.TokenEncryptKey.PublicKey, []byte(helper.HelperToken))
+		if err != nil {
+			c.JSON(http.StatusOK, AuthResponse{
+				Message: Message{
+					Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
+				},
+				SuccessStates: false,
+			})
+			return
+		}
+
 		// response
 		resp := AuthResponse{
 			SuccessStates:  true,
@@ -327,7 +340,7 @@ func Login(c *gin.Context) {
 			BotLevel:       launcherLevel,
 			BotSkin:        currentUsingMod.AsPhoenixBotSkin(),
 			BotComponent:   currentUsingMod.AsPhoenixBotComponent(),
-			FBToken:        request.FBToken,
+			FBToken:        hex.EncodeToString(encryptedToken),
 			EnableVitality: helper.EnableVitality,
 			RentalServerIP: serverInfo.IPAddress,
 			ChainInfo:      serverInfo.ChainInfo,

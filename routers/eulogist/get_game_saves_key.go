@@ -30,6 +30,7 @@ type GameSavesKeyResponse struct {
 	UserPermissionLevel    uint8  `json:"user_permission_level"`
 	ResponseExpireUnixTime int64  `json:"response_expire_unix_time"`
 
+	VitalityAccessToken  string `json:"vitality_access_token"`
 	GameSavesAESCipher   []byte `json:"game_saves_aes_cipher"`
 	DisableOpertorVerify bool   `json:"disable_operator_verify"`
 

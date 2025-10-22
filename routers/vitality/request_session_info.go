@@ -2,6 +2,7 @@ package vitality_api
 
 import (
 	"bunker-lite/database"
+	"bunker-lite/define"
 	"bunker-lite/utils"
 	"fmt"
 	"net/http"
@@ -42,7 +43,7 @@ func RequestSessionInfo(c *gin.Context) {
 		return
 	}
 
-	decrypted, err := utils.DecryptPKCS1v15(TokenEncryptKey, []byte(request.Token))
+	decrypted, err := utils.DecryptPKCS1v15(define.TokenEncryptKey, []byte(request.Token))
 	if err == nil {
 		request.Token = string(decrypted)
 	}
