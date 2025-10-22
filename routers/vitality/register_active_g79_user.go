@@ -5,6 +5,7 @@ import (
 	"bunker-lite/database"
 	"bunker-lite/define"
 	"bunker-lite/utils"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 
@@ -42,9 +43,11 @@ func RegisterActiveGu(c *gin.Context) {
 		return
 	}
 
-	decrypted, err := utils.DecryptPKCS1v15(define.TokenEncryptKey, []byte(request.Token))
-	if err == nil {
-		request.Token = string(decrypted)
+	if tokenBytes, err := hex.DecodeString(request.Token); err == nil {
+		decrypted, err := utils.DecryptPKCS1v15(define.TokenEncryptKey, tokenBytes)
+		if err == nil {
+			request.Token = string(decrypted)
+		}
 	}
 	if !database.CheckAuthHelperByToken(request.Token, true) {
 		c.JSON(http.StatusOK, RegisterActiveGuResponse{
