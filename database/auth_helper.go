@@ -153,75 +153,25 @@ func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (uniqueID string
 	return helper.HelperUniqueID, nil
 }
 
-// GetHelperBasicInfo ..
-func GetHelperBasicInfo(uniqueID string, useLock bool) (activeGu define.ActiveG79User, err error) {
-	if useLock {
-		mu.Lock()
-		defer mu.Unlock()
-	}
-
-	// check auth helper
-	if !CheckAuthHelperByUniqueID(uniqueID, false) {
-		return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 无法找到目标 MC 账号")
-	}
-	helper := GetAuthHelperByUniqueID(uniqueID, false)
-
-	// g79 login
-	activeGu, err = LoadOrRegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", useLock)
-	if err != nil {
-		return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
-	}
-
-	// update database
-	if activeGu.SessionType == define.SessionTypeMpayUser {
-		err = serverDatabase.Update(func(tx *bbolt.Tx) error {
-			helper.GameNickName = activeGu.RecordG79UserData.Username
-
-			buf := bytes.NewBuffer(nil)
-			writer := protocol.NewWriter(buf, 0)
-			helper.Marshal(writer)
-
-			err = tx.
-				Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).
-				Put(
-					[]byte(helper.HelperUniqueID),
-					buf.Bytes(),
-				)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		})
-		if err != nil {
-			return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
-		}
-	}
-
-	return activeGu, nil
-}
-
 // UpdateHelperToken ..
-func UpdateHelperToken(uniqueID string, useLock bool) (legacyToken string, newToken string, err error) {
+func UpdateHelperToken(token string, newToken string, useLock bool) error {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
 	}
 
-	if !CheckAuthHelperByUniqueID(uniqueID, false) {
-		return "", "", fmt.Errorf("UpdateHelperToken: 目标 MC 账号不存在")
+	if !CheckAuthHelperByToken(token, false) {
+		return fmt.Errorf("UpdateHelperToken: 目标 MC 账号不存在")
 	}
+	helper := GetAuthHelperByToken(token, false)
+	helper.HelperToken = newToken
 
-	helper := GetAuthHelperByUniqueID(uniqueID, false)
-	legacyToken = helper.HelperToken
-	helper.HelperToken = uuid.NewString()
-
-	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
+	err := serverDatabase.Update(func(tx *bbolt.Tx) error {
 		buf := bytes.NewBuffer(nil)
 		writer := protocol.NewWriter(buf, 0)
 		helper.Marshal(writer)
 
-		err = tx.
+		err := tx.
 			Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).
 			Put(
 				[]byte(helper.HelperUniqueID),
@@ -233,7 +183,7 @@ func UpdateHelperToken(uniqueID string, useLock bool) (legacyToken string, newTo
 
 		err = tx.
 			Bucket([]byte(DATABASE_KEY_TTAH_MAPPING)).
-			Delete([]byte(legacyToken))
+			Delete([]byte(token))
 		if err != nil {
 			return err
 		}
@@ -251,10 +201,48 @@ func UpdateHelperToken(uniqueID string, useLock bool) (legacyToken string, newTo
 		return nil
 	})
 	if err != nil {
-		return "", "", fmt.Errorf("UpdateHelperToken: 更新 MC 账号的令牌时出现问题, 原因是 %v", err)
+		return fmt.Errorf("UpdateHelperToken: 更新 MC 账号的令牌时出现问题, 原因是 %v", err)
 	}
 
-	return legacyToken, helper.HelperToken, nil
+	return nil
+}
+
+// UpdateHelperInfo ..
+func UpdateHelperInfo(helper define.AuthServerHelper, useLock bool) error {
+	if useLock {
+		mu.Lock()
+		defer mu.Unlock()
+	}
+
+	if !CheckAuthHelperByUniqueID(helper.HelperUniqueID, false) {
+		return fmt.Errorf("UpdateHelperInfo: 目标 MC 账号不存在")
+	}
+	recordedHelper := GetAuthHelperByUniqueID(helper.HelperUniqueID, false)
+
+	if recordedHelper.HelperToken != helper.HelperToken {
+		err := UpdateHelperToken(recordedHelper.HelperToken, helper.HelperToken, false)
+		if err != nil {
+			return fmt.Errorf("UpdateHelperInfo: 更新 MC 账号信息时出现问题, 原因是 %v", err)
+		}
+	}
+
+	err := serverDatabase.Update(func(tx *bbolt.Tx) error {
+		buf := bytes.NewBuffer(nil)
+		writer := protocol.NewWriter(buf, 0)
+		helper.Marshal(writer)
+
+		return tx.
+			Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).
+			Put(
+				[]byte(helper.HelperUniqueID),
+				buf.Bytes(),
+			)
+	})
+	if err != nil {
+		return fmt.Errorf("UpdateHelperInfo: 更新 MC 账号信息时出现问题, 原因是 %v", err)
+	}
+
+	return nil
 }
 
 // DeleteAuthHelper ..
@@ -285,4 +273,34 @@ func DeleteAuthHelper(uniqueID string, useLock bool) (helperToken string, err er
 	}
 
 	return helper.HelperToken, nil
+}
+
+// GetHelperBasicInfo ..
+func GetHelperBasicInfo(uniqueID string, useLock bool) (activeGu define.ActiveG79User, err error) {
+	if useLock {
+		mu.Lock()
+		defer mu.Unlock()
+	}
+
+	// check auth helper
+	if !CheckAuthHelperByUniqueID(uniqueID, false) {
+		return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 无法找到目标 MC 账号")
+	}
+	helper := GetAuthHelperByUniqueID(uniqueID, false)
+
+	// g79 login
+	activeGu, err = LoadOrRegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", useLock)
+	if err != nil {
+		return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
+	}
+
+	// update game nick name
+	if activeGu.SessionType == define.SessionTypeMpayUser && helper.GameNickName != activeGu.RecordG79UserData.Username {
+		helper.GameNickName = activeGu.RecordG79UserData.Username
+		if err = UpdateHelperInfo(helper, false); err != nil {
+			return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
+		}
+	}
+
+	return activeGu, nil
 }

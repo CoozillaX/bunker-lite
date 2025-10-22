@@ -6,9 +6,12 @@ import "github.com/sandertv/gophertunnel/minecraft/protocol"
 type AuthServerHelper struct {
 	HelperUniqueID string
 	HelperToken    string
-	GameNickName   string
-	G79UserUID     string
-	MpayUserData   []byte
+
+	GameNickName string
+	G79UserUID   string
+	MpayUserData []byte
+
+	EnableVitality bool
 }
 
 func (a *AuthServerHelper) Marshal(io protocol.IO) {
@@ -17,4 +20,5 @@ func (a *AuthServerHelper) Marshal(io protocol.IO) {
 	io.String(&a.GameNickName)
 	io.String(&a.G79UserUID)
 	io.ByteSlice(&a.MpayUserData)
+	io.Bool(&a.EnableVitality)
 }

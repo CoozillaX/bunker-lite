@@ -56,8 +56,9 @@ type AuthResponse struct {
 	BotSkin      enhance.PhoenixSkinInfo `json:"skin_info"`             // 机器人的皮肤信息
 	BotComponent map[string]*int         `json:"outfit_info,omitempty"` // 机器人当前已加载的组件及其附加值
 
-	FBToken    string `json:"token"`      // ...
-	MasterName string `json:"respond_to"` // 机器人主人的游戏名称
+	FBToken        string `json:"token"`           // ...
+	MasterName     string `json:"respond_to"`      // 机器人主人的游戏名称
+	EnableVitality bool   `json:"enable_vitality"` // 是否启用 Vitality API
 
 	RentalServerIP string `json:"ip_address"` // 欲登录的租赁服的 IP 地址
 	ChainInfo      string `json:"chainInfo"`  // 欲登录的租赁服的链请求
@@ -327,7 +328,7 @@ func Login(c *gin.Context) {
 			BotSkin:        currentUsingMod.AsPhoenixBotSkin(),
 			BotComponent:   currentUsingMod.AsPhoenixBotComponent(),
 			FBToken:        request.FBToken,
-			MasterName:     activeGu.RecordG79UserData.Username,
+			EnableVitality: helper.EnableVitality,
 			RentalServerIP: serverInfo.IPAddress,
 			ChainInfo:      serverInfo.ChainInfo,
 		}

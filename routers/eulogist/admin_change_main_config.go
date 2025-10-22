@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // ChangeMainConfigRequest ..
@@ -83,7 +84,25 @@ func ChangeMainConfig(c *gin.Context) {
 				continue
 			}
 
-			legacyToken, newToken, err := database.UpdateHelperToken(value.AuthServerSecret(), true)
+			if !database.CheckAuthHelperByUniqueID(value.AuthServerSecret(), true) {
+				c.JSON(http.StatusOK, ChangeMainConfigResponse{
+					ErrorInfo: fmt.Sprintf(
+						"ChangeMainConfig: 不一致的底层数据库视图 (发生在 %v)",
+						value.AuthServerSecret(),
+					),
+					Success: false,
+				})
+				return
+			}
+
+			helper := database.GetAuthHelperByUniqueID(
+				value.AuthServerSecret(),
+				true,
+			)
+			oldToken := helper.HelperToken
+			newToken := uuid.NewString()
+
+			err = database.UpdateHelperToken(oldToken, newToken, true)
 			if err != nil {
 				c.JSON(http.StatusOK, ChangeMainConfigResponse{
 					ErrorInfo: fmt.Sprintf("ChangeMainConfig: 更改用户主要配置时出现问题, 原因是 %v", err),
@@ -92,7 +111,7 @@ func ChangeMainConfig(c *gin.Context) {
 				return
 			}
 
-			err = database.MigrateActiveG79User(legacyToken, newToken, true)
+			err = database.MigrateActiveG79User(oldToken, newToken, true)
 			if err != nil {
 				c.JSON(http.StatusOK, ChangeMainConfigResponse{
 					ErrorInfo: fmt.Sprintf("ChangeMainConfig: 更改用户主要配置时出现问题, 原因是 %v", err),
