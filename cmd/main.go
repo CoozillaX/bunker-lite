@@ -18,7 +18,6 @@ func main() {
 	authServerToken := "YOUR FB TOKEN"
 
 	// prepare 2
-	engineVersion := "ENGINE VERSION (CAN BE EMPTY)"
 	peAuthData := "PE AUTH DATA"
 	saAuthData := "SA AUTH DATA"
 
@@ -34,7 +33,6 @@ func main() {
 			RegisterActiveGuRequest{
 				Token:              authServerToken,
 				OverrideSession:    true,
-				EngineVersion:      engineVersion,
 				ProvidedPeAuthData: peAuthData,
 				ProvidedSaAuthData: saAuthData,
 			},

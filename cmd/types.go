@@ -6,7 +6,6 @@ package main
 type RegisterActiveGuRequest struct {
 	Token              string `json:"token,omitempty"`
 	OverrideSession    bool   `json:"override_session,omitempty"`
-	EngineVersion      string `json:"engine_version,omitempty"`
 	ProvidedPeAuthData string `json:"provided_pe_auth_data,omitempty"`
 	ProvidedSaAuthData string `json:"provided_sa_auth_data,omitempty"`
 }

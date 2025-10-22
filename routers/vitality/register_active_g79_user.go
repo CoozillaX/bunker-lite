@@ -15,7 +15,6 @@ import (
 type RegisterActiveGuRequest struct {
 	Token              string `json:"token,omitempty"`
 	OverrideSession    bool   `json:"override_session,omitempty"`
-	EngineVersion      string `json:"engine_version,omitempty"`
 	ProvidedPeAuthData string `json:"provided_pe_auth_data,omitempty"`
 	ProvidedSaAuthData string `json:"provided_sa_auth_data,omitempty"`
 }
@@ -54,18 +53,14 @@ func RegisterActiveGu(c *gin.Context) {
 		})
 		return
 	}
-
 	helper := database.GetAuthHelperByToken(request.Token, true)
 	database.LockG79Transaction(request.Token)
 	defer database.UnlockG79Transaction(request.Token)
 
-	if len(request.EngineVersion) == 0 {
-		request.EngineVersion = gameinfo.DefaultEngineVersion
-	}
 	if request.OverrideSession {
 		activeGu, err = database.RegisterActiveG79User(
 			helper,
-			request.EngineVersion,
+			gameinfo.DefaultEngineVersion,
 			request.ProvidedPeAuthData,
 			request.ProvidedSaAuthData,
 			false,
@@ -73,7 +68,7 @@ func RegisterActiveGu(c *gin.Context) {
 	} else {
 		activeGu, err = database.LoadOrRegisterActiveG79User(
 			helper,
-			request.EngineVersion,
+			gameinfo.DefaultEngineVersion,
 			request.ProvidedPeAuthData,
 			request.ProvidedSaAuthData,
 			false,
