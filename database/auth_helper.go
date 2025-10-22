@@ -94,7 +94,7 @@ func GetAuthHelperByToken(token string, useLock bool) (helper define.AuthServerH
 }
 
 // CreateAuthHelper ..
-func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (uniqueID string, protocolError *defines.ProtocolError) {
+func CreateAuthHelper(mpayUser *defines.MpayUser, enableVitality bool, useLock bool) (uniqueID string, protocolError *defines.ProtocolError) {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -117,6 +117,7 @@ func CreateAuthHelper(mpayUser *defines.MpayUser, useLock bool) (uniqueID string
 		GameNickName:   gu.Username,
 		G79UserUID:     gu.EntityID,
 		MpayUserData:   mpayUserBytes,
+		EnableVitality: enableVitality,
 	}
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
 		buf := bytes.NewBuffer(nil)
