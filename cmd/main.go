@@ -10,8 +10,6 @@ import (
 	"github.com/pterm/pterm"
 )
 
-const EnableDebug = true
-
 func main() {
 	// prepare 1
 	authServerAddress := define.AddressVitalityAPI
@@ -41,9 +39,8 @@ func main() {
 			pterm.Warning.Printfln("[RegisterActiveGu] %v", err)
 			continue
 		}
-
 		if !registerActiveGuResp.Success {
-			panic(fmt.Sprintf("RegisterActive: %v", registerActiveGuResp.ErrorInfo))
+			panic(fmt.Sprintf("main/RegisterActiveGu: %v", registerActiveGuResp.ErrorInfo))
 		}
 		pterm.Info.Printfln("[RegisterActiveGu] %#v", registerActiveGuResp)
 
