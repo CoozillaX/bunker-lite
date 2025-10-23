@@ -836,15 +836,18 @@ Most of the users use their robot just in one rental server. So, its very conven
 
 However, some users use a robot for multiple rental servers. And due to multiple **Session Maintainer** is not allowed (due to this may lead to greater bandwidth consumption and an overall abnormal request frequency), therefore they possibly use an independent maintainer.
 
-To align with these two groups of users, you can allow the user to set whether to enable **Vitality API** automatically when they use the robot.<br/>
+To align with these two groups of users, you can allow the user to set whether to running **Session Maintainer** in client side automatically when they use the robot.<br/>
 You can show this settings in the website of your auth service, or anywhere that easy for user to access and manage.
 
-Therefore, we add a new field to `/phoenix/login` that shows as follows.
+Therefore, we add a new field to `/phoenix/login` (the response of auth server) that shows as follows.
 Note that this field is used to notify current rental server login need running a maintainer or not.
 
 | Key             | Data Type |
 | --------------- | --------- |
 | enable_vitality | bool      |
+
+It's necessary to say is that no matter what value you set for `enable_vitality`, the users can always use running a maintainer that under **Vitality API** protocol.<br/>
+This field (enable_vitality) is just to notify whether the robot (or the access point) should running a maintainer automatically or not.
 
 
 
