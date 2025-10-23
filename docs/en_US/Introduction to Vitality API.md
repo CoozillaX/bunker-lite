@@ -678,7 +678,7 @@ Description
 > ```
 >
 > The g79 server response is as follows (this is not a completely one, just show what data you needed).
-> ```json
+> ```json5
 > {
 > 	"entity": {
 > 		"1": 0, // xp_from_online
@@ -742,7 +742,7 @@ Description
 > ```
 >
 > The g79 server response is as follows (this is not a completely one, just show what data you needed).
-> ```json
+> ```json5
 > {
 > 	"entity": {
 > 		"rest_currency_time": 0, 	  // rest_currency_time
@@ -813,7 +813,7 @@ Description
 > ```
 >
 > The g79 server response is as follows (this is not a completely one, just show what data you needed).
-> ```json
+> ```json5
 > {
 > 	"entity": {
 > 		"token": "" // New token of this g79 user
