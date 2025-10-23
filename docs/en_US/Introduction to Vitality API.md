@@ -270,7 +270,7 @@ the research supports the possibility that multiple logins may lead to bans.
     - 飛飛 (2679159026; Use their personal mc account)
         - 2025/10/14
             - Use nv1's api for `1,216` times
-            - Banned to **2025-11-14 15:15:12** (Happened on **2025-10-14 15:15:12**)
+            - Banned to **2025-11-14 15:15:12** (Happened on **2025-10-15 15:15:12**)
         - 2025/10/16
             - Use nv1's api for `954` times
             - Banned to **2025-10-24 07:39:04** (Happened on **2025-10-17 07:39:04**)
@@ -293,7 +293,7 @@ the research supports the possibility that multiple logins may lead to bans.
                 - 10/19 13:09:39 (panic: 验证服务器返回: 未搜索到租赁服)
                 - 10/19 13:09:49 (panic: 验证服务器返回: 未搜索到租赁服)
                 - 10/19 13:10:00 (panic: 验证服务器返回: 未搜索到租赁服)
-            - Banned to **2025-11-19 07:39:58** (Happened on **2025-10-19 07:39:58**)
+            - Banned to **2025-11-19 07:39:58** (Happened on **2025-10-20 07:39:58**)
         - 2025/10/22
             - Use nv1's api for `6` times
             - Not banned
