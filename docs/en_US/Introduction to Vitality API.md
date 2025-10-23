@@ -857,7 +857,7 @@ This field (enable_vitality) is just to notify whether the robot (or the access 
 **Session Maintainer** first use [Register Active G79 User](#register-active-g79-user) to register a new session (or used a session that is not expired).
 
 Then, start `2` threads.
-- For the first thread, it refresh the session each `20` minutes. Note that it should fix the sleep time due to the response of [Register Active G79 User](#register-active-g79-user) told the expire unix time of current session.
+- For the first thread, it refresh the session each `20` minutes by use [Keep G79 User Alive](#keep-g79-user-alive). Note that it should compute the sleep time due to the response of [Register Active G79 User](#register-active-g79-user) and [Keep G79 User Alive](#keep-g79-user-alive) will told the expire unix time of current session.
 - For the second thread, it calls [Get Currency Online](#get-currency-online) each `5` minutes.
 
 If any of a thread get error from auth server, then it means that this session is possibly expired or deleted.<br/>
