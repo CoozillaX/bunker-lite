@@ -48,16 +48,16 @@ func TanLobbyCreate(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
-			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 			Success:   false,
+			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 		})
 		return
 	}
 
 	if !database.CheckAuthHelperByToken(request.FBToken, true) {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
-			ErrorInfo: "TanLobbyCreate: Invalid token was provided",
 			Success:   false,
+			ErrorInfo: "TanLobbyCreate: Invalid token was provided",
 		})
 		return
 	}
@@ -73,8 +73,8 @@ func TanLobbyCreate(c *gin.Context) {
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
-			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 			Success:   false,
+			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 		})
 		return
 	}
@@ -83,8 +83,8 @@ func TanLobbyCreate(c *gin.Context) {
 	g79UserUID, raknetServerAddress, signalingServerAddress, err := enhance.SelectTransferServer(activeGu.RecordG79UserData)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
-			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 			Success:   false,
+			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 		})
 		return
 	}
@@ -104,8 +104,8 @@ func TanLobbyCreate(c *gin.Context) {
 	raknetAESRand, err := utils.AES_ECB_PKCS7Encrypt(encryptedUserToken, raknetRand)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
-			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 			Success:   false,
+			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 		})
 		return
 	}
@@ -115,8 +115,8 @@ func TanLobbyCreate(c *gin.Context) {
 	signalingTicket, err := utils.AES_ECB_PKCS7Encrypt([]byte(activeGu.RecordG79UserData.G79Token), signalingSeed)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
-			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 			Success:   false,
+			ErrorInfo: fmt.Sprintf("TanLobbyCreate: %v", err),
 		})
 		return
 	}

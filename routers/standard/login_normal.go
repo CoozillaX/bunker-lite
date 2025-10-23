@@ -140,10 +140,10 @@ func Login(c *gin.Context) {
 	err := c.Bind(&request)
 	if err != nil {
 		c.JSON(http.StatusOK, AuthResponse{
+			SuccessStates: false,
 			Message: Message{
 				Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
 			},
-			SuccessStates: false,
 		})
 		return
 	}
@@ -154,10 +154,10 @@ func Login(c *gin.Context) {
 		splitAns := strings.Split(request.FBToken, "|")
 		if len(splitAns) != 2 {
 			c.JSON(http.StatusOK, AuthResponse{
+				SuccessStates: false,
 				Message: Message{
 					Information: "Login: 提供的 FB Token 无效",
 				},
-				SuccessStates: false,
 			})
 			return
 		}
@@ -167,10 +167,10 @@ func Login(c *gin.Context) {
 
 		if !database.CheckUserByToken(eulogitUserToken, true) || !database.CheckAuthHelperByUniqueID(helperUniqueID, true) {
 			c.JSON(http.StatusOK, AuthResponse{
+				SuccessStates: false,
 				Message: Message{
 					Information: "Login: 提供的 FB Token 无效",
 				},
-				SuccessStates: false,
 			})
 			return
 		}
@@ -178,10 +178,10 @@ func Login(c *gin.Context) {
 		user := database.GetUserByToken(eulogitUserToken, true)
 		if user.UnbanUnixTime >= time.Now().Unix() {
 			c.JSON(http.StatusOK, AuthResponse{
+				SuccessStates: false,
 				Message: Message{
 					Information: "Login: 赞颂者用户仍被封禁中",
 				},
-				SuccessStates: false,
 			})
 			return
 		}
@@ -197,13 +197,13 @@ func Login(c *gin.Context) {
 
 		if !accessPass {
 			c.JSON(http.StatusOK, AuthResponse{
+				SuccessStates: false,
 				Message: Message{
 					Information: fmt.Sprintf(
 						"Login: 进入目标租赁服 (%s) 需要租赁服管理人员的授权。如果您没有授权, 可以使用第三方验证服务解决问题",
 						request.ServerCode,
 					),
 				},
-				SuccessStates: false,
 			})
 			return
 		}
@@ -245,10 +245,10 @@ func Login(c *gin.Context) {
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, AuthResponse{
+			SuccessStates: false,
 			Message: Message{
 				Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
 			},
-			SuccessStates: false,
 		})
 		return
 	}
@@ -264,10 +264,10 @@ func Login(c *gin.Context) {
 		)
 		if protocolError != nil {
 			c.JSON(http.StatusOK, AuthResponse{
+				SuccessStates: false,
 				Message: Message{
 					Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", protocolError.Error()),
 				},
-				SuccessStates: false,
 			})
 			return
 		}
@@ -289,10 +289,10 @@ func Login(c *gin.Context) {
 			)
 			if err != nil {
 				c.JSON(http.StatusOK, AuthResponse{
+					SuccessStates: false,
 					Message: Message{
 						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
 					},
-					SuccessStates: false,
 				})
 				return
 			}
@@ -305,13 +305,13 @@ func Login(c *gin.Context) {
 		session := utils.GetSessionByBearer(c)
 		if session == nil {
 			c.JSON(http.StatusOK, AuthResponse{
+				SuccessStates: false,
 				Message: Message{
 					Information: fmt.Sprintf(
 						"Login: 无效的 Auth Bearer (%s)",
 						c.Request.Header.Get("Authorization"),
 					),
 				},
-				SuccessStates: false,
 			})
 			return
 		}
@@ -325,10 +325,10 @@ func Login(c *gin.Context) {
 		encryptedToken, err := utils.EncryptPKCS1v15(&define.TokenEncryptKey.PublicKey, []byte(helper.HelperToken))
 		if err != nil {
 			c.JSON(http.StatusOK, AuthResponse{
+				SuccessStates: false,
 				Message: Message{
 					Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
 				},
-				SuccessStates: false,
 			})
 			return
 		}
@@ -350,10 +350,10 @@ func Login(c *gin.Context) {
 			jsonBytes, err := json.Marshal(resp)
 			if err != nil {
 				c.JSON(http.StatusOK, AuthResponse{
+					SuccessStates: false,
 					Message: Message{
 						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
 					},
-					SuccessStates: false,
 				})
 				return
 			}
@@ -361,10 +361,10 @@ func Login(c *gin.Context) {
 			encrypted, err := utils.EncryptPKCS1v15(PhoenixLoginKey, jsonBytes)
 			if err != nil {
 				c.JSON(http.StatusOK, AuthResponse{
+					SuccessStates: false,
 					Message: Message{
 						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
 					},
-					SuccessStates: false,
 				})
 				return
 			}
@@ -378,9 +378,9 @@ func Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, AuthResponse{
+		SuccessStates: false,
 		Message: Message{
 			Information: "Login: 目标版本的租赁服不支持, 请等待地堡适配",
 		},
-		SuccessStates: false,
 	})
 }

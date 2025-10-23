@@ -89,7 +89,7 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 func initVitalityRouter(router *gin.Engine) *gin.Engine {
 	vitalityApiGroup := router.Group("/vitality_api")
 
-	// Vitality API
+	// Vitality API (v1.0)
 	{
 		vitalityApiGroup.POST("/registry_active_gu", handlerWithMutex(vitality_api.RegisterActiveGu))
 		vitalityApiGroup.POST("/request_session_info", vitality_api.RequestSessionInfo)

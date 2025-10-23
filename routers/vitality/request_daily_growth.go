@@ -22,10 +22,10 @@ type DailyGrowthRequest struct {
 
 // DailyGrowthResponse ..
 type DailyGrowthResponse struct {
-	ErrorInfo    string `json:"error_info"`
-	Success      bool   `json:"success"`
-	XpFromOnline int    `json:"xp_from_online"`
-	XpFromCharge int    `json:"xp_from_charge"`
+	ErrorInfo      string `json:"error_info"`
+	Success        bool   `json:"success"`
+	XpFromOnline   int    `json:"xp_from_online"`
+	XpFromRecharge int    `json:"xp_from_recharge"`
 }
 
 // RequestDailyGrowth ..
@@ -98,8 +98,8 @@ func RequestDailyGrowth(c *gin.Context) {
 
 	var query struct {
 		Entity struct {
-			XpFromOnline int `json:"1"`
-			XpFromCharge int `json:"2"`
+			XpFromOnline   int `json:"1"`
+			XpFromRecharge int `json:"2"`
 		} `json:"entity"`
 	}
 	if err = json.NewDecoder(reader).Decode(&query); err != nil {
@@ -111,8 +111,8 @@ func RequestDailyGrowth(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, DailyGrowthResponse{
-		Success:      true,
-		XpFromOnline: query.Entity.XpFromOnline,
-		XpFromCharge: query.Entity.XpFromCharge,
+		Success:        true,
+		XpFromOnline:   query.Entity.XpFromOnline,
+		XpFromRecharge: query.Entity.XpFromRecharge,
 	})
 }

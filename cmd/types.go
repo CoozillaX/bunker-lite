@@ -55,6 +55,38 @@ type CleanUpSessionResponse struct {
 	Success   bool   `json:"success"`
 }
 
+// ------------------------- Request Daily Growth -------------------------
+
+// DailyGrowthRequest ..
+type DailyGrowthRequest struct {
+	Token     string `json:"token,omitempty"`
+	SessionID string `json:"session_id,omitempty"`
+}
+
+// DailyGrowthResponse ..
+type DailyGrowthResponse struct {
+	ErrorInfo      string `json:"error_info"`
+	Success        bool   `json:"success"`
+	XpFromOnline   int    `json:"xp_from_online"`
+	XpFromRecharge int    `json:"xp_from_recharge"`
+}
+
+// ------------------------- Get Currency Online -------------------------
+
+// CurrencyOnlineRequest ..
+type CurrencyOnlineRequest struct {
+	Token     string `json:"token,omitempty"`
+	SessionID string `json:"session_id,omitempty"`
+}
+
+// CurrencyOnlineResponse ..
+type CurrencyOnlineResponse struct {
+	ErrorInfo        string `json:"error_info"`
+	Success          bool   `json:"success"`
+	RestCurrencyTime int    `json:"rest_currency_time"`
+	FormatDateString string `json:"format_date_string"`
+}
+
 // ------------------------- Keep G79 User Alive -------------------------
 
 const (
@@ -74,38 +106,6 @@ type KeepGuAliveResponse struct {
 	ErrorInfo         string `json:"error_info"`
 	Success           bool   `json:"success"`
 	SessionExpireTime int64  `json:"session_expire_time"`
-}
-
-// ------------------------- Get Currency Online -------------------------
-
-// CurrencyOnlineRequest ..
-type CurrencyOnlineRequest struct {
-	Token     string `json:"token,omitempty"`
-	SessionID string `json:"session_id,omitempty"`
-}
-
-// CurrencyOnlineResponse ..
-type CurrencyOnlineResponse struct {
-	ErrorInfo        string `json:"error_info"`
-	Success          bool   `json:"success"`
-	RestCurrencyTime int    `json:"rest_currency_time"`
-	FormatDateString string `json:"format_date_string"`
-}
-
-// ------------------------- Request Daily Growth -------------------------
-
-// DailyGrowthRequest ..
-type DailyGrowthRequest struct {
-	Token     string `json:"token,omitempty"`
-	SessionID string `json:"session_id,omitempty"`
-}
-
-// DailyGrowthResponse ..
-type DailyGrowthResponse struct {
-	ErrorInfo    string `json:"error_info"`
-	Success      bool   `json:"success"`
-	XpFromOnline int    `json:"xp_from_online"`
-	XpFromCharge int    `json:"xp_from_charge"`
 }
 
 // ------------------------- End -------------------------
