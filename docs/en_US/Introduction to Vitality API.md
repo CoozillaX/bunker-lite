@@ -1,8 +1,36 @@
+# Signature
+## Publisher
+- **Eulogist/Bunker**, the standard auth service of NEMC robot field.
+- **ToolDelta**, the common robot provider.
+- **Neo-Omega**, the core of a robot.
+
+
+
+
+
+## Author
+Eternal Crystal
+
+
+
+
+
+## Document Info
+- API Version: **v1.0**
+- Documents Version: **v1.1**
+
+
+
+
+
+
+
 # Catalogue
-- [Catalogue](#catalogue)
 - [Signature](#signature)
   - [Publisher](#publisher)
   - [Author](#author)
+  - [Document Info](#document-info)
+- [Catalogue](#catalogue)
 - [New concept: Vitality API](#new-concept-vitality-api)
   - [Abstract](#abstract)
   - [Prior data collection](#prior-data-collection)
@@ -27,25 +55,6 @@
   - [Changes in rental server login response](#changes-in-rental-server-login-response)
   - [Implementation of Session Maintainer](#implementation-of-session-maintainer)
   - [Adaptation](#adaptation)
-
-
-
-
-
-
-
-# Signature
-## Publisher
-- **Eulogist/Bunker**, the standard auth service of NEMC robot field.
-- **ToolDelta**, the common robot provider.
-- **Neo-Omega**, the core of a robot.
-
-
-
-
-
-## Author
-Eternal Crystal
 
 
 
@@ -486,9 +495,6 @@ Otherwise, `Session Type` is `SessionTypeMpayUser(0)`.
 
 
 ## Vitality API
-Based on the requirements we raised in the previous text, we defined some apis to fulfill them.<br/>
-Documents Version: **v1.0**
-
 ### Register Active G79 User
 Summary
 > **Register Active G79 User** registers a session that associated with a specific g79 user login.
@@ -545,7 +551,7 @@ Description
 
 ### Request Session Info
 Summary
-> **Request Session Info** returns the session info that corresponding auth server helper.
+> **Request Session Info** returns the corresponding session info of the user's auth server helper.
 
 
 Basic Info
@@ -593,7 +599,7 @@ Description
 
 ### Clean Up Session
 Summary
-> **Clean Up Session** deletes **Session** that corresponding auth server helper from underlying database.<br/>
+> **Clean Up Session** deletes corresponding **Session** of the user's auth server helper from underlying database.<br/>
 > If target session is expired, or the session is not found, then result in **NOP** (no operation).
 
 
@@ -623,7 +629,8 @@ Server Response
 Description
 > If current auth server helper already have a session and is not expired, then delete this session from underlying database.
 >
-> Note that if provided `session_id` not matched the one that recorded in database of the auth server, then the delete operation should not being executed.
+> If provided `session_id` not matched the one that recorded in database of the auth server, response an error.<br/>
+> If the **Session** is expired, also response an error.
 >
 > For the meaning of `session_id`, please refer to [Session](#session).<br/>
 > If meet error, then `success` will be `false`, and `error_info` will carry out the specific error information.<br/>
@@ -663,9 +670,10 @@ Server Response
 
 Description
 > The auth server first load the **Session** that corresponding to the auth server helper.<br/>
-> If the session ID of loaded session matched the one that provide by the user, then load the corresponding active g79 user.
+> Then load the corresponding active g79 user that corresponding to this **Session**.
 > 
-> Note that if **Session** is expired, then response an error and stop to do anything.<br/>
+> If provided `session_id` not matched the one that recorded in database of the auth server, response an error.<br/>
+> If the **Session** is expired, also response an error.<br/>
 > Otherwise, the session is still alive, so please use its active g79 user to request daily growth.<br/>
 > 
 > A go implements is like follows.
@@ -726,9 +734,10 @@ Server Response
 
 Description
 > The auth server first load the **Session** that corresponding to the auth server helper.<br/>
-> If the session ID of loaded session matched the one that provide by the user, then load the corresponding active g79 user.
+> Then load the corresponding active g79 user that corresponding to this **Session**.
 > 
-> Note that if **Session** is expired, then response an error and stop to do anything.<br/>
+> If provided `session_id` not matched the one that recorded in database of the auth server, response an error.<br/>
+> If the **Session** is expired, also response an error.<br/>
 > Otherwise, the session is still alive, so please use its active g79 user to get currency online.<br/>
 > 
 > A go implements is like follows.
@@ -796,10 +805,12 @@ Constant Enumerate
 
 Description
 > The auth server first load the **Session** that corresponding to the auth server helper.<br/>
-> If the session ID of loaded session matched the one that provide by the user, then load the corresponding active g79 user.
+> Then load the corresponding active g79 user that corresponding to this **Session**.
 > 
-> Note that if **Session** is expired, then response an error and stop to do anything.<br/>
-> Or, if the time between request time and `Session Expire Time` exceed `12` hours, then response empty `error_info` with `error_type` which is `KeepGuAliveErrorLifeLimit(1)`.<br/>
+> If provided `session_id` not matched the one that recorded in database of the auth server, response an error.<br/>
+> If the **Session** is expired, also response an error.<br/>
+> 
+> If the time between request time and `Session Expire Time` exceed `12` hours, then response empty `error_info` with `error_type` which is `KeepGuAliveErrorLifeLimit(1)`.<br/>
 > Otherwise, the session is still alive, so please use its active g79 user to keep g79 user alive.<br/>
 > 
 > A go implements is like follows.
