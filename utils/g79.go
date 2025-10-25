@@ -5,33 +5,50 @@ import (
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/patrickmn/go-cache"
 )
 
-var g79UserCache *cache.Cache // cache[MpayUserUid]*g79.G79User
+const defaultTTL = 4
+
+type g79UserCacheItem struct {
+	gu  *g79.G79User
+	ttl int
+}
+
+var (
+	g79UserCache       *cache.Cache // cache[MpayUserUid]*g79UserCacheItem
+	g79UserCacheLogger = log.Default()
+)
 
 func init() {
+	g79UserCacheLogger.SetPrefix("[G79UserCache] ")
 	g79UserCache = cache.New(25*time.Minute, 5*time.Minute)
 	g79UserCache.OnEvicted(func(uid string, value any) {
-		gu := value.(*g79.G79User)
-		gu.Logout()
+		item := value.(*g79UserCacheItem)
+		if item.ttl > 0 && item.gu.Update() == nil { // no need to logout if update failed
+			item.ttl--
+			g79UserCache.SetDefault(uid, item)
+		} else {
+			item.gu.Logout()
+		}
 	})
 }
 
 func HandleG79Login(engineVersion string, mu *defines.MpayUser) (*g79.G79User, *defines.ProtocolError) {
 	// check cache
 	if cached, ok := g79UserCache.Get(mu.Uid); ok {
-		gu := cached.(*g79.G79User)
-		// if version match?
-		if gu.GameInfo.EngineVersion == engineVersion {
-			// if expired?
-			if ginerr := gu.Update(); ginerr == nil {
-				g79UserCache.SetDefault(mu.Uid, gu)
-				return gu, nil
-			}
+		item := cached.(*g79UserCacheItem)
+		gu := item.gu
+		// if version match? and if still valid?
+		if gu.GameInfo.EngineVersion == engineVersion && gu.AccOnlineExp() == nil {
+			g79UserCacheLogger.Printf("CACHE HIT: uid=%s, engineVersion=%s, old ttl=%d\n", mu.Uid, engineVersion, item.ttl)
+			item.ttl = defaultTTL // refresh ttl
+			g79UserCache.SetDefault(mu.Uid, item)
+			return gu, nil
 		}
 	}
 	// g79 login
@@ -39,8 +56,12 @@ func HandleG79Login(engineVersion string, mu *defines.MpayUser) (*g79.G79User, *
 	if protocolErr != nil {
 		return nil, protocolErr
 	}
+	g79UserCacheLogger.Printf("NEW LOGIN: uid=%s, engineVersion=%s\n", mu.Uid, engineVersion)
 	// cache
-	g79UserCache.SetDefault(mu.Uid, gu)
+	g79UserCache.SetDefault(mu.Uid, &g79UserCacheItem{
+		gu:  gu,
+		ttl: defaultTTL,
+	})
 	return gu, nil
 }
 
