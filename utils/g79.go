@@ -44,12 +44,15 @@ func HandleG79Login(engineVersion string, mu *defines.MpayUser) (*g79.G79User, *
 	if cached, ok := g79UserCache.Get(mu.Uid); ok {
 		item := cached.(*g79UserCacheItem)
 		gu := item.gu
-		// if version match? and if still valid?
-		if gu.GameInfo.EngineVersion == engineVersion && gu.AccOnlineExp() == nil {
-			g79UserCacheLogger.Printf("CACHE HIT: uid=%s, engineVersion=%s, old ttl=%d\n", mu.Uid, engineVersion, item.ttl)
-			item.ttl = defaultTTL // refresh ttl
-			g79UserCache.SetDefault(mu.Uid, item)
-			return gu, nil
+		// if version match?
+		if gu.GameInfo.EngineVersion == engineVersion {
+			// if still valid ?
+			if _, _, protocolErr := gu.AccOnlineExp(); protocolErr == nil {
+				g79UserCacheLogger.Printf("CACHE HIT: uid=%s, engineVersion=%s, old ttl=%d\n", mu.Uid, engineVersion, item.ttl)
+				item.ttl = defaultTTL // refresh ttl
+				g79UserCache.SetDefault(mu.Uid, item)
+				return gu, nil
+			}
 		}
 	}
 	// g79 login
