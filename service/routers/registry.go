@@ -1,9 +1,9 @@
 package routers
 
 import (
-	eulogist_api "bunker-lite/service/routers/eulogist"
-	std_api "bunker-lite/service/routers/standard"
-	vitality_api "bunker-lite/service/routers/vitality"
+	eulogist_api "bunker-lite/service/routers/api/eulogist"
+	std_api "bunker-lite/service/routers/api/standard"
+	vitality_api "bunker-lite/service/routers/api/vitality"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

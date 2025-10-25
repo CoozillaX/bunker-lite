@@ -4,7 +4,7 @@ import (
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
 	"bunker-lite/service/database"
-	"bunker-lite/service/keys"
+	"bunker-lite/service/routers/keys"
 	"bunker-lite/utils"
 	"encoding/hex"
 	"encoding/json"
