@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bunker-lite/define"
+	"bunker-lite/service/define"
 	"context"
 	"fmt"
 	"sync"

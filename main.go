@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bunker-lite/routers"
+	"bunker-lite/service/routers"
 	"fmt"
 )
 
