@@ -32,6 +32,7 @@ func init() {
 		if item.ttl > 0 && item.gu.Update() == nil { // no need to logout if update failed
 			item.ttl--
 			g79UserCache.SetDefault(uid, item)
+			g79UserCacheLogger.Printf("CACHE REFRESH: uid=%s, engineVersion=%s, new ttl=%d\n", uid, item.gu.GameInfo.EngineVersion, item.ttl)
 		} else {
 			item.gu.Logout()
 		}
