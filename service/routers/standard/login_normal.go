@@ -4,6 +4,7 @@ import (
 	"bunker-lite/enhance"
 	"bunker-lite/service/database"
 	"bunker-lite/service/define"
+	"bunker-lite/service/keys"
 	"bunker-lite/service/utils"
 	"fmt"
 	"net/http"
@@ -322,7 +323,7 @@ func Login(c *gin.Context) {
 		session.Store(session_key_patch_version, activeGu.RecordG79UserData.GameInfo.PatchVersion)
 
 		// get encrypted token
-		encryptedToken, err := utils.EncryptPKCS1v15(&define.TokenEncryptKey.PublicKey, []byte(helper.HelperToken))
+		encryptedToken, err := utils.EncryptPKCS1v15(&keys.TokenEncryptKey.PublicKey, []byte(helper.HelperToken))
 		if err != nil {
 			c.JSON(http.StatusOK, AuthResponse{
 				SuccessStates: false,
@@ -358,7 +359,7 @@ func Login(c *gin.Context) {
 				return
 			}
 
-			encrypted, err := utils.EncryptPKCS1v15(PhoenixLoginKey, jsonBytes)
+			encrypted, err := utils.EncryptPKCS1v15(keys.PhoenixLoginKey, jsonBytes)
 			if err != nil {
 				c.JSON(http.StatusOK, AuthResponse{
 					SuccessStates: false,

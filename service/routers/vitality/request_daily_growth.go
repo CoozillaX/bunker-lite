@@ -4,7 +4,7 @@ import (
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
 	"bunker-lite/service/database"
-	"bunker-lite/service/define"
+	"bunker-lite/service/keys"
 	"bunker-lite/service/utils"
 	"encoding/hex"
 	"encoding/json"
@@ -42,7 +42,7 @@ func RequestDailyGrowth(c *gin.Context) {
 	}
 
 	if tokenBytes, err := hex.DecodeString(request.Token); err == nil {
-		decrypted, err := utils.DecryptPKCS1v15(define.TokenEncryptKey, tokenBytes)
+		decrypted, err := utils.DecryptPKCS1v15(keys.TokenEncryptKey, tokenBytes)
 		if err == nil {
 			request.Token = string(decrypted)
 		}

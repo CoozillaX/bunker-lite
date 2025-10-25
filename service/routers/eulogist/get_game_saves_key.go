@@ -3,6 +3,7 @@ package eulogist_api
 import (
 	"bunker-lite/service/database"
 	"bunker-lite/service/define"
+	"bunker-lite/service/keys"
 	"bunker-lite/service/utils"
 	"encoding/json"
 	"fmt"
@@ -52,7 +53,7 @@ func GetGameSavesKey(c *gin.Context) {
 		return
 	}
 
-	decrypted, err := utils.DecryptPKCS1v15(define.GameSavesEncryptKey, requestRaw)
+	decrypted, err := utils.DecryptPKCS1v15(keys.GameSavesEncryptKey, requestRaw)
 	if err == nil {
 		requestRaw = decrypted
 		enableEncrypt = true
@@ -148,7 +149,7 @@ func GetGameSavesKey(c *gin.Context) {
 			return
 		}
 
-		encrypted, err := utils.EncryptPKCS1v15(&define.GameSavesEncryptKey.PublicKey, jsonBytes)
+		encrypted, err := utils.EncryptPKCS1v15(&keys.GameSavesEncryptKey.PublicKey, jsonBytes)
 		if err != nil {
 			c.JSON(http.StatusOK, GameSavesKeyResponse{
 				ErrorInfo: fmt.Sprintf("GetGameSavesKey: 获取存档解密密钥时出现问题, 原因是 %v", err),
