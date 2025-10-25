@@ -1,7 +1,7 @@
 package std_api
 
 import (
-	"bunker-lite/service/utils"
+	"bunker-lite/utils"
 	"encoding/json"
 	"fmt"
 	"net/http"

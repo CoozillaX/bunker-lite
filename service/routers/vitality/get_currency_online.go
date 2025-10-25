@@ -5,7 +5,7 @@ import (
 	"bunker-core/protocol/gameinfo"
 	"bunker-lite/service/database"
 	"bunker-lite/service/keys"
-	"bunker-lite/service/utils"
+	"bunker-lite/utils"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
