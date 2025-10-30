@@ -5,7 +5,6 @@ import (
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -20,19 +19,16 @@ type g79UserCacheItem struct {
 }
 
 var (
-	g79UserCache       *cache.Cache // cache[MpayUserUid]*g79UserCacheItem
-	g79UserCacheLogger = log.Default()
+	g79UserCache *cache.Cache // cache[MpayUserUid]*g79UserCacheItem
 )
 
 func init() {
-	g79UserCacheLogger.SetPrefix("[G79UserCache] ")
 	g79UserCache = cache.New(25*time.Minute, 5*time.Minute)
 	g79UserCache.OnEvicted(func(uid string, value any) {
 		item := value.(*g79UserCacheItem)
 		if item.ttl > 0 && item.gu.Update() == nil { // no need to logout if update failed
 			item.ttl--
 			g79UserCache.SetDefault(uid, item)
-			g79UserCacheLogger.Printf("CACHE REFRESH: uid=%s, engineVersion=%s, new ttl=%d\n", uid, item.gu.GameInfo.EngineVersion, item.ttl)
 		} else {
 			item.gu.Logout()
 		}
@@ -48,7 +44,6 @@ func HandleG79Login(engineVersion string, mu *defines.MpayUser) (*g79.G79User, *
 		if gu.GameInfo.EngineVersion == engineVersion {
 			// if still valid ?
 			if _, _, protocolErr := gu.AccOnlineExp(); protocolErr == nil {
-				g79UserCacheLogger.Printf("CACHE HIT: uid=%s, engineVersion=%s, old ttl=%d\n", mu.Uid, engineVersion, item.ttl)
 				item.ttl = defaultTTL // refresh ttl
 				g79UserCache.SetDefault(mu.Uid, item)
 				return gu, nil
@@ -60,7 +55,6 @@ func HandleG79Login(engineVersion string, mu *defines.MpayUser) (*g79.G79User, *
 	if protocolErr != nil {
 		return nil, protocolErr
 	}
-	g79UserCacheLogger.Printf("NEW LOGIN: uid=%s, engineVersion=%s\n", mu.Uid, engineVersion)
 	// cache
 	g79UserCache.SetDefault(mu.Uid, &g79UserCacheItem{
 		gu:  gu,
