@@ -66,7 +66,7 @@ func HandleG79Login(engineVersion string, mu *defines.MpayUser) (*g79.G79User, *
 func GetG79LauncherLevel(gu *g79.G79User) (int, *defines.ProtocolError) {
 	reader, ginerr := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-get-grow-lv-exp").
+		SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-get-grow-lv-exp").
 		SetRawBody([]byte("{}")).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
