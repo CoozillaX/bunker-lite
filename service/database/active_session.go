@@ -60,7 +60,7 @@ func RegisterActiveSession(
 	peAuthData string,
 	saAuthData string,
 	useGeneralLock bool,
-	userSessionLock bool,
+	useSessionLock bool,
 ) (
 	session define.ActiveSession,
 	err error,
@@ -73,7 +73,7 @@ func RegisterActiveSession(
 		mu.Lock()
 		defer mu.Unlock()
 	}
-	if userSessionLock {
+	if useSessionLock {
 		ActiveSessionTran.Lock(session.SessionID)
 		defer ActiveSessionTran.Unlock(session.SessionID)
 	}
@@ -150,8 +150,8 @@ func RegisterActiveSession(
 }
 
 // DeleteActiveSession ..
-func DeleteActiveSession(sessionID string, userSessionLock bool) error {
-	if userSessionLock {
+func DeleteActiveSession(sessionID string, useSessionLock bool) error {
+	if useSessionLock {
 		ActiveSessionTran.Lock(sessionID)
 		defer ActiveSessionTran.Unlock(sessionID)
 	}
@@ -174,8 +174,8 @@ func DeleteActiveSession(sessionID string, userSessionLock bool) error {
 }
 
 // LoadActiveSession ..
-func LoadActiveSession(sessionID string, userSessionLock bool) (session define.ActiveSession, found bool, err error) {
-	if userSessionLock {
+func LoadActiveSession(sessionID string, useSessionLock bool) (session define.ActiveSession, found bool, err error) {
+	if useSessionLock {
 		ActiveSessionTran.Lock(sessionID)
 		defer ActiveSessionTran.Unlock(sessionID)
 	}
@@ -233,7 +233,7 @@ func LoadOrRegisterActiveSession(
 	peAuthData string,
 	saAuthData string,
 	useGeneralLock bool,
-	userSessionLock bool,
+	useSessionLock bool,
 ) (
 	session define.ActiveSession,
 	err error,
@@ -245,7 +245,7 @@ func LoadOrRegisterActiveSession(
 
 	sessionID, found, err := GetSessionIDByHelperUniqueID(helper.HelperUniqueID, false)
 	if found {
-		if userSessionLock {
+		if useSessionLock {
 			ActiveSessionTran.Lock(sessionID)
 			defer ActiveSessionTran.Unlock(sessionID)
 		}
@@ -273,8 +273,8 @@ func LoadOrRegisterActiveSession(
 }
 
 // UpdateActiveSession ..
-func UpdateActiveSession(session define.ActiveSession, userSessionLock bool) error {
-	if userSessionLock {
+func UpdateActiveSession(session define.ActiveSession, useSessionLock bool) error {
+	if useSessionLock {
 		ActiveSessionTran.Lock(session.SessionID)
 		defer ActiveSessionTran.Unlock(session.SessionID)
 	}
