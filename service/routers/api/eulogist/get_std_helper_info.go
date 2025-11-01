@@ -69,7 +69,7 @@ func GetStdHelperInfo(c *gin.Context) {
 		return
 	}
 
-	activeGu, err := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
+	session, err := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
 	if err != nil {
 		c.JSON(http.StatusOK, HelperInfoResponse{
 			ErrorInfo: fmt.Sprintf("GetStdHelperInfo: 请求 MC 账号信息时出现问题, 原因是 %v", err),
@@ -78,10 +78,10 @@ func GetStdHelperInfo(c *gin.Context) {
 		return
 	}
 
-	if activeGu.SessionType == define.SessionTypeMpayUser {
+	if session.SessionType == define.SessionTypeMpayUser {
 		account.UpdateData(map[string]any{
-			"gameNickName":       activeGu.G79User().Username,
-			"g79UserUID":         activeGu.G79User().EntityID,
+			"gameNickName":       session.G79User().Username,
+			"g79UserUID":         session.G79User().EntityID,
 			"authHelperUniqueID": account.AuthServerSecret(),
 		})
 		user.CurrentAuthServerAccount = protocol.Option(account)
@@ -107,9 +107,9 @@ func GetStdHelperInfo(c *gin.Context) {
 
 	c.JSON(http.StatusOK, HelperInfoResponse{
 		Success:           true,
-		AccountType:       activeGu.SessionType,
-		AccountExpireTime: activeGu.SessionExpireTime,
-		GameNickName:      activeGu.G79User().Username,
-		G79UserUID:        activeGu.G79User().EntityID,
+		AccountType:       session.SessionType,
+		AccountExpireTime: session.SessionExpireTime,
+		GameNickName:      session.G79User().Username,
+		G79UserUID:        session.G79User().EntityID,
 	})
 }
