@@ -64,7 +64,7 @@ func TanLobbyCreate(c *gin.Context) {
 	helper = database.GetAuthHelperByToken(request.FBToken, true)
 
 	// g79 login
-	activeGu, err := database.LoadOrRegisterActiveG79User(
+	session, err := database.LoadOrRegisterActiveSession(
 		helper,
 		gameinfo.DefaultEngineVersion,
 		request.ProvidedPeAuthData,
@@ -80,7 +80,7 @@ func TanLobbyCreate(c *gin.Context) {
 	}
 
 	// select transfer server
-	g79UserUID, raknetServerAddress, signalingServerAddress, err := enhance.SelectTransferServer(activeGu.RecordG79UserData)
+	g79UserUID, raknetServerAddress, signalingServerAddress, err := enhance.SelectTransferServer(session.G79User())
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
 			Success:   false,
@@ -96,7 +96,7 @@ func TanLobbyCreate(c *gin.Context) {
 	_, _ = cryptoRand.Read(signalingSeed)
 
 	// compute encrypted token and key to encrypt/decrypt raknet session
-	encryptedUserToken := utils.MD5Sum([]byte(activeGu.RecordG79UserData.G79Token))
+	encryptedUserToken := utils.MD5Sum([]byte(session.G79User().G79Token))
 	encryptKeyBytes := []byte(string(encryptedUserToken) + string(raknetRand))
 	decryptKeyBytes := []byte(string(raknetRand) + string(encryptedUserToken))
 
@@ -112,7 +112,7 @@ func TanLobbyCreate(c *gin.Context) {
 	raknetAESRand = raknetAESRand[0:16]
 
 	// compute signaling ticket by g79 token and seed
-	signalingTicket, err := utils.AES_ECB_PKCS7Encrypt([]byte(activeGu.RecordG79UserData.G79Token), signalingSeed)
+	signalingTicket, err := utils.AES_ECB_PKCS7Encrypt([]byte(session.G79User().G79Token), signalingSeed)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
 			Success:   false,
@@ -127,7 +127,7 @@ func TanLobbyCreate(c *gin.Context) {
 		TanLobbyCreateResponse{
 			Success:                true,
 			UserUniqueID:           g79UserUID,
-			UserPlayerName:         activeGu.RecordG79UserData.Username,
+			UserPlayerName:         session.G79User().Username,
 			RaknetServerAddress:    raknetServerAddress,
 			RaknetRand:             raknetRand,
 			RaknetAESRand:          raknetAESRand,

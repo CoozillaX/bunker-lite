@@ -18,7 +18,7 @@ func GetDownloadInfoByItemID(gu *g79.G79User, id string) (*DownloadInfo, *define
 	// 1. Do req
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-download-item/get-download-info").
+		SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-download-item/get-download-info").
 		SetRawBody(fmt.Appendf(nil, `{"item_id":"%s"}`, id)).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()

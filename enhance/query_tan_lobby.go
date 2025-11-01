@@ -44,7 +44,7 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 	})
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.TransferServerNewHttpUrl + "/room-with-name").
+		SetUrl(gameinfo.G79Servers.Load().TransferServerNewHttpUrl + "/room-with-name").
 		SetRawBody(reqBody).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
@@ -90,7 +90,7 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 	}
 
 	// query transfer server list
-	resp, err := http.Get(gameinfo.G79ServerList.TransferServerUrl)
+	resp, err := http.Get(gameinfo.G79Servers.Load().TransferServerUrl)
 	if err != nil {
 		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", err)
 	}

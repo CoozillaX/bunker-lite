@@ -680,7 +680,7 @@ Description
 > ```go
 > activeGu.RecordG79UserData.CreateHttpClient().
 >     SetMethod(http.MethodPost).
->  	SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-get-daily-growth-info").
+>  	SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-get-daily-growth-info").
 > 	SetTokenMode(g79.TOKEN_MODE_NORMAL).
 > 	Do()
 > ```
@@ -744,7 +744,7 @@ Description
 > ```go
 > activeGu.RecordG79UserData.CreateHttpClient().
 > 	SetMethod(http.MethodPost).
-> 	SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/get-currency-online").
+> 	SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/get-currency-online").
 > 	SetRawBody([]byte("{}")).
 > 	SetTokenMode(g79.TOKEN_MODE_NORMAL).
 > 	Do()
@@ -817,7 +817,7 @@ Description
 > ```go
 > gu.CreateHttpClient().
 > 	SetMethod(http.MethodPost).
-> 	SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/authentication/update").
+> 	SetUrl(gameinfo.G79Servers.Load().CoreServerUrl + "/authentication/update").
 > 	SetTokenMode(TOKEN_MODE_NORMAL).
 > 	SetEncryptSuffix(0x4).
 > 	Do()

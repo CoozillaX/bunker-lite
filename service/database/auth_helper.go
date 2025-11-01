@@ -247,18 +247,18 @@ func UpdateHelperInfo(helper define.AuthServerHelper, useLock bool) error {
 }
 
 // DeleteAuthHelper ..
-func DeleteAuthHelper(uniqueID string, useLock bool) (helperToken string, err error) {
+func DeleteAuthHelper(uniqueID string, useLock bool) error {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
 	}
 
 	if !CheckAuthHelperByUniqueID(uniqueID, false) {
-		return "", fmt.Errorf("DeleteAuthHelper: 目标 MC 账号不存在")
+		return fmt.Errorf("DeleteAuthHelper: 目标 MC 账号不存在")
 	}
 	helper := GetAuthHelperByUniqueID(uniqueID, false)
 
-	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
+	err := serverDatabase.Update(func(tx *bbolt.Tx) error {
 		err := tx.Bucket([]byte(DATABASE_KEY_AUTH_HELPER)).Delete([]byte(helper.HelperUniqueID))
 		if err != nil {
 			return err
@@ -270,14 +270,25 @@ func DeleteAuthHelper(uniqueID string, useLock bool) (helperToken string, err er
 		return nil
 	})
 	if err != nil {
-		return "", fmt.Errorf("DeleteAuthHelper: 删除 MC 账号时出现问题, 原因是 %v", err)
+		return fmt.Errorf("DeleteAuthHelper: 删除 MC 账号时出现问题, 原因是 %v", err)
 	}
 
-	return helper.HelperToken, nil
+	sessionID, found, err := GetSessionIDByHelperUniqueID(helper.HelperUniqueID, false)
+	if err != nil {
+		return fmt.Errorf("DeleteAuthHelper: 删除 MC 账号时出现问题, 原因是 %v", err)
+	}
+	if found {
+		err = DeleteActiveSession(sessionID, false)
+		if err != nil {
+			return fmt.Errorf("DeleteAuthHelper: 删除 MC 账号时出现问题, 原因是 %v", err)
+		}
+	}
+
+	return nil
 }
 
 // GetHelperBasicInfo ..
-func GetHelperBasicInfo(uniqueID string, useLock bool) (activeGu define.ActiveG79User, err error) {
+func GetHelperBasicInfo(uniqueID string, useLock bool) (session define.ActiveSession, err error) {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -285,23 +296,23 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (activeGu define.ActiveG7
 
 	// check auth helper
 	if !CheckAuthHelperByUniqueID(uniqueID, false) {
-		return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 无法找到目标 MC 账号")
+		return define.ActiveSession{}, fmt.Errorf("GetHelperBasicInfo: 无法找到目标 MC 账号")
 	}
 	helper := GetAuthHelperByUniqueID(uniqueID, false)
 
 	// g79 login
-	activeGu, err = LoadOrRegisterActiveG79User(helper, gameinfo.DefaultEngineVersion, "", "", useLock)
+	session, err = LoadOrRegisterActiveSession(helper, gameinfo.DefaultEngineVersion, "", "", useLock)
 	if err != nil {
-		return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
+		return define.ActiveSession{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
 	}
 
 	// update game nick name
-	if activeGu.SessionType == define.SessionTypeMpayUser && helper.GameNickName != activeGu.RecordG79UserData.Username {
-		helper.GameNickName = activeGu.RecordG79UserData.Username
+	if session.SessionType == define.SessionTypeMpayUser && helper.GameNickName != session.G79User().Username {
+		helper.GameNickName = session.G79User().Username
 		if err = UpdateHelperInfo(helper, false); err != nil {
-			return define.ActiveG79User{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
+			return define.ActiveSession{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
 		}
 	}
 
-	return activeGu, nil
+	return session, nil
 }

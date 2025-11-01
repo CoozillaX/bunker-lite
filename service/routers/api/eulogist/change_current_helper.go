@@ -76,7 +76,7 @@ func ChangeCurrentHelper(c *gin.Context) {
 		return
 	}
 
-	activeGu, err := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
+	session, err := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
 	if err != nil {
 		c.JSON(http.StatusOK, HelperChangeResponse{
 			ErrorInfo: fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题, 原因是 %v", err),
@@ -85,9 +85,9 @@ func ChangeCurrentHelper(c *gin.Context) {
 		return
 	}
 
-	if activeGu.SessionType == define.SessionTypeMpayUser {
-		gameNickName = activeGu.RecordG79UserData.Username
-		g79UserUID = activeGu.RecordG79UserData.EntityID
+	if session.SessionType == define.SessionTypeMpayUser {
+		gameNickName = session.G79User().Username
+		g79UserUID = session.G79User().EntityID
 	} else {
 		stdAccount := account.(*define.StdAuthServerAccount)
 		gameNickName = stdAccount.GameNickName()

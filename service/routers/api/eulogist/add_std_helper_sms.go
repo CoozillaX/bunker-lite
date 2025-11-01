@@ -180,7 +180,7 @@ func AddStdHelperSMS(c *gin.Context) {
 	}
 
 	if isRepeat {
-		if _, err = database.DeleteAuthHelper(helper.HelperUniqueID, true); err != nil {
+		if err = database.DeleteAuthHelper(helper.HelperUniqueID, true); err != nil {
 			c.JSON(http.StatusOK, SMSHelperAddResponse{
 				ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题, 原因是 %v", err),
 				ResponseType: ResponseTypeMeetError,

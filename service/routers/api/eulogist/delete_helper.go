@@ -83,15 +83,7 @@ func DeleteHelper(c *gin.Context) {
 
 	account := user.MultipleAuthServerAccounts[request.Index]
 	if account.IsStdAccount() {
-		helperToken, err := database.DeleteAuthHelper(account.AuthServerSecret(), true)
-		if err != nil {
-			c.JSON(http.StatusOK, HelperDeleteResponse{
-				ErrorInfo: fmt.Sprintf("DeleteHelper: 删除已有的 MC 账号时出现问题, 原因是 %v", err),
-				Success:   false,
-			})
-			return
-		}
-		err = database.DeleteActiveG79User(helperToken, true)
+		err = database.DeleteAuthHelper(account.AuthServerSecret(), true)
 		if err != nil {
 			c.JSON(http.StatusOK, HelperDeleteResponse{
 				ErrorInfo: fmt.Sprintf("DeleteHelper: 删除已有的 MC 账号时出现问题, 原因是 %v", err),

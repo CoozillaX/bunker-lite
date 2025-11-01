@@ -89,7 +89,7 @@ func SetLoginStates(c *gin.Context) {
 			})
 			return
 		}
-		_, err = database.RegisterActiveG79User(
+		_, err = database.RegisterActiveSession(
 			helper,
 			gameinfo.DefaultEngineVersion,
 			request.PeAuth,
@@ -97,7 +97,23 @@ func SetLoginStates(c *gin.Context) {
 			true,
 		)
 	case RequestTypeCleanUpSession:
-		err = database.DeleteActiveG79User(helper.HelperToken, true)
+		sessionID, found, err := database.GetSessionIDByHelperUniqueID(helper.HelperUniqueID, true)
+		if err != nil {
+			c.JSON(http.StatusOK, LoginStatesSetResponse{
+				ErrorInfo: fmt.Sprintf("SetLoginStates: 设置登录状态时出现问题, 原因是 %v", err),
+				Success:   false,
+			})
+			return
+		}
+		if found {
+			if err = database.DeleteActiveSession(sessionID, true); err != nil {
+				c.JSON(http.StatusOK, LoginStatesSetResponse{
+					ErrorInfo: fmt.Sprintf("SetLoginStates: 设置登录状态时出现问题, 原因是 %v", err),
+					Success:   false,
+				})
+				return
+			}
+		}
 	case RequestTypeEnableVitality:
 		helper.EnableVitality = true
 		err = database.UpdateHelperInfo(helper, true)

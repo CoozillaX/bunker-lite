@@ -49,10 +49,10 @@ func CleanUpSession(c *gin.Context) {
 		})
 		return
 	}
-	database.LockG79Transaction(request.Token)
-	defer database.UnlockG79Transaction(request.Token)
+	database.ActiveSessionTran.Lock(request.SessionID)
+	defer database.ActiveSessionTran.Unlock(request.SessionID)
 
-	activeGu, found, err := database.LoadActiveG79User(request.Token, false)
+	session, found, err := database.LoadActiveSession(request.SessionID, false)
 	if err != nil {
 		c.JSON(http.StatusOK, CleanUpSessionResponse{
 			ErrorInfo: fmt.Sprintf("CleanUpSession: %v", err),
@@ -67,18 +67,8 @@ func CleanUpSession(c *gin.Context) {
 		})
 		return
 	}
-	if request.SessionID != activeGu.SessionID {
-		c.JSON(http.StatusOK, CleanUpSessionResponse{
-			ErrorInfo: fmt.Sprintf(
-				"CleanUpSession: Session ID not matched (expect = %#v, provided = %#v)",
-				activeGu.SessionID, request.SessionID,
-			),
-			Success: false,
-		})
-		return
-	}
 
-	err = database.DeleteActiveG79User(request.Token, false)
+	err = database.DeleteActiveSession(session.SessionID, false)
 	if err != nil {
 		c.JSON(http.StatusOK, CleanUpSessionResponse{
 			ErrorInfo: fmt.Sprintf("CleanUpSession: %v", err),

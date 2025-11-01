@@ -19,7 +19,7 @@ func SelectTransferServer(gu *g79.G79User) (g79UserUID uint32, raknetServerAddre
 	g79UserUID = uint32(uid)
 
 	// query transfer server list
-	resp, err := http.Get(gameinfo.G79ServerList.TransferServerUrl)
+	resp, err := http.Get(gameinfo.G79Servers.Load().TransferServerUrl)
 	if err != nil {
 		return 0, "", "", fmt.Errorf("SelectTransferServer: %v", err)
 	}

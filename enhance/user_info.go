@@ -15,7 +15,7 @@ func GetName(gu *g79.G79User) (name string, err error) {
 	})
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/pe-user-detail/get").
+		SetUrl(gameinfo.G79Servers.Load().CoreServerUrl + "/pe-user-detail/get").
 		SetRawBody(reqBody).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
@@ -41,7 +41,7 @@ func ChangeName(gu *g79.G79User, userNewName string) *defines.ProtocolError {
 	})
 	_, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-nickname-setting/update").
+		SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-nickname-setting/update").
 		SetRawBody(reqBody).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
@@ -54,7 +54,7 @@ func ChangeName(gu *g79.G79User, userNewName string) *defines.ProtocolError {
 func GetLauncherLevel(gu *g79.G79User) (level int, exp int, needExp int, protocolError *defines.ProtocolError) {
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-get-grow-lv-exp").
+		SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-get-grow-lv-exp").
 		SetRawBody([]byte("{}")).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()

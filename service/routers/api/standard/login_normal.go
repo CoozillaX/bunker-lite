@@ -237,7 +237,7 @@ func Login(c *gin.Context) {
 	}
 
 	// g79 login
-	activeGu, err := database.LoadOrRegisterActiveG79User(
+	activeSession, err := database.LoadOrRegisterActiveSession(
 		helper,
 		engineVersion,
 		request.ProvidedPeAuthData,
@@ -259,8 +259,8 @@ func Login(c *gin.Context) {
 	for range 2 {
 		// request server info
 		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolError := requestServerInfo(
-			activeGu.SessionType != define.SessionTypeMpayUser,
-			activeGu.RecordG79UserData,
+			activeSession.SessionType != define.SessionTypeMpayUser,
+			activeSession.G79User(),
 			&request,
 		)
 		if protocolError != nil {
@@ -281,7 +281,7 @@ func Login(c *gin.Context) {
 				engineVersion = value.(string)
 			}
 			// relogin g79 user
-			activeGu, err = database.RegisterActiveG79User(
+			activeSession, err = database.RegisterActiveSession(
 				helper,
 				engineVersion,
 				"",
@@ -318,9 +318,9 @@ func Login(c *gin.Context) {
 		}
 
 		// save info for anti-cheat callback
-		session.Store(session_key_entity_id, activeGu.RecordG79UserData.EntityID)
-		session.Store(session_key_engine_version, activeGu.RecordG79UserData.GameInfo.EngineVersion)
-		session.Store(session_key_patch_version, activeGu.RecordG79UserData.GameInfo.PatchVersion)
+		session.Store(session_key_entity_id, activeSession.G79User().EntityID)
+		session.Store(session_key_engine_version, activeSession.G79User().GameInfo.EngineVersion)
+		session.Store(session_key_patch_version, activeSession.G79User().GameInfo.PatchVersion)
 
 		// get encrypted token
 		encryptedToken, err := utils.EncryptPKCS1v15(&keys.TokenEncryptKey.PublicKey, []byte(helper.HelperToken))

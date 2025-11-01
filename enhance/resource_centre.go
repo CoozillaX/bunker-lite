@@ -23,7 +23,7 @@ func GetLobbyDownloadInfoByItemIDs(gu *g79.G79User, itemIDs []string) (
 	})
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.ApiGatewayUrl + "/pe-item/query/search-lobby-by-id-list").
+		SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-item/query/search-lobby-by-id-list").
 		SetRawBody(reqBody).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		Do()
@@ -63,7 +63,7 @@ func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]b
 	})
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/pe-item/get-encryption-key-list-for-guests").
+		SetUrl(gameinfo.G79Servers.Load().CoreServerUrl + "/pe-item/get-encryption-key-list-for-guests").
 		SetRawBody(reqBody).
 		SetTokenMode(g79.TOKEN_MODE_NORMAL).
 		SetEncryptSuffix(0xc).

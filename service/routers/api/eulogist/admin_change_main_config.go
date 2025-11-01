@@ -110,15 +110,6 @@ func ChangeMainConfig(c *gin.Context) {
 				})
 				return
 			}
-
-			err = database.MigrateActiveG79User(oldToken, newToken, true)
-			if err != nil {
-				c.JSON(http.StatusOK, ChangeMainConfigResponse{
-					ErrorInfo: fmt.Sprintf("ChangeMainConfig: 更改用户主要配置时出现问题, 原因是 %v", err),
-					Success:   false,
-				})
-				return
-			}
 		}
 	}
 

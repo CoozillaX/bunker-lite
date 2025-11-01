@@ -26,9 +26,9 @@ func main() {
 		var cancel context.CancelFunc
 
 		// Register new session
-		registerActiveGuResp, err := SendAndGetHttpResponse[RegisterActiveGuResponse](
-			fmt.Sprintf("%s/registry_active_gu", authServerAddress),
-			RegisterActiveGuRequest{
+		registerActiveSessionResp, err := SendAndGetHttpResponse[RegisterActiveSessionResponse](
+			fmt.Sprintf("%s/register_active_session", authServerAddress),
+			RegisterActiveSessionRequest{
 				Token:              authServerToken,
 				OverrideSession:    true,
 				ProvidedPeAuthData: peAuthData,
@@ -36,36 +36,39 @@ func main() {
 			},
 		)
 		if err != nil {
-			pterm.Warning.Printfln("[RegisterActiveGu] %v", err)
+			pterm.Warning.Printfln("[RegisterActiveSession] %v", err)
 			continue
 		}
-		if !registerActiveGuResp.Success {
-			panic(fmt.Sprintf("main/RegisterActiveGu: %v", registerActiveGuResp.ErrorInfo))
+		if !registerActiveSessionResp.Success {
+			panic(fmt.Sprintf("main/RegisterActiveSession: %v", registerActiveSessionResp.ErrorInfo))
 		}
-		pterm.Info.Printfln("[RegisterActiveGu] %#v", registerActiveGuResp)
+		pterm.Info.Printfln("[RegisterActiveSession] %#v", registerActiveSessionResp)
 
 		// Init variable
-		sessionExpireTime = registerActiveGuResp.SessionExpireTime
+		sessionExpireTime = registerActiveSessionResp.SessionExpireTime
 		waitGroup.Add(2)
 		ctx, cancel = context.WithCancel(context.Background())
 
 		// Debug
 		if true {
-			resp, _ := SendAndGetHttpResponse[SessionInfoResponse](
-				fmt.Sprintf("%s/request_session_info", authServerAddress),
-				SessionInfoRequest{
-					Token: authServerToken,
+			resp, _ := SendAndGetHttpResponse[VitalityDebugResponse](
+				fmt.Sprintf("%s/request_vitality_debug", authServerAddress),
+				VitalityDebugRequest{
+					Token:       authServerToken,
+					SessionID:   registerActiveSessionResp.SessionID,
+					RequestType: RequestTypeGetCurrencyOnline,
 				},
 			)
 			fmt.Printf("%#v\n", resp)
 			// return
 		}
 		if true {
-			resp, _ := SendAndGetHttpResponse[DailyGrowthResponse](
-				fmt.Sprintf("%s/request_daily_growth", authServerAddress),
-				DailyGrowthRequest{
-					Token:     authServerToken,
-					SessionID: registerActiveGuResp.SessionID,
+			resp, _ := SendAndGetHttpResponse[VitalityDebugResponse](
+				fmt.Sprintf("%s/request_vitality_debug", authServerAddress),
+				VitalityDebugRequest{
+					Token:       authServerToken,
+					SessionID:   registerActiveSessionResp.SessionID,
+					RequestType: RequestTypeGetDailyGrowth,
 				},
 			)
 			fmt.Printf("%#v\n", resp)
@@ -82,7 +85,7 @@ func main() {
 					return
 				}
 
-				nextTimeToRefreshSession := time.Unix(sessionExpireTime-600, 0)
+				nextTimeToRefreshSession := time.Unix(sessionExpireTime-30*60, 0)
 				if nextTimeToRefreshSession.After(time.Now()) {
 					timer := time.NewTimer(time.Until(nextTimeToRefreshSession))
 					select {
@@ -93,68 +96,32 @@ func main() {
 					}
 				}
 
-				resp, err := SendAndGetHttpResponse[KeepGuAliveResponse](
-					fmt.Sprintf("%s/keep_gu_alive", authServerAddress),
-					KeepGuAliveRequest{
+				resp, err := SendAndGetHttpResponse[KeepSessionAliveResponse](
+					fmt.Sprintf("%s/keep_session_alive", authServerAddress),
+					KeepSessionAliveRequest{
 						Token:     authServerToken,
-						SessionID: registerActiveGuResp.SessionID,
+						SessionID: registerActiveSessionResp.SessionID,
 					},
 				)
 				if err != nil {
-					pterm.Warning.Printfln("[KeepGuAlive] %v", err)
+					pterm.Warning.Printfln("[KeepSessionAlive] %v", err)
 					continue
 				}
 
 				if !resp.Success {
 					switch resp.ErrorType {
-					case KeepGuAliveErrorMeetError:
-						pterm.Error.Printfln("[KeepGuAlive] %v", resp.ErrorInfo)
-					case KeepGuAliveErrorLifeLimit:
-						pterm.Info.Printfln("[KeepGuAlive] This session reach its max life time limit. Do refresh.")
-						cleanUpSession(authServerAddress, authServerToken, registerActiveGuResp.SessionID)
+					case KeepSessionAliveErrorMeetError:
+						pterm.Error.Printfln("[KeepSessionAlive] %v", resp.ErrorInfo)
+					case KeepSessionAliveErrorLifeLimit:
+						pterm.Info.Printfln("[KeepSessionAlive] This session reach its max life time limit. Do refresh.")
+						cleanUpSession(authServerAddress, authServerToken, registerActiveSessionResp.SessionID)
 					}
 					cancel()
 					return
 				}
-				pterm.Success.Printfln("[KeepGuAlive] %#v", resp)
+				pterm.Success.Printfln("[KeepSessionAlive] %#v", resp)
 
 				sessionExpireTime = resp.SessionExpireTime
-			}
-		}()
-
-		// Get currency online
-		go func() {
-			ticker := time.NewTicker(time.Minute * 5)
-			defer func() {
-				ticker.Stop()
-				waitGroup.Done()
-			}()
-
-			for {
-				resp, err := SendAndGetHttpResponse[CurrencyOnlineResponse](
-					fmt.Sprintf("%s/get_currency_online", authServerAddress),
-					CurrencyOnlineRequest{
-						Token:     authServerToken,
-						SessionID: registerActiveGuResp.SessionID,
-					},
-				)
-				if err != nil {
-					pterm.Warning.Printfln("[GetCurrencyOnline] %v", err)
-					continue
-				}
-
-				if !resp.Success {
-					pterm.Error.Printfln("[GetCurrencyOnline] %v", resp.ErrorInfo)
-					cancel()
-					return
-				}
-				pterm.Success.Printfln("[GetCurrencyOnline] %#v", resp)
-
-				select {
-				case <-ticker.C:
-				case <-ctx.Done():
-					return
-				}
 			}
 		}()
 

@@ -122,7 +122,7 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	}
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
-		SetUrl(gameinfo.G79ServerList.CoreServerUrl + "/pe-authentication").
+		SetUrl(gameinfo.G79Servers.Load().CoreServerUrl + "/pe-authentication").
 		SetRawBody(reqBody).
 		SetEncryptSuffix(0xc).
 		Do()
@@ -149,6 +149,11 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("PeAuthLogin: %v", err)
 	}
+
+	// 10. Acc online exp
+	go func() {
+		_, _, _ = gu.AccOnlineExp()
+	}()
 
 	return gu, nil
 }

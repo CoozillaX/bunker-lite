@@ -9,15 +9,16 @@ import (
 const DatabseFileName = "eulogist-bunker-lite.db"
 
 const (
-	DATABASE_KEY_EULOGIST_USER   = "EULOGIST_USER"   // map[UserUniqueID]define.EulogistUser
-	DATABASE_KEY_AUTH_HELPER     = "AUTH_HELPER"     // map[HelperUniqueID]define.AuthServerHelper
-	DATABASE_KEY_ACTIVE_G79_USER = "ACTIVE_G79_USER" // map[HelperToken]define.ActiveG79User
+	DATABASE_KEY_EULOGIST_USER  = "EULOGIST_USER"  // map[UserUniqueID]define.EulogistUser
+	DATABASE_KEY_AUTH_HELPER    = "AUTH_HELPER"    // map[HelperUniqueID]define.AuthServerHelper
+	DATABASE_KEY_ACTIVE_SESSION = "ACTIVE_SESSION" // map[SessionID]define.ActiveSession
 )
 
 const (
-	DATABASE_KEY_NTEU_MAPPING = "NAME_TO_EULOGIST_USER"  // map[EulogistUserName]UserUniqueID
-	DATABSE_KEY_TTEU_MAPPING  = "TOKEN_TO_EULOGIST_USER" // map[EulogistToken]UserUniqueID
-	DATABASE_KEY_TTAH_MAPPING = "TOEKN_TO_AUTH_HELPER"   // map[HelperToken]HelperUniqueID
+	DATABASE_KEY_NTEU_MAPPING = "NAME_TO_EULOGIST_USER"     // map[EulogistUserName]UserUniqueID
+	DATABSE_KEY_TTEU_MAPPING  = "TOKEN_TO_EULOGIST_USER"    // map[EulogistToken]UserUniqueID
+	DATABASE_KEY_TTAH_MAPPING = "TOEKN_TO_AUTH_HELPER"      // map[HelperToken]HelperUniqueID
+	DATABASE_KEY_AHSI_MAPPING = "AUTH_HELPER_TO_SESSION_ID" // map[HelperUniqueID]SessionID
 )
 
 const (
@@ -27,8 +28,8 @@ const (
 )
 
 var (
-	mu             *sync.RWMutex
-	serverDatabase *bbolt.DB
+	mu             = new(sync.RWMutex)
+	serverDatabase = (*bbolt.DB)(nil)
 )
 
 func init() {
@@ -36,7 +37,6 @@ func init() {
 	options := bbolt.Options{
 		FreelistType: bbolt.FreelistMapType,
 	}
-
 	serverDatabase, err = bbolt.Open(DatabseFileName, 0600, &options)
 	if err != nil {
 		panic(err)
@@ -49,7 +49,7 @@ func init() {
 		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_AUTH_HELPER)); err != nil {
 			return err
 		}
-		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_ACTIVE_G79_USER)); err != nil {
+		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_ACTIVE_SESSION)); err != nil {
 			return err
 		}
 		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_NTEU_MAPPING)); err != nil {
@@ -59,6 +59,9 @@ func init() {
 			return err
 		}
 		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_TTAH_MAPPING)); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_AHSI_MAPPING)); err != nil {
 			return err
 		}
 		if _, err := tx.CreateBucketIfNotExists([]byte(DATABASE_KEY_ALLOW_LIST_CONFIG)); err != nil {
@@ -76,5 +79,8 @@ func init() {
 		panic(err)
 	}
 
-	mu = new(sync.RWMutex)
+	err = initActiveSessionPoller()
+	if err != nil {
+		panic(err)
+	}
 }

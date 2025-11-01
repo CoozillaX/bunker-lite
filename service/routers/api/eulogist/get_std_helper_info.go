@@ -80,8 +80,8 @@ func GetStdHelperInfo(c *gin.Context) {
 
 	if activeGu.SessionType == define.SessionTypeMpayUser {
 		account.UpdateData(map[string]any{
-			"gameNickName":       activeGu.RecordG79UserData.Username,
-			"g79UserUID":         activeGu.RecordG79UserData.EntityID,
+			"gameNickName":       activeGu.G79User().Username,
+			"g79UserUID":         activeGu.G79User().EntityID,
 			"authHelperUniqueID": account.AuthServerSecret(),
 		})
 		user.CurrentAuthServerAccount = protocol.Option(account)
@@ -109,7 +109,7 @@ func GetStdHelperInfo(c *gin.Context) {
 		Success:           true,
 		AccountType:       activeGu.SessionType,
 		AccountExpireTime: activeGu.SessionExpireTime,
-		GameNickName:      activeGu.RecordG79UserData.Username,
-		G79UserUID:        activeGu.RecordG79UserData.EntityID,
+		GameNickName:      activeGu.G79User().Username,
+		G79UserUID:        activeGu.G79User().EntityID,
 	})
 }

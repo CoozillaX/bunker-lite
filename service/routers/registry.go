@@ -89,14 +89,12 @@ func initEulogistRouter(router *gin.Engine) *gin.Engine {
 func initVitalityRouter(router *gin.Engine) *gin.Engine {
 	vitalityApiGroup := router.Group("/vitality_api")
 
-	// Vitality API (v1.0)
+	// Vitality API (v2.0)
 	{
-		vitalityApiGroup.POST("/registry_active_gu", handlerWithMutex(vitality_api.RegisterActiveGu))
-		vitalityApiGroup.POST("/request_session_info", vitality_api.RequestSessionInfo)
+		vitalityApiGroup.POST("/register_active_session", handlerWithMutex(vitality_api.RegisterActiveSession))
 		vitalityApiGroup.POST("/clean_up_session", vitality_api.CleanUpSession)
-		vitalityApiGroup.POST("/request_daily_growth", vitality_api.RequestDailyGrowth)
-		vitalityApiGroup.POST("/get_currency_online", vitality_api.GetCurrencyOnline)
-		vitalityApiGroup.POST("/keep_gu_alive", vitality_api.KeepGuAlive)
+		vitalityApiGroup.POST("/keep_session_alive", vitality_api.KeepSessionAlive)
+		vitalityApiGroup.POST("/request_vitality_debug", vitality_api.RequestVitalityDebug)
 	}
 
 	// No router
