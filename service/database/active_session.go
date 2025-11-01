@@ -65,10 +65,12 @@ func RegisterActiveSession(
 	session define.ActiveSession,
 	err error,
 ) {
+	// prepare
 	var gu *g79.G79User
 	session = define.NewActiveSession()
 	session.SessionID = uuid.NewString()
 
+	// do lock
 	if useGeneralLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -78,6 +80,7 @@ func RegisterActiveSession(
 		defer ActiveSessionTran.Unlock(session.SessionID)
 	}
 
+	// g79 login
 	if len(peAuthData) == 0 && len(saAuthData) == 0 {
 		var mu = new(defines.MpayUser)
 		var protocolError *defines.ProtocolError
@@ -101,21 +104,26 @@ func RegisterActiveSession(
 		return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 	}
 
+	// delete old session if exists
+	sessionID, found, err := GetSessionIDByHelperUniqueID(helper.HelperUniqueID, false)
+	if err != nil {
+		return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
+	}
+	if found {
+		if err = DeleteActiveSession(sessionID, false); err != nil {
+			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
+		}
+	}
+
+	// set session info
 	currentTime := time.Now().Unix()
 	session.SessionStartTime = currentTime
 	session.SessionExpireTime = currentTime + define.SessionExpireTimeSecond
 	session.RecordG79UserData.NextRefreshTime = currentTime + pollers.PollerActiveSessionSuggestedSecond
 	session.RecordG79UserData.InternalG79User = gu
 
+	// update session to underlying database
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
-		oldSessionID := tx.Bucket([]byte(DATABASE_KEY_AHSI_MAPPING)).Get([]byte(helper.HelperUniqueID))
-		if len(oldSessionID) > 0 {
-			err := tx.Bucket([]byte(DATABASE_KEY_ACTIVE_SESSION)).Delete(oldSessionID)
-			if err != nil {
-				return err
-			}
-		}
-
 		err := tx.Bucket([]byte(DATABASE_KEY_ACTIVE_SESSION)).Put(
 			[]byte(session.SessionID),
 			define.EncodeActiveSession(session),
@@ -138,6 +146,7 @@ func RegisterActiveSession(
 		return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 	}
 
+	// start poller and return
 	_, _ = pollers.AppendSession(
 		session.SessionID,
 		ActiveSessionTran,
