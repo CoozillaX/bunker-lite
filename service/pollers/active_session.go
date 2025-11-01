@@ -29,7 +29,7 @@ func AppendSession(
 	loadFunc func(sessionID string, useLock bool) (session define.ActiveSession, found bool, err error),
 	deleteFunc func(sessionID string, useLock bool) error,
 	updateFunc func(session define.ActiveSession, useLock bool) error,
-) (success bool) {
+) (alreadyHit bool, success bool) {
 	callBack := func(sessionID *string) (appendToQueue bool) {
 		transaction.Lock(*sessionID)
 		defer transaction.Unlock(*sessionID)

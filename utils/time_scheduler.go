@@ -95,7 +95,7 @@ func (t *TimeScheduler[T]) appendWithAuto(element *ElementWithCallback[T], useLo
 }
 
 // appendWithTime ..
-func (t *TimeScheduler[T]) appendWithTime(element *ElementWithCallback[T], expectedUnixTime int64, useLock bool) bool {
+func (t *TimeScheduler[T]) appendWithTime(element *ElementWithCallback[T], expectedUnixTime int64, useLock bool) (success bool) {
 	if useLock {
 		t.mutex.Lock()
 		defer t.mutex.Unlock()
@@ -182,7 +182,7 @@ func (t *TimeScheduler[T]) Append(
 	element *T,
 	callback func(value *T) (appendToQueue bool),
 	expectedUnixTime int64,
-) (success bool) {
+) (alreadyHit bool, success bool) {
 	for {
 		t.mutex.Lock()
 		if !t.trans.TryLock(identifier) {
@@ -197,11 +197,11 @@ func (t *TimeScheduler[T]) Append(
 	defer t.trans.Unlock(identifier)
 
 	if _, ok := t.mapping[identifier]; ok {
-		return
+		return true, false
 	}
 	for _, value := range t.pendingQueue {
 		if value.identifier == identifier {
-			return
+			return true, false
 		}
 	}
 
@@ -212,9 +212,9 @@ func (t *TimeScheduler[T]) Append(
 	}
 	if expectedUnixTime == ExpectedUnixTimeNotSet {
 		t.appendWithAuto(e, false)
-		return true
+		return false, true
 	}
-	return t.appendWithTime(e, expectedUnixTime, false)
+	return false, t.appendWithTime(e, expectedUnixTime, false)
 }
 
 // Delete ..

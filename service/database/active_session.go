@@ -25,7 +25,7 @@ func initActiveSessionPoller() error {
 
 		sessionBucket.ForEach(func(k, v []byte) error {
 			session := define.DecodeActiveSession(v)
-			success := pollers.AppendSession(
+			alreadyHit, success := pollers.AppendSession(
 				session.SessionID,
 				ActiveSessionTran,
 				session.RecordG79UserData.NextRefreshTime,
@@ -33,7 +33,7 @@ func initActiveSessionPoller() error {
 				DeleteActiveSession,
 				UpdateActiveSession,
 			)
-			if !success {
+			if !alreadyHit && !success {
 				sessionToDelete = append(sessionToDelete, string(k))
 			}
 			return nil
@@ -138,7 +138,7 @@ func RegisterActiveSession(
 		return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 	}
 
-	pollers.AppendSession(
+	_, _ = pollers.AppendSession(
 		session.SessionID,
 		ActiveSessionTran,
 		utils.ExpectedUnixTimeNotSet,
