@@ -243,6 +243,7 @@ func Login(c *gin.Context) {
 		request.ProvidedPeAuthData,
 		request.ProvidedSaAuthData,
 		true,
+		true,
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, AuthResponse{
@@ -286,6 +287,7 @@ func Login(c *gin.Context) {
 				engineVersion,
 				"",
 				"",
+				true,
 				true,
 			)
 			if err != nil {

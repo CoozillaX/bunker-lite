@@ -95,6 +95,7 @@ func SetLoginStates(c *gin.Context) {
 			request.PeAuth,
 			request.SaAuth,
 			true,
+			true,
 		)
 	case RequestTypeCleanUpSession:
 		sessionID, found, err := database.GetSessionIDByHelperUniqueID(helper.HelperUniqueID, true)

@@ -54,7 +54,14 @@ func initActiveSessionPoller() error {
 }
 
 // RegisterActiveSession ..
-func RegisterActiveSession(helper define.AuthServerHelper, engineVersion string, peAuthData string, saAuthData string, useLock bool) (
+func RegisterActiveSession(
+	helper define.AuthServerHelper,
+	engineVersion string,
+	peAuthData string,
+	saAuthData string,
+	useGeneralLock bool,
+	userSessionLock bool,
+) (
 	session define.ActiveSession,
 	err error,
 ) {
@@ -62,11 +69,11 @@ func RegisterActiveSession(helper define.AuthServerHelper, engineVersion string,
 	session = define.NewActiveSession()
 	session.SessionID = uuid.NewString()
 
-	if useLock {
+	if useGeneralLock {
 		mu.Lock()
 		defer mu.Unlock()
 	}
-	if useLock {
+	if userSessionLock {
 		ActiveSessionTran.Lock(session.SessionID)
 		defer ActiveSessionTran.Unlock(session.SessionID)
 	}
@@ -143,8 +150,8 @@ func RegisterActiveSession(helper define.AuthServerHelper, engineVersion string,
 }
 
 // DeleteActiveSession ..
-func DeleteActiveSession(sessionID string, useLock bool) error {
-	if useLock {
+func DeleteActiveSession(sessionID string, userSessionLock bool) error {
+	if userSessionLock {
 		ActiveSessionTran.Lock(sessionID)
 		defer ActiveSessionTran.Unlock(sessionID)
 	}
@@ -167,8 +174,8 @@ func DeleteActiveSession(sessionID string, useLock bool) error {
 }
 
 // LoadActiveSession ..
-func LoadActiveSession(sessionID string, useLock bool) (session define.ActiveSession, found bool, err error) {
-	if useLock {
+func LoadActiveSession(sessionID string, userSessionLock bool) (session define.ActiveSession, found bool, err error) {
+	if userSessionLock {
 		ActiveSessionTran.Lock(sessionID)
 		defer ActiveSessionTran.Unlock(sessionID)
 	}
@@ -220,18 +227,25 @@ func GetSessionIDByHelperUniqueID(helperUniqueID string, useLock bool) (sessionI
 }
 
 // LoadOrRegisterActiveSession ..
-func LoadOrRegisterActiveSession(helper define.AuthServerHelper, engineVersion string, peAuthData string, saAuthData string, useLock bool) (
+func LoadOrRegisterActiveSession(
+	helper define.AuthServerHelper,
+	engineVersion string,
+	peAuthData string,
+	saAuthData string,
+	useGeneralLock bool,
+	userSessionLock bool,
+) (
 	session define.ActiveSession,
 	err error,
 ) {
-	if useLock {
+	if useGeneralLock {
 		mu.Lock()
 		defer mu.Unlock()
 	}
 
 	sessionID, found, err := GetSessionIDByHelperUniqueID(helper.HelperUniqueID, false)
 	if found {
-		if useLock {
+		if userSessionLock {
 			ActiveSessionTran.Lock(sessionID)
 			defer ActiveSessionTran.Unlock(sessionID)
 		}
@@ -244,7 +258,14 @@ func LoadOrRegisterActiveSession(helper define.AuthServerHelper, engineVersion s
 		}
 	}
 
-	session, err = RegisterActiveSession(helper, engineVersion, peAuthData, saAuthData, false)
+	session, err = RegisterActiveSession(
+		helper,
+		engineVersion,
+		peAuthData,
+		saAuthData,
+		false,
+		true,
+	)
 	if err != nil {
 		return define.ActiveSession{}, fmt.Errorf("LoadOrRegisterActiveSession: %v", err)
 	}
@@ -252,8 +273,8 @@ func LoadOrRegisterActiveSession(helper define.AuthServerHelper, engineVersion s
 }
 
 // UpdateActiveSession ..
-func UpdateActiveSession(session define.ActiveSession, useLock bool) error {
-	if useLock {
+func UpdateActiveSession(session define.ActiveSession, userSessionLock bool) error {
+	if userSessionLock {
 		ActiveSessionTran.Lock(session.SessionID)
 		defer ActiveSessionTran.Unlock(session.SessionID)
 	}

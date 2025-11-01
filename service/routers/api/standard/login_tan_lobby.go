@@ -78,6 +78,7 @@ func TanLobbyLogin(c *gin.Context) {
 		request.ProvidedPeAuthData,
 		request.ProvidedSaAuthData,
 		true,
+		true,
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{

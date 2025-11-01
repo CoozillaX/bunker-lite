@@ -66,6 +66,7 @@ func RegisterActiveSession(c *gin.Context) {
 			request.ProvidedPeAuthData,
 			request.ProvidedSaAuthData,
 			true,
+			true,
 		)
 	} else {
 		session, err = database.LoadOrRegisterActiveSession(
@@ -73,6 +74,7 @@ func RegisterActiveSession(c *gin.Context) {
 			gameinfo.DefaultEngineVersion,
 			request.ProvidedPeAuthData,
 			request.ProvidedSaAuthData,
+			true,
 			true,
 		)
 	}

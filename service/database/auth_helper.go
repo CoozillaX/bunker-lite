@@ -301,7 +301,14 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (session define.ActiveSes
 	helper := GetAuthHelperByUniqueID(uniqueID, false)
 
 	// g79 login
-	session, err = LoadOrRegisterActiveSession(helper, gameinfo.DefaultEngineVersion, "", "", useLock)
+	session, err = LoadOrRegisterActiveSession(
+		helper,
+		gameinfo.DefaultEngineVersion,
+		"",
+		"",
+		false,
+		true,
+	)
 	if err != nil {
 		return define.ActiveSession{}, fmt.Errorf("GetHelperBasicInfo: 查询 MC 账号信息时出现问题, 原因是 %v", err)
 	}
