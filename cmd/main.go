@@ -46,7 +46,7 @@ func main() {
 
 		// Init variable
 		sessionExpireTime = registerActiveSessionResp.SessionExpireTime
-		waitGroup.Add(2)
+		waitGroup.Add(1)
 		ctx, cancel = context.WithCancel(context.Background())
 
 		// Debug
