@@ -206,6 +206,7 @@ func LoadActiveSession(sessionID string, useSessionLock bool) (session define.Ac
 	if time.Now().Unix()-session.SessionStartTime < define.SessionMaxLifeTimeSecond {
 		session.SessionExpireTime = time.Now().Unix() + define.SessionExpireTimeSecond
 		if err = UpdateActiveSession(session, false); err != nil {
+			_ = DeleteActiveSession(sessionID, false)
 			return define.ActiveSession{}, false, fmt.Errorf("LoadActiveSession: %v", err)
 		}
 	}
