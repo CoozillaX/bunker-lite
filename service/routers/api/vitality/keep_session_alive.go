@@ -88,16 +88,6 @@ func KeepSessionAlive(c *gin.Context) {
 		return
 	}
 
-	session.SessionExpireTime = time.Now().Unix() + define.SessionExpireTimeSecond
-	if err = database.UpdateActiveSession(session, false); err != nil {
-		c.JSON(http.StatusOK, KeepSessionAliveResponse{
-			ErrorType: KeepSessionAliveErrorMeetError,
-			ErrorInfo: fmt.Sprintf("KeepSessionAlive: %v", err),
-			Success:   false,
-		})
-		return
-	}
-
 	c.JSON(http.StatusOK, KeepSessionAliveResponse{
 		Success:           true,
 		SessionExpireTime: session.SessionExpireTime,

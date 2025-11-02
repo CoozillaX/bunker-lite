@@ -203,6 +203,12 @@ func LoadActiveSession(sessionID string, useSessionLock bool) (session define.Ac
 		_ = DeleteActiveSession(sessionID, false)
 		return define.ActiveSession{}, false, nil
 	}
+	if time.Now().Unix()-session.SessionStartTime < define.SessionMaxLifeTimeSecond {
+		session.SessionExpireTime = time.Now().Unix() + define.SessionExpireTimeSecond
+		if err = UpdateActiveSession(session, false); err != nil {
+			return define.ActiveSession{}, false, fmt.Errorf("LoadActiveSession: %v", err)
+		}
+	}
 
 	session.G79User().Username, err = enhance.GetName(session.G79User())
 	if err != nil {
