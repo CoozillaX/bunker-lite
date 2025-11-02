@@ -161,11 +161,12 @@ func (t *TimeScheduler[T]) ticker() {
 		t.pendingQueue = nil
 	}
 
-	if len(t.scheduledQueue) > 0 && t.scheduledQueue[0] != nil {
-		element := t.scheduledQueue[0]
-		t.trans.Lock(element.identifier)
-		t.scheduledQueue[0] = nil
-		go appendFunc(element)
+	if len(t.scheduledQueue) > 0 {
+		if element := t.scheduledQueue[0]; element != nil {
+			t.trans.Lock(element.identifier)
+			t.scheduledQueue[0] = nil
+			go appendFunc(element)
+		}
 	}
 
 	t.headUnixTime += t.checkTimeSeconds
