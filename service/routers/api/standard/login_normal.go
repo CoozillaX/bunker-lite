@@ -244,6 +244,7 @@ func Login(c *gin.Context) {
 		request.ProvidedSaAuthData,
 		true,
 		true,
+		true,
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, AuthResponse{

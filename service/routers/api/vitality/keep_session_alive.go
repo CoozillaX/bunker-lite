@@ -63,7 +63,7 @@ func KeepSessionAlive(c *gin.Context) {
 	database.ActiveSessionTran.Lock(request.SessionID)
 	defer database.ActiveSessionTran.Unlock(request.SessionID)
 
-	session, found, err := database.LoadActiveSession(request.SessionID, false)
+	session, found, err := database.LoadActiveSession(request.SessionID, true, false)
 	if err != nil {
 		c.JSON(http.StatusOK, KeepSessionAliveResponse{
 			ErrorType: KeepSessionAliveErrorMeetError,

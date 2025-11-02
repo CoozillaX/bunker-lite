@@ -306,6 +306,7 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (session define.ActiveSes
 		gameinfo.DefaultEngineVersion,
 		"",
 		"",
+		true,
 		false,
 		true,
 	)

@@ -76,6 +76,7 @@ func RegisterActiveSession(c *gin.Context) {
 			request.ProvidedSaAuthData,
 			true,
 			true,
+			true,
 		)
 	}
 	if err != nil {

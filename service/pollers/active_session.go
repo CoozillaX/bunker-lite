@@ -26,7 +26,7 @@ func AppendSession(
 	sessionID string,
 	transaction *utils.Transaction,
 	expectedUnixTime int64,
-	loadFunc func(sessionID string, useLock bool) (session define.ActiveSession, found bool, err error),
+	loadFunc func(sessionID string, extendSessionLifeTime bool, useLock bool) (session define.ActiveSession, found bool, err error),
 	deleteFunc func(sessionID string, useLock bool) error,
 	updateFunc func(session define.ActiveSession, useLock bool) error,
 ) (alreadyHit bool, success bool) {
@@ -34,7 +34,7 @@ func AppendSession(
 		transaction.Lock(*sessionID)
 		defer transaction.Unlock(*sessionID)
 
-		session, found, err := loadFunc(*sessionID, false)
+		session, found, err := loadFunc(*sessionID, false, false)
 		if err != nil || !found {
 			_ = deleteFunc(*sessionID, false)
 			return false

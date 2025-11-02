@@ -183,7 +183,15 @@ func DeleteActiveSession(sessionID string, useSessionLock bool) error {
 }
 
 // LoadActiveSession ..
-func LoadActiveSession(sessionID string, useSessionLock bool) (session define.ActiveSession, found bool, err error) {
+func LoadActiveSession(
+	sessionID string,
+	extendSessionLifeTime bool,
+	useSessionLock bool,
+) (
+	session define.ActiveSession,
+	found bool,
+	err error,
+) {
 	if useSessionLock {
 		ActiveSessionTran.Lock(sessionID)
 		defer ActiveSessionTran.Unlock(sessionID)
@@ -203,11 +211,13 @@ func LoadActiveSession(sessionID string, useSessionLock bool) (session define.Ac
 		_ = DeleteActiveSession(sessionID, false)
 		return define.ActiveSession{}, false, nil
 	}
-	if time.Now().Unix()-session.SessionStartTime < define.SessionMaxLifeTimeSecond {
-		session.SessionExpireTime = time.Now().Unix() + define.SessionExpireTimeSecond
-		if err = UpdateActiveSession(session, false); err != nil {
-			_ = DeleteActiveSession(sessionID, false)
-			return define.ActiveSession{}, false, fmt.Errorf("LoadActiveSession: %v", err)
+	if extendSessionLifeTime {
+		if time.Now().Unix()-session.SessionStartTime < define.SessionMaxLifeTimeSecond {
+			session.SessionExpireTime = time.Now().Unix() + define.SessionExpireTimeSecond
+			if err = UpdateActiveSession(session, false); err != nil {
+				_ = DeleteActiveSession(sessionID, false)
+				return define.ActiveSession{}, false, fmt.Errorf("LoadActiveSession: %v", err)
+			}
 		}
 	}
 
@@ -248,6 +258,7 @@ func LoadOrRegisterActiveSession(
 	engineVersion string,
 	peAuthData string,
 	saAuthData string,
+	extendSessionLifeTime bool,
 	useGeneralLock bool,
 	useSessionLock bool,
 ) (
@@ -265,7 +276,7 @@ func LoadOrRegisterActiveSession(
 			ActiveSessionTran.Lock(sessionID)
 			defer ActiveSessionTran.Unlock(sessionID)
 		}
-		session, found, err := LoadActiveSession(sessionID, false)
+		session, found, err := LoadActiveSession(sessionID, extendSessionLifeTime, false)
 		if err != nil {
 			return define.ActiveSession{}, fmt.Errorf("LoadOrRegisterActiveSession: %v", err)
 		}
