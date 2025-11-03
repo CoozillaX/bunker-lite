@@ -80,6 +80,7 @@ func TanLobbyLogin(c *gin.Context) {
 		true,
 		true,
 		true,
+		true,
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{

@@ -77,6 +77,7 @@ func RegisterActiveSession(c *gin.Context) {
 			true,
 			true,
 			true,
+			true,
 		)
 	}
 	if err != nil {

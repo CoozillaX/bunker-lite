@@ -76,7 +76,7 @@ func ChangeCurrentHelper(c *gin.Context) {
 		return
 	}
 
-	session, err := database.GetHelperBasicInfo(account.AuthServerSecret(), true)
+	session, err := database.GetHelperBasicInfo(account.AuthServerSecret(), true, true)
 	if err != nil {
 		c.JSON(http.StatusOK, HelperChangeResponse{
 			ErrorInfo: fmt.Sprintf("ChangeCurrentHelper: 切换 MC 账号时出现问题, 原因是 %v", err),

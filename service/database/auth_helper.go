@@ -288,7 +288,7 @@ func DeleteAuthHelper(uniqueID string, useGeneralLock bool, useSessionLock bool)
 }
 
 // GetHelperBasicInfo ..
-func GetHelperBasicInfo(uniqueID string, useLock bool) (session define.ActiveSession, err error) {
+func GetHelperBasicInfo(uniqueID string, deletePollerWhenExpire bool, useLock bool) (session define.ActiveSession, err error) {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -307,6 +307,7 @@ func GetHelperBasicInfo(uniqueID string, useLock bool) (session define.ActiveSes
 		"",
 		"",
 		true,
+		deletePollerWhenExpire,
 		false,
 		true,
 	)

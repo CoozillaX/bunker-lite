@@ -110,9 +110,7 @@ func RegisterActiveSession(
 		return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 	}
 	if found {
-		if err = DeleteActiveSession(oldSessionID, true, useSessionLock); err != nil {
-			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
-		}
+		go DeleteActiveSession(oldSessionID, true, true)
 	}
 
 	// set session info
@@ -193,6 +191,7 @@ func DeleteActiveSession(sessionID string, deletePoller bool, useSessionLock boo
 func LoadActiveSession(
 	sessionID string,
 	extendSessionLifeTime bool,
+	deletePollerWhenExpire bool,
 	useSessionLock bool,
 ) (
 	session define.ActiveSession,
@@ -215,14 +214,14 @@ func LoadActiveSession(
 		return define.ActiveSession{}, false, nil
 	}
 	if session.SessionExpireTime <= time.Now().Unix() {
-		_ = DeleteActiveSession(sessionID, true, false)
+		_ = DeleteActiveSession(sessionID, deletePollerWhenExpire, false)
 		return define.ActiveSession{}, false, nil
 	}
 	if extendSessionLifeTime {
 		if time.Now().Unix()-session.SessionStartTime < define.SessionMaxLifeTimeSecond {
 			session.SessionExpireTime = time.Now().Unix() + define.SessionExpireTimeSecond
 			if err = UpdateActiveSession(session, false); err != nil {
-				_ = DeleteActiveSession(sessionID, true, false)
+				_ = DeleteActiveSession(sessionID, deletePollerWhenExpire, false)
 				return define.ActiveSession{}, false, fmt.Errorf("LoadActiveSession: %v", err)
 			}
 		}
@@ -230,7 +229,7 @@ func LoadActiveSession(
 
 	session.G79User().Username, err = enhance.GetName(session.G79User())
 	if err != nil {
-		_ = DeleteActiveSession(sessionID, true, false)
+		_ = DeleteActiveSession(sessionID, deletePollerWhenExpire, false)
 		return define.ActiveSession{}, false, fmt.Errorf("LoadActiveSession: %v", err)
 	}
 	return session, true, nil
@@ -266,6 +265,7 @@ func LoadOrRegisterActiveSession(
 	peAuthData string,
 	saAuthData string,
 	extendSessionLifeTime bool,
+	deletePollerWhenExpire bool,
 	useGeneralLock bool,
 	useSessionLock bool,
 ) (
@@ -279,7 +279,7 @@ func LoadOrRegisterActiveSession(
 
 	sessionID, found, err := GetSessionIDByHelperUniqueID(helper.HelperUniqueID, false)
 	if found {
-		session, found, err := LoadActiveSession(sessionID, extendSessionLifeTime, useSessionLock)
+		session, found, err := LoadActiveSession(sessionID, extendSessionLifeTime, deletePollerWhenExpire, useSessionLock)
 		if err != nil {
 			return define.ActiveSession{}, fmt.Errorf("LoadOrRegisterActiveSession: %v", err)
 		}
