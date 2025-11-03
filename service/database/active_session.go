@@ -279,11 +279,7 @@ func LoadOrRegisterActiveSession(
 
 	sessionID, found, err := GetSessionIDByHelperUniqueID(helper.HelperUniqueID, false)
 	if found {
-		if useSessionLock {
-			ActiveSessionTran.Lock(sessionID)
-			defer ActiveSessionTran.Unlock(sessionID)
-		}
-		session, found, err := LoadActiveSession(sessionID, extendSessionLifeTime, false)
+		session, found, err := LoadActiveSession(sessionID, extendSessionLifeTime, useSessionLock)
 		if err != nil {
 			return define.ActiveSession{}, fmt.Errorf("LoadOrRegisterActiveSession: %v", err)
 		}
