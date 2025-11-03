@@ -27,7 +27,7 @@ func AppendSession(
 	transaction *utils.Transaction,
 	expectedUnixTime int64,
 	loadFunc func(sessionID string, extendSessionLifeTime bool, useLock bool) (session define.ActiveSession, found bool, err error),
-	deleteFunc func(sessionID string, useLock bool) error,
+	deleteFunc func(sessionID string, deletePoller bool, useLock bool) error,
 	updateFunc func(session define.ActiveSession, useLock bool) error,
 ) (alreadyHit bool, success bool) {
 	callBack := func(sessionID *string) (appendToQueue bool) {
@@ -36,19 +36,19 @@ func AppendSession(
 
 		session, found, err := loadFunc(*sessionID, false, false)
 		if err != nil || !found {
-			_ = deleteFunc(*sessionID, false)
+			_ = deleteFunc(*sessionID, false, false)
 			return false
 		}
 
 		protocolError := session.G79User().Update()
 		if protocolError != nil {
-			_ = deleteFunc(*sessionID, false)
+			_ = deleteFunc(*sessionID, false, false)
 			return false
 		}
 
 		session.RecordG79UserData.NextRefreshTime += PollerActiveSessionSuggestedSecond
 		if err = updateFunc(session, false); err != nil {
-			_ = deleteFunc(*sessionID, false)
+			_ = deleteFunc(*sessionID, false, false)
 			return false
 		}
 

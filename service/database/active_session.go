@@ -105,12 +105,12 @@ func RegisterActiveSession(
 	}
 
 	// delete old session if exists
-	sessionID, found, err := GetSessionIDByHelperUniqueID(helper.HelperUniqueID, false)
+	oldSessionID, found, err := GetSessionIDByHelperUniqueID(helper.HelperUniqueID, false)
 	if err != nil {
 		return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 	}
 	if found {
-		if err = DeleteActiveSession(sessionID, false); err != nil {
+		if err = DeleteActiveSession(oldSessionID, true, useSessionLock); err != nil {
 			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 		}
 	}
@@ -159,17 +159,23 @@ func RegisterActiveSession(
 }
 
 // DeleteActiveSession ..
-func DeleteActiveSession(sessionID string, useSessionLock bool) error {
+func DeleteActiveSession(sessionID string, deletePoller bool, useSessionLock bool) error {
+	// do lock
 	if useSessionLock {
 		ActiveSessionTran.Lock(sessionID)
 		defer ActiveSessionTran.Unlock(sessionID)
 	}
 
-	pollers.DeleteSession(
-		sessionID,
-		ActiveSessionTran,
-		false,
-	)
+	// delete poller if required
+	if deletePoller {
+		pollers.DeleteSession(
+			sessionID,
+			ActiveSessionTran,
+			false,
+		)
+	}
+
+	// delete session from underlying database
 	err := serverDatabase.Update(func(tx *bbolt.Tx) error {
 		return tx.
 			Bucket([]byte(DATABASE_KEY_ACTIVE_SESSION)).
@@ -179,6 +185,7 @@ func DeleteActiveSession(sessionID string, useSessionLock bool) error {
 		return fmt.Errorf("DeleteActiveSession: %v", err)
 	}
 
+	// return
 	return nil
 }
 
@@ -208,14 +215,14 @@ func LoadActiveSession(
 		return define.ActiveSession{}, false, nil
 	}
 	if session.SessionExpireTime <= time.Now().Unix() {
-		_ = DeleteActiveSession(sessionID, false)
+		_ = DeleteActiveSession(sessionID, true, false)
 		return define.ActiveSession{}, false, nil
 	}
 	if extendSessionLifeTime {
 		if time.Now().Unix()-session.SessionStartTime < define.SessionMaxLifeTimeSecond {
 			session.SessionExpireTime = time.Now().Unix() + define.SessionExpireTimeSecond
 			if err = UpdateActiveSession(session, false); err != nil {
-				_ = DeleteActiveSession(sessionID, false)
+				_ = DeleteActiveSession(sessionID, true, false)
 				return define.ActiveSession{}, false, fmt.Errorf("LoadActiveSession: %v", err)
 			}
 		}
@@ -223,7 +230,7 @@ func LoadActiveSession(
 
 	session.G79User().Username, err = enhance.GetName(session.G79User())
 	if err != nil {
-		_ = DeleteActiveSession(sessionID, false)
+		_ = DeleteActiveSession(sessionID, true, false)
 		return define.ActiveSession{}, false, fmt.Errorf("LoadActiveSession: %v", err)
 	}
 	return session, true, nil

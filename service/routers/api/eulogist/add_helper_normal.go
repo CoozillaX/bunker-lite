@@ -186,7 +186,7 @@ func AddHelperNormal(c *gin.Context) {
 	}
 
 	if isRepeat {
-		if err = database.DeleteAuthHelper(helper.HelperUniqueID, true); err != nil {
+		if err = database.DeleteAuthHelper(helper.HelperUniqueID, true, true); err != nil {
 			c.JSON(http.StatusOK, HelperAddResponse{
 				ErrorInfo: fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %v", err),
 				Success:   false,

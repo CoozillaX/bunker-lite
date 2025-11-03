@@ -68,7 +68,7 @@ func CleanUpSession(c *gin.Context) {
 		return
 	}
 
-	err = database.DeleteActiveSession(session.SessionID, false)
+	err = database.DeleteActiveSession(session.SessionID, true, false)
 	if err != nil {
 		c.JSON(http.StatusOK, CleanUpSessionResponse{
 			ErrorInfo: fmt.Sprintf("CleanUpSession: %v", err),

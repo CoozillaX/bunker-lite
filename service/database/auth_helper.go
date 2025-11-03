@@ -247,8 +247,8 @@ func UpdateHelperInfo(helper define.AuthServerHelper, useLock bool) error {
 }
 
 // DeleteAuthHelper ..
-func DeleteAuthHelper(uniqueID string, useLock bool) error {
-	if useLock {
+func DeleteAuthHelper(uniqueID string, useGeneralLock bool, useSessionLock bool) error {
+	if useGeneralLock {
 		mu.Lock()
 		defer mu.Unlock()
 	}
@@ -278,7 +278,7 @@ func DeleteAuthHelper(uniqueID string, useLock bool) error {
 		return fmt.Errorf("DeleteAuthHelper: 删除 MC 账号时出现问题, 原因是 %v", err)
 	}
 	if found {
-		err = DeleteActiveSession(sessionID, false)
+		err = DeleteActiveSession(sessionID, true, useSessionLock)
 		if err != nil {
 			return fmt.Errorf("DeleteAuthHelper: 删除 MC 账号时出现问题, 原因是 %v", err)
 		}

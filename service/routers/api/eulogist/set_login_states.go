@@ -107,7 +107,7 @@ func SetLoginStates(c *gin.Context) {
 			return
 		}
 		if found {
-			if err = database.DeleteActiveSession(sessionID, true); err != nil {
+			if err = database.DeleteActiveSession(sessionID, true, true); err != nil {
 				c.JSON(http.StatusOK, LoginStatesSetResponse{
 					ErrorInfo: fmt.Sprintf("SetLoginStates: 设置登录状态时出现问题, 原因是 %v", err),
 					Success:   false,
