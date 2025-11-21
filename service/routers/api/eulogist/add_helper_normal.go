@@ -137,16 +137,6 @@ func AddHelperNormal(c *gin.Context) {
 	}
 
 	tran := loadOrCreateVerifyTransaction(request.TransactionUUID)
-	if protocolError != nil {
-		c.JSON(http.StatusOK, HelperAddResponse{
-			ErrorInfo:            fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %s", protocolError.Error()),
-			NetEaseRequireVerify: len(protocolError.VerifyUrl) != 0,
-			VerifyURL:            protocolError.VerifyUrl,
-			Success:              false,
-		})
-		return
-	}
-
 	protocolError = tran.LoginHelpder.PasswordLogin(
 		request.Email, request.MD5Password,
 		utils.GetPasswordLevel(request.MD5Password),
