@@ -27,7 +27,7 @@ func SaAuthLogin(engineVersion string, saAuthJsonData string) (gu *g79.G79User, 
 	}
 
 	// 2. Create mu and sync data
-	mu := mpay.GenerateMpayUser()
+	mu := mpay.CreateLoginHelper(nil).GetMpayUser()
 	mu.Uid = saAuthData.Uid
 	mu.MpayToken = saAuthData.MpayToken
 	mu.MpayDevice.Udid = saAuthData.Udid

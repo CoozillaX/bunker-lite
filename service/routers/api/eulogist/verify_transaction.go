@@ -1,7 +1,6 @@
 package eulogist_api
 
 import (
-	"bunker-core/protocol/defines"
 	"bunker-core/protocol/mpay"
 	"sync"
 	"time"
@@ -14,7 +13,7 @@ var verifyTransactions = make(map[string]*VerifyTransaction)
 
 // VerifyTransaction ..
 type VerifyTransaction struct {
-	MpayUser       *defines.MpayUser
+	LoginHelpder   *mpay.LoginHelper
 	Mobile         string
 	ExpireUnixTime int64
 }
@@ -39,7 +38,7 @@ func loadOrCreateVerifyTransaction(uniqueID string) *VerifyTransaction {
 	}
 
 	tran = &VerifyTransaction{
-		MpayUser:       mpay.GenerateMpayUser(),
+		LoginHelpder:   mpay.CreateLoginHelper(nil),
 		ExpireUnixTime: currentTime.Unix() + VerifyTransactionExpireSeconds,
 	}
 	verifyTransactions[uniqueID] = tran

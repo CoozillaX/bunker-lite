@@ -2,7 +2,6 @@ package eulogist_api
 
 import (
 	"bunker-core/protocol/defines"
-	"bunker-core/protocol/mpay"
 	"bunker-lite/service/database"
 	"bunker-lite/service/define"
 	"bunker-lite/utils"
@@ -138,7 +137,6 @@ func AddHelperNormal(c *gin.Context) {
 	}
 
 	tran := loadOrCreateVerifyTransaction(request.TransactionUUID)
-	loginHelper, protocolError := mpay.CreateLoginHelper(tran.MpayUser)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
 			ErrorInfo:            fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %s", protocolError.Error()),
@@ -149,7 +147,7 @@ func AddHelperNormal(c *gin.Context) {
 		return
 	}
 
-	protocolError = loginHelper.PasswordLogin(
+	protocolError = tran.LoginHelpder.PasswordLogin(
 		request.Email, request.MD5Password,
 		utils.GetPasswordLevel(request.MD5Password),
 	)
@@ -163,7 +161,7 @@ func AddHelperNormal(c *gin.Context) {
 		return
 	}
 
-	helperUniqueID, protocolError := database.CreateAuthHelper(tran.MpayUser, true, true)
+	helperUniqueID, protocolError := database.CreateAuthHelper(tran.LoginHelpder.GetMpayUser(), true, true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
 			ErrorInfo:            fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %s", protocolError.Error()),
