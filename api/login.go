@@ -93,7 +93,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(&LoginResponse{
 				Success: false,
 				Message: protocolErr.Error(),
-				Token:   utils.EncodeFBToken(mu),
+				Token:   utils.EncodeFBToken(helper.GetMpayUser()),
 			})
 			return
 		}
