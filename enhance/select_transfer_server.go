@@ -46,15 +46,15 @@ func SelectTransferServer(gu *g79.G79User) (g79UserUID uint32, raknetServerAddre
 	}
 
 	// filter available transfer server
-	available := make([]TransferServerInfo, 0)
+	validServer := make([]TransferServerInfo, 0)
 	for _, server := range serverList {
 		if server.Status == TransferServerStatusAvailable {
-			available = append(available, server)
+			validServer = append(validServer, server)
 		}
 	}
 
 	// ensure transfer server address
-	server := available[rand.Intn(len(available))]
+	server := validServer[rand.Intn(len(validServer))]
 	raknetServerAddress = fmt.Sprintf("%s:%d", server.ServerIP, server.WebsocketPorts[rand.Intn(len(server.WebsocketPorts))])
 	signalingServerAddress = fmt.Sprintf("%s:%d", server.ServerIP, server.SignalWebPort)
 
