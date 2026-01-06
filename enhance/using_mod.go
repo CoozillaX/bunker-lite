@@ -67,11 +67,10 @@ func GetCurrentUsingMod(gu *g79.G79User) (UsingMod, *defines.ProtocolError) {
 		if protocolError != nil {
 			return UsingMod{}, protocolError
 		}
-		skinIsSlim, protocolError := GetSkinIsSlim(gu, query.UsingMod.SkinData.ItemID)
+		query.UsingMod.SkinData.IsSlim, protocolError = GetSkinIsSlim(gu, query.UsingMod.SkinData.ItemID)
 		if protocolError != nil {
 			return UsingMod{}, protocolError
 		}
-		query.UsingMod.SkinData.IsSlim = skinIsSlim
 	} else {
 		query.UsingMod.SkinDownloadInfo = &DownloadInfo{
 			EntityID: query.UsingMod.SkinData.ItemID,
