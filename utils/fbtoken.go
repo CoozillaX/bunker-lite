@@ -1,22 +1,22 @@
 package utils
 
 import (
-	"bunker-core/protocol/defines"
+	"bunker-core/protocol/mpay/android"
 	"encoding/base64"
 	"encoding/json"
 )
 
-func EncodeFBToken(mu *defines.MpayUser) string {
+func EncodeFBToken(mu *android.AndroidMpayUser) string {
 	raw, _ := json.Marshal(mu)
 	return base64.StdEncoding.EncodeToString(raw)
 }
 
-func DecodeFBToken(token string) (*defines.MpayUser, error) {
+func DecodeFBToken(token string) (*android.AndroidMpayUser, error) {
 	raw, err := base64.StdEncoding.DecodeString(token)
 	if err != nil {
 		return nil, err
 	}
-	var mu defines.MpayUser
+	var mu android.AndroidMpayUser
 	if err := json.Unmarshal(raw, &mu); err != nil {
 		return nil, err
 	}

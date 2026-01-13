@@ -3,12 +3,13 @@ package api
 import (
 	"bunker-lite/utils"
 	"net/http"
+	"strings"
 	"time"
 
 	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
-	"bunker-core/protocol/gameinfo"
 	"bunker-core/protocol/mpay"
+	"bunker-core/protocol/mpay/android"
 
 	"encoding/json"
 
@@ -33,19 +34,20 @@ type LoginResponse struct {
 	Token       string `json:"token,omitempty"`
 }
 
-var versionCache = cache.New(24*time.Hour, time.Hour) // cache[serverCode]serverVersion
+var versionCache = cache.New(24*time.Hour, time.Hour) // cache[serverCode]bedrockVersion
 
 func requestServerInfo(
-	mu *defines.MpayUser,
+	mu mpay.MpayUser,
 	req *LoginRequest,
 ) (*g79.G79User, *g79.RentalServerInfo, *defines.ProtocolError) {
 	// change engine version by cache
-	engineVersion := gameinfo.DefaultEngineVersion
 	if value, ok := versionCache.Get(req.ServerCode); ok {
-		engineVersion = value.(string)
+		if err := mu.UpdateGameInfoByBedrockVersion(value.(string)); err != nil {
+			return nil, nil, &defines.ProtocolError{Message: err.Error()}
+		}
 	}
 	// g79 login
-	gu, protocolErr := utils.HandleG79Login(engineVersion, mu)
+	gu, protocolErr := utils.HandleG79Login(mu)
 	if protocolErr != nil {
 		return nil, nil, protocolErr
 	}
@@ -55,13 +57,10 @@ func requestServerInfo(
 		return nil, nil, protocolErr
 	}
 	// cache version
-	currentGameInfo, err := gameinfo.GetInfoByGameVersion(rentalInfo.MCVersion)
-	if err != nil {
-		return nil, nil, &defines.ProtocolError{Message: err.Error()}
-	}
-	versionCache.SetDefault(req.ServerCode, currentGameInfo.EngineVersion)
+	rentalBedrockVersion := strings.TrimSuffix(rentalInfo.MCVersion, "-release")
+	versionCache.SetDefault(req.ServerCode, rentalBedrockVersion)
 	// check version
-	if gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
+	if gu.GetBedrockVersion() != rentalBedrockVersion {
 		// re-login and get chain with updated engine version
 		return requestServerInfo(mu, req)
 	}
@@ -82,23 +81,32 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// parse token
-	var mu *defines.MpayUser
+	var mu *android.AndroidMpayUser
 	if req.FBToken != "" {
 		mu, _ = utils.DecodeFBToken(req.FBToken)
 	}
+	if mu == nil {
+		mu = &android.AndroidMpayUser{}
+	}
+	// initialise, including mpay device registration
+	if protocolErr := mu.Initialise(); protocolErr != nil {
+		json.NewEncoder(w).Encode(&LoginResponse{
+			Success: false,
+			Message: protocolErr.Error(),
+			Token:   utils.EncodeFBToken(mu),
+		})
+		return
+	}
 	// try mpay login if no token
-	if mu == nil || mu.MpayToken == "" {
-		helper := mpay.CreateLoginHelper(mu)
-		if protocolErr := helper.GuestLogin(); protocolErr != nil {
+	if mu.MpayToken == "" {
+		if protocolErr := mu.GuestLogin(); protocolErr != nil {
 			json.NewEncoder(w).Encode(&LoginResponse{
 				Success: false,
 				Message: protocolErr.Error(),
-				Token:   utils.EncodeFBToken(helper.GetMpayUser()),
+				Token:   utils.EncodeFBToken(mu),
 			})
 			return
 		}
-		// update mpay user
-		mu = helper.GetMpayUser()
 	}
 	// dry login
 	if req.ServerCode == "::DRY::" && req.ServerPasscode == "::DRY::" {
@@ -123,8 +131,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// save info for anti-cheat callback
 	session := utils.GetSessionByBearer(r)
 	session.Store(session_key_entity_id, gu.EntityID)
-	session.Store(session_key_engine_version, gu.GameInfo.EngineVersion)
-	session.Store(session_key_patch_version, gu.GameInfo.PatchVersion)
+	session.Store(session_key_engine_version, gu.GetEngineVersion())
+	session.Store(session_key_patch_version, gu.GetPatchVersion())
+	session.Store(session_key_platform, gu.GetSystemName())
 	// response
 	json.NewEncoder(w).Encode(&LoginResponse{
 		Success:     true,

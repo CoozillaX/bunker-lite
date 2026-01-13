@@ -4,6 +4,7 @@ import (
 	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
+	"bunker-core/protocol/mpay"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -35,28 +36,28 @@ func init() {
 	})
 }
 
-func HandleG79Login(engineVersion string, mu *defines.MpayUser) (*g79.G79User, *defines.ProtocolError) {
+func HandleG79Login(mu mpay.MpayUser) (*g79.G79User, *defines.ProtocolError) {
 	// check cache
-	if cached, ok := g79UserCache.Get(mu.Uid); ok {
+	if cached, ok := g79UserCache.Get(mu.GetUid()); ok {
 		item := cached.(*g79UserCacheItem)
 		gu := item.gu
 		// if version match?
-		if gu.GameInfo.EngineVersion == engineVersion {
+		if gu.GetEngineVersion() == mu.GetEngineVersion() {
 			// if still valid ?
 			if _, _, protocolErr := gu.AccOnlineExp(); protocolErr == nil {
 				item.ttl = defaultTTL // refresh ttl
-				g79UserCache.SetDefault(mu.Uid, item)
+				g79UserCache.SetDefault(mu.GetUid(), item)
 				return gu, nil
 			}
 		}
 	}
 	// g79 login
-	gu, protocolErr := g79.Login(engineVersion, mu)
+	gu, protocolErr := g79.Login(mu)
 	if protocolErr != nil {
 		return nil, protocolErr
 	}
 	// cache
-	g79UserCache.SetDefault(mu.Uid, &g79UserCacheItem{
+	g79UserCache.SetDefault(mu.GetUid(), &g79UserCacheItem{
 		gu:  gu,
 		ttl: defaultTTL,
 	})

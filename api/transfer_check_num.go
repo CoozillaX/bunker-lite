@@ -47,6 +47,12 @@ func TransferCheckNum(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	// get platform
+	platform, ok := session.Load(session_key_platform)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	// parse fb req
 	var dataList []any
 	if err := json.Unmarshal([]byte(req.Data), &dataList); err != nil {
@@ -64,6 +70,7 @@ func TransferCheckNum(w http.ResponseWriter, r *http.Request) {
 		dataList[0].(string),
 		dataList[1].(string),
 		strconv.Itoa(int(dataList[2].(float64))),
+		platform.(string),
 	)
 	if err != nil {
 		json.NewEncoder(w).Encode(&TransferCheckNumResponse{
