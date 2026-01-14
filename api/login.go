@@ -88,15 +88,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if mu == nil {
 		mu = &android.AndroidMpayUser{}
 	}
-	// initialise, including mpay device registration
-	if protocolErr := mu.Initialise(); protocolErr != nil {
-		json.NewEncoder(w).Encode(&LoginResponse{
-			Success: false,
-			Message: protocolErr.Error(),
-			Token:   utils.EncodeFBToken(mu),
-		})
-		return
-	}
 	// try mpay login if no token
 	if mu.MpayToken == "" {
 		if protocolErr := mu.GuestLogin(); protocolErr != nil {
@@ -108,7 +99,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// dry login
+	// dry login, should always do dry login first to initialise mpay user
 	if req.ServerCode == "::DRY::" && req.ServerPasscode == "::DRY::" {
 		json.NewEncoder(w).Encode(&LoginResponse{
 			Success: true,
