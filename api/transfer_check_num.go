@@ -63,13 +63,28 @@ func TransferCheckNum(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	mcpData, ok := dataList[0].(string)
+	if !ok || mcpData == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	salt, ok := dataList[1].(string)
+	if !ok || salt == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	uid, ok := dataList[2].(float64)
+	if !ok || uid <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	// get check num
 	result, err := mcp.GetMCPCheckNum(
 		engineVersion.(string),
 		patchVersion.(string),
-		dataList[0].(string),
-		dataList[1].(string),
-		strconv.Itoa(int(dataList[2].(float64))),
+		mcpData,
+		salt,
+		strconv.Itoa(int(uid)),
 		platform.(string),
 	)
 	if err != nil {
