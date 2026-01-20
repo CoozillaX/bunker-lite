@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
+	"strings"
 
 	"bunker-core/mcp"
 )
@@ -55,7 +55,9 @@ func TransferCheckNum(w http.ResponseWriter, r *http.Request) {
 	}
 	// parse fb req
 	var dataList []any
-	if err := json.Unmarshal([]byte(req.Data), &dataList); err != nil {
+	decoder := json.NewDecoder(strings.NewReader(req.Data))
+	decoder.UseNumber()
+	if err := decoder.Decode(&dataList); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -73,8 +75,8 @@ func TransferCheckNum(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	uid, ok := dataList[2].(float64)
-	if !ok || uid <= 0 {
+	uid, ok := dataList[2].(json.Number)
+	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -84,7 +86,7 @@ func TransferCheckNum(w http.ResponseWriter, r *http.Request) {
 		patchVersion.(string),
 		mcpData,
 		salt,
-		strconv.Itoa(int(uid)),
+		uid.String(),
 		platform.(string),
 	)
 	if err != nil {
