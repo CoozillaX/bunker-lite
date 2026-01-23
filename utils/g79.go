@@ -38,7 +38,7 @@ func init() {
 
 func HandleG79Login(mu mpay.MpayUser) (*g79.G79User, *defines.ProtocolError) {
 	// check cache
-	if cached, ok := g79UserCache.Get(mu.GetUid()); ok {
+	if cached, ok := g79UserCache.Get(mu.GetUid() + mu.GetEngineVersion()); ok {
 		item := cached.(*g79UserCacheItem)
 		gu := item.gu
 		// if version match?
@@ -46,7 +46,7 @@ func HandleG79Login(mu mpay.MpayUser) (*g79.G79User, *defines.ProtocolError) {
 			// if still valid ?
 			if _, _, protocolErr := gu.AccOnlineExp(); protocolErr == nil {
 				item.ttl = defaultTTL // refresh ttl
-				g79UserCache.SetDefault(mu.GetUid(), item)
+				g79UserCache.SetDefault(mu.GetUid()+mu.GetEngineVersion(), item)
 				return gu, nil
 			}
 		}
@@ -57,7 +57,7 @@ func HandleG79Login(mu mpay.MpayUser) (*g79.G79User, *defines.ProtocolError) {
 		return nil, protocolErr
 	}
 	// cache
-	g79UserCache.SetDefault(mu.GetUid(), &g79UserCacheItem{
+	g79UserCache.SetDefault(mu.GetUid()+mu.GetEngineVersion(), &g79UserCacheItem{
 		gu:  gu,
 		ttl: defaultTTL,
 	})
