@@ -4,6 +4,8 @@ import (
 	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
+	"bunker-core/protocol/mpay/android"
+	"bunker-core/protocol/mpay/utils"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -83,43 +85,43 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 		return nil, fmt.Errorf("PeAuthLogin: Wrong Pe Auth data string %#v", peAuthStringData)
 	}
 
-	// 3. Sync part of basic data
-	defaultBaseInfo, err := gameinfo.GetInfoByEngineVersion(gameinfo.DefaultEngineVersion)
+	// 3. Init mpay user
+	mu := new(android.AndroidMpayUser)
+	err = mu.UpdateGameInfoByEngineVersion(android.DefaultEngineVersion)
 	if err != nil {
 		return nil, fmt.Errorf("PeAuthLogin: %v", err)
 	}
-	copiedBaseInfo := *defaultBaseInfo
-	defaultBaseInfo = &copiedBaseInfo
+
+	// 4. Change engine version and patch version
+	copiedBaseInfo := *mu.GameInfo
+	defaultBaseInfo := &copiedBaseInfo
 	defaultBaseInfo.EngineVersion = engineVersion
 	defaultBaseInfo.PatchVersion = patchVersion
 
-	// 4. Get auth message but not included seed
+	// 5. Sync part of data
+	mu.AndroidMpayDevice.CPUDigit = cpuDigit
+	mu.AndroidMpayDevice.SystemName = osName
+	mu.GameInfo = defaultBaseInfo
+
+	// 6. Get auth message but not included seed
 	authMessage, exist := saAuthData["message"].(string)
 	if !exist || len(authMessage) < 36 {
 		return nil, fmt.Errorf("PeAuthLogin: Wrong auth message %#v was found", authMessage)
 	}
 	authMessage = authMessage[:len(authMessage)-36]
 
-	// 5. Generate new seed and put it to auth message
+	// 7. Generate new seed and put it to auth message
 	seed := uuid.NewString()
 	authMessage += seed
 
-	// 6. Prefix saAuthData and marshal
+	// 8. Prefix saAuthData and marshal
 	saAuthData["seed"] = seed
 	saAuthData["message"] = authMessage
-	saAuthData["sign"] = g79.CalculateAuthenticationSign(authMessage, defaultBaseInfo.AuthSignKey, defaultBaseInfo.AuthSignCycle)
+	saAuthData["sign"] = utils.CalculateAuthenticationSign(authMessage, defaultBaseInfo.AuthSignKey, defaultBaseInfo.AuthSignCycle)
 	reqBody, _ := json.Marshal(saAuthData)
 
-	// 7. Do request
-	gu = &g79.G79User{
-		MpayUser: defines.MpayUser{
-			MpayDevice: defines.MpayDevice{
-				CPUDigit:   cpuDigit,
-				SystemName: osName,
-			},
-		},
-		GameInfo: defaultBaseInfo,
-	}
+	// 9. Do request
+	gu = &g79.G79User{MpayUser: mu}
 	reader, protocolError := gu.CreateHttpClient().
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79Servers.Load().CoreServerUrl + "/pe-authentication").
@@ -130,7 +132,7 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 		return nil, protocolError
 	}
 
-	// 8. Parse response
+	// 10. Parse response
 	var query struct {
 		Entity *g79.G79User `json:"entity"`
 	}
@@ -140,17 +142,15 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 		}
 	}
 	gu = query.Entity
-	gu.MpayUser.MpayDevice.CPUDigit = cpuDigit
-	gu.MpayUser.MpayDevice.SystemName = osName
-	gu.GameInfo = defaultBaseInfo
+	gu.MpayUser = mu
 
-	// 9. Get username
+	// 11. Get username
 	gu.Username, err = GetName(gu)
 	if err != nil {
 		return nil, fmt.Errorf("PeAuthLogin: %v", err)
 	}
 
-	// 10. Acc online exp
+	// 12. Acc online exp
 	go func() {
 		_, _, _ = gu.AccOnlineExp()
 	}()

@@ -2,7 +2,7 @@ package enhance
 
 import (
 	"bunker-core/protocol/g79"
-	"bunker-core/protocol/mpay"
+	"bunker-core/protocol/mpay/android"
 	"encoding/json"
 	"fmt"
 )
@@ -27,14 +27,18 @@ func SaAuthLogin(engineVersion string, saAuthJsonData string) (gu *g79.G79User, 
 	}
 
 	// 2. Create mu and sync data
-	mu := mpay.CreateLoginHelper(nil).GetMpayUser()
+	mu := new(android.AndroidMpayUser)
 	mu.Uid = saAuthData.Uid
 	mu.MpayToken = saAuthData.MpayToken
-	mu.MpayDevice.Udid = saAuthData.Udid
-	mu.MpayDevice.MpayID = saAuthData.MpayID
+	mu.AndroidMpayDevice.Udid = saAuthData.Udid
+	mu.AndroidMpayDevice.MpayID = saAuthData.MpayID
 
 	// 3. g79 login
-	gu, protocolError := g79.Login(engineVersion, mu)
+	err = mu.UpdateGameInfoByEngineVersion(engineVersion)
+	if err != nil {
+		return nil, fmt.Errorf("SaAuthLogin: %v", err)
+	}
+	gu, protocolError := g79.Login(mu)
 	if protocolError != nil {
 		return nil, fmt.Errorf("SaAuthLogin: %v", protocolError.Error())
 	}

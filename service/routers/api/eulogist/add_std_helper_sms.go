@@ -92,7 +92,7 @@ func AddStdHelperSMS(c *gin.Context) {
 			return
 		}
 
-		protocolError = tran.LoginHelpder.GetSMSLoginCode(tran.Mobile)
+		protocolError = tran.MpayUser.SMSLoginRequestCode(tran.Mobile)
 		if protocolError != nil {
 			if len(protocolError.VerifyUrl) == 0 {
 				c.JSON(http.StatusOK, SMSHelperAddResponse{
@@ -125,7 +125,7 @@ func AddStdHelperSMS(c *gin.Context) {
 		return
 	}
 
-	protocolError = tran.LoginHelpder.SMSLogin(tran.Mobile, request.SMSVerifyCode)
+	protocolError = tran.MpayUser.SMSLoginVerifyCode(tran.Mobile, request.SMSVerifyCode)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
 			ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题, 原因是 %v (stage 2)", protocolError.Error()),
@@ -134,7 +134,7 @@ func AddStdHelperSMS(c *gin.Context) {
 		return
 	}
 
-	helperUniqueID, protocolError := database.CreateAuthHelper(tran.LoginHelpder.GetMpayUser(), true, true)
+	helperUniqueID, protocolError := database.CreateAuthHelper(tran.MpayUser, true, true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, SMSHelperAddResponse{
 			ErrorInfo:    fmt.Sprintf("AddStdHelperSMS: 添加新的 MC 账号时出现问题, 原因是 %v (stage 3)", protocolError.Error()),

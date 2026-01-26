@@ -3,6 +3,7 @@ package database
 import (
 	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
+	"bunker-core/protocol/mpay/android"
 	"bunker-lite/enhance"
 	"bunker-lite/service/define"
 	"bunker-lite/service/pollers"
@@ -82,12 +83,15 @@ func RegisterActiveSession(
 
 	// g79 login
 	if len(peAuthData) == 0 && len(saAuthData) == 0 {
-		var mu = new(defines.MpayUser)
+		var mu = new(android.AndroidMpayUser)
 		var protocolError *defines.ProtocolError
 		if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
 			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 		}
-		if gu, protocolError = g79.Login(engineVersion, mu); protocolError != nil {
+		if err = mu.UpdateGameInfoByEngineVersion(engineVersion); err != nil {
+			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
+		}
+		if gu, protocolError = g79.Login(mu); protocolError != nil {
 			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", protocolError.Error())
 		}
 		session.SessionType = define.SessionTypeMpayUser

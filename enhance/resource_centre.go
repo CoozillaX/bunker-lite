@@ -58,7 +58,7 @@ func GetLobbyDownloadInfoByItemIDs(gu *g79.G79User, itemIDs []string) (
 func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]byte, err error) {
 	// 1. Do req
 	reqBody, _ := json.Marshal(map[string]any{
-		"device_id": gu.MpayUser.UrsUdid,
+		"device_id": gu.MpayUser.GetDeviceID(),
 		"item_ids":  itemIDs,
 	})
 	reader, protocolError := gu.CreateHttpClient().
@@ -105,7 +105,7 @@ func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]b
 		if !ok {
 			return nil, fmt.Errorf("GetLobbyItemEncryptionKeys: Invalid jwt (should never happened) (stage 1)")
 		}
-		mapping[item.ModItemID] = utils.GetRecordEncryptKey(contentKey, gu.EntityID, gu.MpayUser.UrsUdid)
+		mapping[item.ModItemID] = utils.GetRecordEncryptKey(contentKey, gu.EntityID, gu.MpayUser.GetDeviceID())
 	}
 	for _, value := range itemIDs {
 		result = append(result, mapping[value])

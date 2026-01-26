@@ -49,6 +49,13 @@ func TransferCheckNum(c *gin.Context) {
 		return
 	}
 
+	// get platform
+	platform, ok := session.Load(session_key_platform)
+	if !ok {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
 	// parse fb req
 	var dataList []any
 	if err := json.Unmarshal([]byte(request.Data), &dataList); err != nil {
@@ -67,6 +74,7 @@ func TransferCheckNum(c *gin.Context) {
 		dataList[0].(string),
 		dataList[1].(string),
 		strconv.Itoa(int(dataList[2].(float64))),
+		platform.(string),
 	)
 	if err != nil {
 		c.JSON(http.StatusOK, TransferCheckNumResponse{

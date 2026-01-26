@@ -137,7 +137,7 @@ func AddHelperNormal(c *gin.Context) {
 	}
 
 	tran := loadOrCreateVerifyTransaction(request.TransactionUUID)
-	protocolError = tran.LoginHelpder.PasswordLogin(
+	protocolError = tran.MpayUser.PasswordLogin(
 		request.Email, request.MD5Password,
 		utils.GetPasswordLevel(request.MD5Password),
 	)
@@ -151,7 +151,7 @@ func AddHelperNormal(c *gin.Context) {
 		return
 	}
 
-	helperUniqueID, protocolError := database.CreateAuthHelper(tran.LoginHelpder.GetMpayUser(), true, true)
+	helperUniqueID, protocolError := database.CreateAuthHelper(tran.MpayUser, true, true)
 	if protocolError != nil {
 		c.JSON(http.StatusOK, HelperAddResponse{
 			ErrorInfo:            fmt.Sprintf("AddHelperNormal: 添加新的 MC 账号时出现问题, 原因是 %s", protocolError.Error()),

@@ -13,7 +13,7 @@ import (
 
 	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
-	"bunker-core/protocol/gameinfo"
+	"bunker-core/protocol/mpay/android"
 
 	"encoding/hex"
 	"encoding/json"
@@ -114,18 +114,19 @@ func requestServerInfo(
 		return 0, enhance.UsingMod{}, nil, false, protocolError
 	}
 	// get version
-	currentGameInfo, err := gameinfo.GetInfoByGameVersion(rentalInfo.MCVersion)
-	if err != nil {
+	temp := new(android.AndroidMpayUser)
+	if err := temp.UpdateGameInfoByBedrockVersion(strings.TrimSuffix(rentalInfo.MCVersion, "-release")); err != nil {
 		return 0, enhance.UsingMod{}, nil, false, &defines.ProtocolError{
 			Message: fmt.Sprintf("requestServerInfo: %v", err),
 		}
 	}
+	currentGameInfo := temp.GameInfo
 	// cache and check version
 	if !isSpecialRequest {
 		// do cache
 		versionCache.SetDefault(req.ServerCode, currentGameInfo.EngineVersion)
 		// need relogin with new engine version
-		if gu.GameInfo.EngineVersion != currentGameInfo.EngineVersion {
+		if gu.GetEngineVersion() != currentGameInfo.EngineVersion {
 			return 0, enhance.UsingMod{}, nil, true, nil
 		}
 	}
@@ -227,7 +228,7 @@ func Login(c *gin.Context) {
 	}
 
 	// ensure engine version
-	engineVersion := gameinfo.DefaultEngineVersion
+	engineVersion := android.DefaultEngineVersion
 	if len(request.ProvidedPeAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
 		// change version by cache if we use mpay user to login
 		value, ok := versionCache.Get(request.ServerCode)
@@ -323,8 +324,9 @@ func Login(c *gin.Context) {
 
 		// save info for anti-cheat callback
 		session.Store(session_key_entity_id, activeSession.G79User().EntityID)
-		session.Store(session_key_engine_version, activeSession.G79User().GameInfo.EngineVersion)
-		session.Store(session_key_patch_version, activeSession.G79User().GameInfo.PatchVersion)
+		session.Store(session_key_engine_version, activeSession.G79User().GetEngineVersion())
+		session.Store(session_key_patch_version, activeSession.G79User().GetPatchVersion())
+		session.Store(session_key_platform, activeSession.G79User().GetSystemName())
 
 		// get encrypted token
 		encryptedToken, err := utils.EncryptPKCS1v15(&keys.TokenEncryptKey.PublicKey, []byte(helper.HelperToken))

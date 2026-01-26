@@ -3,7 +3,8 @@ package database
 import (
 	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
-	"bunker-core/protocol/gameinfo"
+	"bunker-core/protocol/mpay"
+	"bunker-core/protocol/mpay/android"
 	"bunker-lite/service/define"
 	"bytes"
 	"encoding/json"
@@ -94,13 +95,13 @@ func GetAuthHelperByToken(token string, useLock bool) (helper define.AuthServerH
 }
 
 // CreateAuthHelper ..
-func CreateAuthHelper(mpayUser *defines.MpayUser, enableVitality bool, useLock bool) (uniqueID string, protocolError *defines.ProtocolError) {
+func CreateAuthHelper(mpayUser mpay.MpayUser, enableVitality bool, useLock bool) (uniqueID string, protocolError *defines.ProtocolError) {
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
 	}
 
-	gu, protocolError := g79.Login(gameinfo.DefaultEngineVersion, mpayUser)
+	gu, protocolError := g79.Login(mpayUser)
 	if protocolError != nil {
 		return "", protocolError
 	}
@@ -303,7 +304,7 @@ func GetHelperBasicInfo(uniqueID string, deletePollerWhenExpire bool, useLock bo
 	// g79 login
 	session, err = LoadOrRegisterActiveSession(
 		helper,
-		gameinfo.DefaultEngineVersion,
+		android.DefaultEngineVersion,
 		"",
 		"",
 		true,

@@ -1,8 +1,8 @@
 package define
 
 import (
-	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
+	"bunker-core/protocol/mpay/android"
 	"bytes"
 	"encoding/json"
 
@@ -39,7 +39,9 @@ func NewActiveSession() ActiveSession {
 	return ActiveSession{
 		RecordG79UserData: &RecordG79User{
 			InternalG79User: &g79.G79User{
-				GameInfo: new(defines.GameInfo),
+				MpayUser: &android.AndroidMpayUser{
+					GameInfo: new(android.AndroidGameInfo),
+				},
 			},
 		},
 	}
@@ -48,6 +50,10 @@ func NewActiveSession() ActiveSession {
 // G79User ..
 func (a *ActiveSession) G79User() *g79.G79User {
 	return a.RecordG79UserData.InternalG79User
+}
+
+func (a *ActiveSession) MpayUser() *android.AndroidMpayUser {
+	return a.RecordG79UserData.InternalG79User.MpayUser.(*android.AndroidMpayUser)
 }
 
 // EncodeActiveSession ..
@@ -67,9 +73,9 @@ func EncodeActiveSession(session ActiveSession) []byte {
 	writer.String(&session.RecordG79UserData.InternalG79User.Sead)
 	writer.String(&session.RecordG79UserData.InternalG79User.Username)
 
-	jsonBytes, _ := json.Marshal(session.RecordG79UserData.InternalG79User.MpayUser)
+	jsonBytes, _ := json.Marshal(session.MpayUser())
 	writer.ByteSlice(&jsonBytes)
-	jsonBytes, _ = json.Marshal(session.RecordG79UserData.InternalG79User.GameInfo)
+	jsonBytes, _ = json.Marshal(session.MpayUser().GameInfo)
 	writer.ByteSlice(&jsonBytes)
 
 	return buf.Bytes()
@@ -96,9 +102,9 @@ func DecodeActiveSession(payload []byte) (session ActiveSession) {
 	reader.String(&session.RecordG79UserData.InternalG79User.Username)
 
 	reader.ByteSlice(&jsonBytes)
-	_ = json.Unmarshal(jsonBytes, &session.RecordG79UserData.InternalG79User.MpayUser)
+	_ = json.Unmarshal(jsonBytes, session.MpayUser())
 	reader.ByteSlice(&jsonBytes)
-	_ = json.Unmarshal(jsonBytes, session.RecordG79UserData.InternalG79User.GameInfo)
+	_ = json.Unmarshal(jsonBytes, session.MpayUser().GameInfo)
 
 	return session
 }
