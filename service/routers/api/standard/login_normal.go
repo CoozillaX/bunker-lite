@@ -328,16 +328,20 @@ func Login(c *gin.Context) {
 		session.Store(session_key_patch_version, activeSession.G79User().GetPatchVersion())
 		session.Store(session_key_platform, activeSession.G79User().GetSystemName())
 
-		// get encrypted token
-		encryptedToken, err := utils.EncryptPKCS1v15(&keys.TokenEncryptKey.PublicKey, []byte(helper.HelperToken))
-		if err != nil {
-			c.JSON(http.StatusOK, AuthResponse{
-				SuccessStates: false,
-				Message: Message{
-					Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
-				},
-			})
-			return
+		// get helper token if enable encrypt
+		helperToken := helper.HelperToken
+		if enableEncrypt {
+			encryptedToken, err := utils.EncryptPKCS1v15(&keys.TokenEncryptKey.PublicKey, []byte(helper.HelperToken))
+			if err != nil {
+				c.JSON(http.StatusOK, AuthResponse{
+					SuccessStates: false,
+					Message: Message{
+						Information: fmt.Sprintf("Login: 登录到租赁服时出现问题, 原因是 %v", err),
+					},
+				})
+				return
+			}
+			helperToken = hex.EncodeToString(encryptedToken)
 		}
 
 		// response
@@ -347,7 +351,7 @@ func Login(c *gin.Context) {
 			BotLevel:       launcherLevel,
 			BotSkin:        currentUsingMod.AsPhoenixBotSkin(),
 			BotComponent:   currentUsingMod.AsPhoenixBotComponent(),
-			FBToken:        hex.EncodeToString(encryptedToken),
+			FBToken:        helperToken,
 			EnableVitality: helper.EnableVitality,
 			RentalServerIP: serverInfo.IPAddress,
 			ChainInfo:      serverInfo.ChainInfo,
