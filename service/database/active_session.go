@@ -87,12 +87,17 @@ func RegisterActiveSession(
 		return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: 该辅助用户已因登录多次失败而被锁定, 请等待至多一小时或联系管理员以解除锁定")
 	}
 	defer func() {
-		helper.TryLoginUnixTime = time.Now().Unix()
-		if success {
+		// prepare
+		currentTime := time.Now().Unix()
+		// update login status
+		if success || currentTime-helper.TryLoginUnixTime >= 3600 {
 			helper.LoginFailedCount = 0
-		} else {
+		}
+		if !success {
 			helper.LoginFailedCount++
 		}
+		helper.TryLoginUnixTime = currentTime
+		// update helper info
 		UpdateHelperInfo(helper, false)
 	}()
 
