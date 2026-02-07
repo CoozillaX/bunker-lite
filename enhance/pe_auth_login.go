@@ -69,15 +69,15 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	var saDataInCookie map[string]any
 
 	// 1. Parse Pe auth data
-	saAuthData, err := ParseHttpEncrypt(peAuthStringData)
+	peAuthData, err := ParseHttpEncrypt(peAuthStringData)
 	if err != nil {
 		return nil, fmt.Errorf("PeAuthLogin: %v", err)
 	}
 
 	// 2. Get basic data
-	engineVersion, exist1 := saAuthData["engine_version"].(string)
-	patchVersion, exist2 := saAuthData["patch_version"].(string)
-	saDataString, _ := saAuthData["sa_data"].(string)
+	engineVersion, exist1 := peAuthData["engine_version"].(string)
+	patchVersion, exist2 := peAuthData["patch_version"].(string)
+	saDataString, _ := peAuthData["sa_data"].(string)
 	_ = json.Unmarshal([]byte(saDataString), &saDataInCookie)
 	cpuDigit, exist3 := saDataInCookie["cpu_digit"].(string)
 	osName, exist4 := saDataInCookie["os_name"].(string)
@@ -104,7 +104,7 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	mu.GameInfo = defaultBaseInfo
 
 	// 6. Get auth message but not included seed
-	authMessage, exist := saAuthData["message"].(string)
+	authMessage, exist := peAuthData["message"].(string)
 	if !exist || len(authMessage) < 36 {
 		return nil, fmt.Errorf("PeAuthLogin: Wrong auth message %#v was found", authMessage)
 	}
@@ -114,11 +114,11 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	seed := uuid.NewString()
 	authMessage += seed
 
-	// 8. Prefix saAuthData and marshal
-	saAuthData["seed"] = seed
-	saAuthData["message"] = authMessage
-	saAuthData["sign"] = utils.CalculateAuthenticationSign(authMessage, defaultBaseInfo.AuthSignKey, defaultBaseInfo.AuthSignCycle)
-	reqBody, _ := json.Marshal(saAuthData)
+	// 8. Prefix peAuthData and marshal
+	peAuthData["seed"] = seed
+	peAuthData["message"] = authMessage
+	peAuthData["sign"] = utils.CalculateAuthenticationSign(authMessage, defaultBaseInfo.AuthSignKey, defaultBaseInfo.AuthSignCycle)
+	reqBody, _ := json.Marshal(peAuthData)
 
 	// 9. Do request
 	gu = &g79.G79User{MpayUser: mu}

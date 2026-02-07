@@ -16,9 +16,10 @@ type SaAuthData struct {
 }
 
 // SaAuthLogin ..
-func SaAuthLogin(engineVersion string, saAuthJsonData string) (gu *g79.G79User, err error) {
+func SaAuthLogin(engineVersion string, saAuthJsonData string) (g79User *g79.G79User, err error) {
 	// 0. Prepare
 	var saAuthData SaAuthData
+	var mpayUser android.AndroidMpayUser
 
 	// 1. Unmarshal json string
 	err = json.Unmarshal([]byte(saAuthJsonData), &saAuthData)
@@ -26,22 +27,22 @@ func SaAuthLogin(engineVersion string, saAuthJsonData string) (gu *g79.G79User, 
 		return nil, fmt.Errorf("SaAuthLogin: %v", err)
 	}
 
-	// 2. Create mu and sync data
-	mu := new(android.AndroidMpayUser)
-	mu.Uid = saAuthData.Uid
-	mu.MpayToken = saAuthData.MpayToken
-	mu.AndroidMpayDevice.Udid = saAuthData.Udid
-	mu.AndroidMpayDevice.MpayID = saAuthData.MpayID
-
-	// 3. g79 login
-	err = mu.UpdateGameInfoByEngineVersion(engineVersion)
-	if err != nil {
-		return nil, fmt.Errorf("SaAuthLogin: %v", err)
+	// 2. Init mpay user
+	protocolErr := mpayUser.Initialise()
+	if protocolErr != nil {
+		return nil, fmt.Errorf("SaAuthLogin: %v", protocolErr.Error())
 	}
-	gu, protocolError := g79.Login(mu)
+
+	// 3. Sync data
+	mpayUser.Uid = saAuthData.Uid
+	mpayUser.MpayToken = saAuthData.MpayToken
+	mpayUser.AndroidMpayDevice.Udid = saAuthData.Udid
+	mpayUser.AndroidMpayDevice.MpayID = saAuthData.MpayID
+
+	// 4. g79 login
+	g79User, protocolError := g79.Login(&mpayUser)
 	if protocolError != nil {
 		return nil, fmt.Errorf("SaAuthLogin: %v", protocolError.Error())
 	}
-
-	return gu, nil
+	return g79User, nil
 }
