@@ -67,7 +67,8 @@ func RegisterActiveSession(
 	err error,
 ) {
 	// prepare
-	var gu *g79.G79User
+	var g79User *g79.G79User
+	var success bool
 	session = define.NewActiveSession()
 	session.SessionID = uuid.NewString()
 
@@ -81,6 +82,20 @@ func RegisterActiveSession(
 		defer ActiveSessionTran.Unlock(session.SessionID)
 	}
 
+	// check login status and update info after operate
+	if time.Now().Unix()-helper.TryLoginUnixTime < 3600 && helper.LoginFailedCount >= 3 {
+		return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: 该辅助用户已因登录多次失败而被锁定, 请等待至多一小时或联系管理员以解除锁定")
+	}
+	defer func() {
+		helper.TryLoginUnixTime = time.Now().Unix()
+		if success {
+			helper.LoginFailedCount = 0
+		} else {
+			helper.LoginFailedCount++
+		}
+		UpdateHelperInfo(helper, false)
+	}()
+
 	// g79 login
 	if len(peAuthData) == 0 && len(saAuthData) == 0 {
 		var mu = new(android.AndroidMpayUser)
@@ -91,17 +106,17 @@ func RegisterActiveSession(
 		if err = mu.UpdateGameInfoByEngineVersion(engineVersion); err != nil {
 			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 		}
-		if gu, protocolError = g79.Login(mu); protocolError != nil {
+		if g79User, protocolError = g79.Login(mu); protocolError != nil {
 			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", protocolError.Error())
 		}
 		session.SessionType = define.SessionTypeMpayUser
 	}
 	if len(peAuthData) > 0 {
-		gu, err = enhance.PeAuthLogin(peAuthData)
+		g79User, err = enhance.PeAuthLogin(peAuthData)
 		session.SessionType = define.SessionTypePeAuth
 	}
 	if len(saAuthData) > 0 {
-		gu, err = enhance.SaAuthLogin(engineVersion, saAuthData)
+		g79User, err = enhance.SaAuthLogin(engineVersion, saAuthData)
 		session.SessionType = define.SessionTypeSaAuth
 	}
 	if err != nil {
@@ -122,7 +137,7 @@ func RegisterActiveSession(
 	session.SessionStartTime = currentTime
 	session.SessionExpireTime = currentTime + define.SessionExpireTimeSecond
 	session.RecordG79UserData.NextRefreshTime = currentTime + pollers.PollerActiveSessionSuggestedSecond
-	session.RecordG79UserData.InternalG79User = gu
+	session.RecordG79UserData.InternalG79User = g79User
 
 	// update session to underlying database
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
@@ -157,6 +172,7 @@ func RegisterActiveSession(
 		DeleteActiveSession,
 		UpdateActiveSession,
 	)
+	success = true
 	return session, nil
 }
 

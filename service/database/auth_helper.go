@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
@@ -113,12 +114,14 @@ func CreateAuthHelper(mpayUser mpay.MpayUser, enableVitality bool, useLock bool)
 	}
 
 	helper := define.AuthServerHelper{
-		HelperUniqueID: uuid.NewString(),
-		HelperToken:    uuid.NewString(),
-		GameNickName:   gu.Username,
-		G79UserUID:     gu.EntityID,
-		MpayUserData:   mpayUserBytes,
-		EnableVitality: enableVitality,
+		HelperUniqueID:   uuid.NewString(),
+		HelperToken:      uuid.NewString(),
+		GameNickName:     gu.Username,
+		G79UserUID:       gu.EntityID,
+		MpayUserData:     mpayUserBytes,
+		TryLoginUnixTime: time.Now().Unix(),
+		LoginFailedCount: 0,
+		EnableVitality:   enableVitality,
 	}
 	err = serverDatabase.Update(func(tx *bbolt.Tx) error {
 		buf := bytes.NewBuffer(nil)
