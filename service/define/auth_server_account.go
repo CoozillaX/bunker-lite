@@ -7,6 +7,11 @@ import (
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 )
 
+const (
+	ValidatedNethardAuthServerAddress = "https://nv1.nethard.pro"
+	ValidatedBunkerAuthServerAddress  = "https://api.liliya233.uk"
+)
+
 // AuthServerAccount ..
 type AuthServerAccount interface {
 	AuthServerAddress() string

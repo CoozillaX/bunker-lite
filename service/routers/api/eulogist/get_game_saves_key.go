@@ -94,6 +94,29 @@ func GetGameSavesKey(c *gin.Context) {
 	}
 
 	if enableEncrypt {
+		account, ok := user.CurrentAuthServerAccount.Value()
+		if !ok {
+			c.JSON(http.StatusOK, GameSavesKeyResponse{
+				ErrorInfo: "GetGameSavesKey: 您必须设置当前正在使用的 MC 账号，然后才能登陆到租赁服",
+				Success:   false,
+			})
+			return
+		}
+		switch account.(type) {
+		case *define.StdAuthServerAccount:
+		case *define.CustomAuthServerAccount:
+			switch account.AuthServerAddress() {
+			case define.ValidatedNethardAuthServerAddress:
+			case define.ValidatedBunkerAuthServerAddress:
+			default:
+				c.JSON(http.StatusOK, GameSavesKeyResponse{
+					ErrorInfo: fmt.Sprintf("GetGameSavesKey: 所使用的验证服务 (%s) 不是权威的验证服务", account.AuthServerAddress()),
+					Success:   false,
+				})
+				return
+			}
+		}
+
 		aesCipher, err := database.GetOrCreateGameSavesKey(user.UserUniqueID, request.RentalServerNumber, true)
 		if err != nil {
 			c.JSON(http.StatusOK, GameSavesKeyResponse{
