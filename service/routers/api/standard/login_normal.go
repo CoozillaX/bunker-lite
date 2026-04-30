@@ -94,7 +94,7 @@ func requestServerInfo(
 ) (
 	launcherLevel int,
 	currentUsingMod enhance.UsingMod,
-	rentalServerInfo *g79.RentalServerInfo,
+	rentalServerInfo *g79.MCServerInfo,
 	needRelogin bool,
 	protocolError *defines.ProtocolError,
 ) {
