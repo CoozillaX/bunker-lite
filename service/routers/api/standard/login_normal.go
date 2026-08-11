@@ -96,31 +96,41 @@ func requestServerInfo(
 	currentUsingMod enhance.UsingMod,
 	rentalServerInfo *g79.MCServerInfo,
 	needRelogin bool,
-	protocolError *defines.ProtocolError,
+	protocolErr *defines.ProtocolError,
 ) {
+	var serverInfo *g79.MCServerInfo
+
 	// launcher level
-	launcherLevel, _, _, protocolError = enhance.GetLauncherLevel(gu)
-	if protocolError != nil {
-		return 0, enhance.UsingMod{}, nil, false, protocolError
+	launcherLevel, _, _, protocolErr = enhance.GetLauncherLevel(gu)
+	if protocolErr != nil {
+		return 0, enhance.UsingMod{}, nil, false, protocolErr
 	}
+
 	// using mod
-	currentUsingMod, protocolError = enhance.GetCurrentUsingMod(gu)
-	if protocolError != nil {
-		return 0, enhance.UsingMod{}, nil, false, protocolError
+	currentUsingMod, protocolErr = enhance.GetCurrentUsingMod(gu)
+	if protocolErr != nil {
+		return 0, enhance.UsingMod{}, nil, false, protocolErr
 	}
+
 	// chain info
-	rentalInfo, protocolError := gu.ImpactRentalServer(req.ServerCode, req.ServerPassword, req.ClientPublicKey)
-	if protocolError != nil {
-		return 0, enhance.UsingMod{}, nil, false, protocolError
+	if after, ok := strings.CutPrefix(req.ServerCode, "#"); ok {
+		serverInfo, protocolErr = gu.ImpactRealmsServer(after, req.ClientPublicKey)
+	} else {
+		serverInfo, protocolErr = gu.ImpactRentalServer(req.ServerCode, req.ServerPassword, req.ClientPublicKey)
 	}
+	if protocolErr != nil {
+		return 0, enhance.UsingMod{}, nil, false, protocolErr
+	}
+
 	// get version
 	temp := new(android.AndroidMpayUser)
-	if err := temp.UpdateGameInfoByBedrockVersion(strings.TrimSuffix(rentalInfo.MCVersion, "-release")); err != nil {
+	if err := temp.UpdateGameInfoByBedrockVersion(strings.TrimSuffix(serverInfo.MCVersion, "-release")); err != nil {
 		return 0, enhance.UsingMod{}, nil, false, &defines.ProtocolError{
 			Message: fmt.Sprintf("requestServerInfo: %v", err),
 		}
 	}
 	currentGameInfo := temp.GameInfo
+
 	// cache and check version
 	if !isSpecialRequest {
 		// do cache
@@ -130,7 +140,9 @@ func requestServerInfo(
 			return 0, enhance.UsingMod{}, nil, true, nil
 		}
 	}
-	return launcherLevel, currentUsingMod, rentalInfo, false, nil
+
+	// return
+	return launcherLevel, currentUsingMod, serverInfo, false, nil
 }
 
 func Login(c *gin.Context) {
