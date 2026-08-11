@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
+	"strings"
 
 	"bunker-core/mcp"
 
@@ -58,11 +58,28 @@ func TransferCheckNum(c *gin.Context) {
 
 	// parse fb req
 	var dataList []any
-	if err := json.Unmarshal([]byte(request.Data), &dataList); err != nil {
+	decoder := json.NewDecoder(strings.NewReader(request.Data))
+	decoder.UseNumber()
+	if err := decoder.Decode(&dataList); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
 	if len(dataList) != 3 {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	mcpData, ok := dataList[0].(string)
+	if !ok {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	salt, ok := dataList[1].(string)
+	if !ok {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	uid, ok := dataList[2].(json.Number)
+	if !ok {
 		c.Status(http.StatusBadRequest)
 		return
 	}
@@ -71,9 +88,9 @@ func TransferCheckNum(c *gin.Context) {
 	result, err := mcp.GetMCPCheckNum(
 		engineVersion.(string),
 		patchVersion.(string),
-		dataList[0].(string),
-		dataList[1].(string),
-		strconv.Itoa(int(dataList[2].(float64))),
+		mcpData,
+		salt,
+		uid.String(),
 		platform.(string),
 	)
 	if err != nil {
