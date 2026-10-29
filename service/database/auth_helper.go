@@ -4,7 +4,6 @@ import (
 	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/mpay"
-	"bunker-core/protocol/mpay/android"
 	"bunker-lite/service/define"
 	"bytes"
 	"encoding/json"
@@ -307,7 +306,7 @@ func GetHelperBasicInfo(uniqueID string, deletePollerWhenExpire bool, useLock bo
 	// g79 login
 	session, err = LoadOrRegisterActiveSession(
 		helper,
-		android.DefaultEngineVersion,
+		"",
 		"",
 		"",
 		true,

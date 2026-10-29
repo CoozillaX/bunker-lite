@@ -16,7 +16,7 @@ type SaAuthData struct {
 }
 
 // SaAuthLogin ..
-func SaAuthLogin(engineVersion string, saAuthJsonData string) (g79User *g79.G79User, err error) {
+func SaAuthLogin(bedrockVersion string, saAuthJsonData string) (g79User *g79.G79User, err error) {
 	// 0. Prepare
 	var saAuthData SaAuthData
 	var mpayUser android.AndroidMpayUser
@@ -28,6 +28,9 @@ func SaAuthLogin(engineVersion string, saAuthJsonData string) (g79User *g79.G79U
 	}
 
 	// 2. Init mpay user
+	if err = UseGamePackage(&mpayUser, bedrockVersion); err != nil {
+		return nil, fmt.Errorf("SaAuthLogin: %v", err)
+	}
 	protocolErr := mpayUser.Initialise()
 	if protocolErr != nil {
 		return nil, fmt.Errorf("SaAuthLogin: %v", protocolErr.Error())

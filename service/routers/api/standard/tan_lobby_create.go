@@ -1,7 +1,6 @@
 package std_api
 
 import (
-	"bunker-core/protocol/mpay/android"
 	"bunker-core/utils"
 	"bunker-lite/enhance"
 	"bunker-lite/service/database"
@@ -65,7 +64,7 @@ func TanLobbyCreate(c *gin.Context) {
 	// g79 login
 	session, err := database.LoadOrRegisterActiveSession(
 		helper,
-		android.DefaultEngineVersion,
+		"",
 		request.ProvidedPeAuthData,
 		request.ProvidedSaAuthData,
 		true,

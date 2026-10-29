@@ -1,7 +1,6 @@
 package eulogist_api
 
 import (
-	"bunker-core/protocol/mpay/android"
 	"bunker-lite/service/database"
 	"fmt"
 	"net/http"
@@ -91,7 +90,7 @@ func SetLoginStates(c *gin.Context) {
 		}
 		_, err = database.RegisterActiveSession(
 			helper,
-			android.DefaultEngineVersion,
+			"",
 			request.PeAuth,
 			request.SaAuth,
 			true,

@@ -1,7 +1,6 @@
 package vitality_api
 
 import (
-	"bunker-core/protocol/mpay/android"
 	"bunker-lite/service/database"
 	"bunker-lite/service/define"
 	"bunker-lite/service/routers/keys"
@@ -62,7 +61,7 @@ func RegisterActiveSession(c *gin.Context) {
 	if request.OverrideSession {
 		session, err = database.RegisterActiveSession(
 			helper,
-			android.DefaultEngineVersion,
+			"",
 			request.ProvidedPeAuthData,
 			request.ProvidedSaAuthData,
 			true,
@@ -71,7 +70,7 @@ func RegisterActiveSession(c *gin.Context) {
 	} else {
 		session, err = database.LoadOrRegisterActiveSession(
 			helper,
-			android.DefaultEngineVersion,
+			"",
 			request.ProvidedPeAuthData,
 			request.ProvidedSaAuthData,
 			true,

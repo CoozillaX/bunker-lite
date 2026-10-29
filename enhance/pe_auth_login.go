@@ -87,7 +87,7 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 
 	// 3. Init mpay user
 	mu := new(android.AndroidMpayUser)
-	err = mu.UpdateGameInfoByEngineVersion(android.DefaultEngineVersion)
+	err = mu.UsePublishedPackage()
 	if err != nil {
 		return nil, fmt.Errorf("PeAuthLogin: %v", err)
 	}

@@ -22,7 +22,7 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-// cache[serverCode]serverVersion
+// cache[serverCode]bedrockVersion
 var versionCache = cache.New(24*time.Hour, time.Hour)
 
 // 客户端向验证服务器发送的请求体，
@@ -122,21 +122,17 @@ func requestServerInfo(
 		return 0, enhance.UsingMod{}, nil, false, protocolErr
 	}
 
-	// get version
-	temp := new(android.AndroidMpayUser)
-	if err := temp.UpdateGameInfoByBedrockVersion(strings.TrimSuffix(serverInfo.MCVersion, "-release")); err != nil {
-		return 0, enhance.UsingMod{}, nil, false, &defines.ProtocolError{
-			Message: fmt.Sprintf("requestServerInfo: %v", err),
-		}
-	}
-	currentGameInfo := temp.GameInfo
-
-	// cache and check version
+	// Sessions created from captured PE/SA data do not switch packages here.
 	if !isSpecialRequest {
-		// do cache
-		versionCache.SetDefault(req.ServerCode, currentGameInfo.EngineVersion)
-		// need relogin with new engine version
-		if gu.GetEngineVersion() != currentGameInfo.EngineVersion {
+		// Resolve the server's Bedrock version through the official package catalog.
+		temp := new(android.AndroidMpayUser)
+		if err := temp.UpdateGameInfoByBedrockVersion(serverInfo.MCVersion); err != nil {
+			return 0, enhance.UsingMod{}, nil, false, &defines.ProtocolError{
+				Message: fmt.Sprintf("requestServerInfo: %v", err),
+			}
+		}
+		versionCache.SetDefault(req.ServerCode, temp.GameInfo.BedrockVersion)
+		if gu.GetEngineVersion() != temp.GameInfo.EngineVersion {
 			return 0, enhance.UsingMod{}, nil, true, nil
 		}
 	}
@@ -239,20 +235,20 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// ensure engine version
-	engineVersion := android.DefaultEngineVersion
+	// Select the published package unless a server's Bedrock version is cached.
+	bedrockVersion := ""
 	if len(request.ProvidedPeAuthData) == 0 && len(request.ProvidedSaAuthData) == 0 {
 		// change version by cache if we use mpay user to login
 		value, ok := versionCache.Get(request.ServerCode)
 		if ok {
-			engineVersion = value.(string)
+			bedrockVersion = value.(string)
 		}
 	}
 
 	// g79 login
 	activeSession, err := database.LoadOrRegisterActiveSession(
 		helper,
-		engineVersion,
+		bedrockVersion,
 		request.ProvidedPeAuthData,
 		request.ProvidedSaAuthData,
 		true,
@@ -294,12 +290,12 @@ func Login(c *gin.Context) {
 			// change version by cache
 			value, ok := versionCache.Get(request.ServerCode)
 			if ok {
-				engineVersion = value.(string)
+				bedrockVersion = value.(string)
 			}
 			// relogin g79 user
 			activeSession, err = database.RegisterActiveSession(
 				helper,
-				engineVersion,
+				bedrockVersion,
 				"",
 				"",
 				true,

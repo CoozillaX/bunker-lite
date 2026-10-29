@@ -54,10 +54,10 @@ func initActiveSessionPoller() error {
 	return nil
 }
 
-// RegisterActiveSession ..
+// RegisterActiveSession uses the published package when bedrockVersion is empty.
 func RegisterActiveSession(
 	helper define.AuthServerHelper,
-	engineVersion string,
+	bedrockVersion string,
 	peAuthData string,
 	saAuthData string,
 	useGeneralLock bool,
@@ -108,7 +108,7 @@ func RegisterActiveSession(
 		if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
 			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 		}
-		if err = mu.UpdateGameInfoByEngineVersion(engineVersion); err != nil {
+		if err = enhance.UseGamePackage(mu, bedrockVersion); err != nil {
 			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 		}
 		if g79User, protocolError = g79.Login(mu); protocolError != nil {
@@ -121,7 +121,7 @@ func RegisterActiveSession(
 		session.SessionType = define.SessionTypePeAuth
 	}
 	if len(saAuthData) > 0 {
-		g79User, err = enhance.SaAuthLogin(engineVersion, saAuthData)
+		g79User, err = enhance.SaAuthLogin(bedrockVersion, saAuthData)
 		session.SessionType = define.SessionTypeSaAuth
 	}
 	if err != nil {
@@ -283,10 +283,10 @@ func GetSessionIDByHelperUniqueID(helperUniqueID string, useLock bool) (sessionI
 	return sessionID, len(sessionID) > 0, nil
 }
 
-// LoadOrRegisterActiveSession ..
+// LoadOrRegisterActiveSession uses the published package when bedrockVersion is empty.
 func LoadOrRegisterActiveSession(
 	helper define.AuthServerHelper,
-	engineVersion string,
+	bedrockVersion string,
 	peAuthData string,
 	saAuthData string,
 	extendSessionLifeTime bool,
@@ -315,7 +315,7 @@ func LoadOrRegisterActiveSession(
 
 	session, err = RegisterActiveSession(
 		helper,
-		engineVersion,
+		bedrockVersion,
 		peAuthData,
 		saAuthData,
 		false,

@@ -1,11 +1,16 @@
 module bunker-lite
 
-go 1.26.0
+go 1.27.3
 
 require (
 	bunker-core v0.0.0
+	github.com/gin-gonic/gin v1.10.1
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/pterm/pterm v0.12.82
+	github.com/sandertv/gophertunnel v1.48.1
+	go.etcd.io/bbolt v1.4.2
 )
 
 require (
@@ -17,6 +22,7 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/containerd/console v1.0.5 // indirect
+	github.com/database64128/chacha8-go v0.0.0-20250815115417-e0f2726d8bd0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-gl/mathgl v1.1.0 // indirect
@@ -42,20 +48,11 @@ require (
 	golang.org/x/crypto v0.33.0 // indirect
 	golang.org/x/image v0.21.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
-
-require (
-	github.com/database64128/chacha8-go v0.0.0-20250815115417-e0f2726d8bd0 // indirect
-	github.com/gin-gonic/gin v1.10.1
-	github.com/golang-jwt/jwt/v5 v5.3.0
-	github.com/pterm/pterm v0.12.82
-	github.com/sandertv/gophertunnel v1.48.1
-	go.etcd.io/bbolt v1.4.2
-	golang.org/x/sys v0.35.0 // indirect
 )
 
 replace bunker-core => ../bunker-core
