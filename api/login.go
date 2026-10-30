@@ -2,6 +2,7 @@ package api
 
 import (
 	"bunker-lite/utils"
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -37,6 +38,7 @@ type LoginResponse struct {
 var versionCache = cache.New(24*time.Hour, time.Hour) // cache[serverCode]bedrockVersion
 
 func requestServerInfo(
+	ctx context.Context,
 	mu mpay.MpayUser,
 	req *LoginRequest,
 ) (*g79.G79User, *g79.MCServerInfo, *defines.ProtocolError) {
@@ -47,16 +49,16 @@ func requestServerInfo(
 		}
 	}
 	// g79 login
-	gu, protocolErr := utils.HandleG79Login(mu)
+	gu, protocolErr := utils.HandleG79Login(ctx, mu)
 	if protocolErr != nil {
 		return nil, nil, protocolErr
 	}
 	// chain info
 	var serverInfo *g79.MCServerInfo
 	if after, ok := strings.CutPrefix(req.ServerCode, "#"); ok {
-		serverInfo, protocolErr = gu.ImpactRealmsServer(after, req.ClientPublicKey)
+		serverInfo, protocolErr = gu.ImpactRealmsServer(ctx, after, req.ClientPublicKey)
 	} else {
-		serverInfo, protocolErr = gu.ImpactRentalServer(req.ServerCode, req.ServerPasscode, req.ClientPublicKey)
+		serverInfo, protocolErr = gu.ImpactRentalServer(ctx, req.ServerCode, req.ServerPasscode, req.ClientPublicKey)
 	}
 	if protocolErr != nil {
 		return nil, nil, protocolErr
@@ -67,12 +69,17 @@ func requestServerInfo(
 	// check version
 	if gu.GetBedrockVersion() != rentalBedrockVersion {
 		// re-login and get chain with updated engine version
-		return requestServerInfo(mu, req)
+		return requestServerInfo(ctx, mu, req)
 	}
 	return gu, serverInfo, nil
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 100*time.Second)
+	defer cancel()
+	if ctx.Err() != nil {
+		return
+	}
 	// check method
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -114,7 +121,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// g79 login and request server info
-	gu, serverInfo, protocolErr := requestServerInfo(mu, &req)
+	gu, serverInfo, protocolErr := requestServerInfo(ctx, mu, &req)
 	if protocolErr != nil {
 		json.NewEncoder(w).Encode(&LoginResponse{
 			Success: false,
@@ -123,7 +130,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// fetch growth level
-	growthLevel, _ := utils.GetG79LauncherLevel(gu)
+	growthLevel, _ := utils.GetG79LauncherLevel(ctx, gu)
 	// save info for anti-cheat callback
 	session := utils.GetSessionByBearer(r)
 	session.Store(session_key_entity_id, gu.EntityID)
