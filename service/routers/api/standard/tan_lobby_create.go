@@ -62,7 +62,7 @@ func TanLobbyCreate(c *gin.Context) {
 	helper = database.GetAuthHelperByToken(request.FBToken, true)
 
 	// g79 login
-	session, err := database.LoadOrRegisterActiveSession(
+	session, err := database.LoadOrRegisterActiveSession(c.Request.Context(),
 		helper,
 		"",
 		request.ProvidedPeAuthData,
@@ -81,7 +81,7 @@ func TanLobbyCreate(c *gin.Context) {
 	}
 
 	// select transfer server
-	g79UserUID, raknetServerAddress, signalingServerAddress, err := enhance.SelectTransferServer(session.G79User())
+	g79UserUID, raknetServerAddress, signalingServerAddress, err := enhance.SelectTransferServer(c.Request.Context(), session.G79User())
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyCreateResponse{
 			Success:   false,

@@ -6,6 +6,7 @@ import (
 	"bunker-lite/service/define"
 	"bunker-lite/service/routers/keys"
 	"bunker-lite/utils"
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -88,6 +89,7 @@ type Message struct {
 
 // requestServerInfo ..
 func requestServerInfo(
+	ctx context.Context,
 	isSpecialRequest bool,
 	gu *g79.G79User,
 	req *AuthRequest,
@@ -101,22 +103,22 @@ func requestServerInfo(
 	var serverInfo *g79.MCServerInfo
 
 	// launcher level
-	launcherLevel, _, _, protocolErr = enhance.GetLauncherLevel(gu)
+	launcherLevel, _, _, protocolErr = enhance.GetLauncherLevel(ctx, gu)
 	if protocolErr != nil {
 		return 0, enhance.UsingMod{}, nil, false, protocolErr
 	}
 
 	// using mod
-	currentUsingMod, protocolErr = enhance.GetCurrentUsingMod(gu)
+	currentUsingMod, protocolErr = enhance.GetCurrentUsingMod(ctx, gu)
 	if protocolErr != nil {
 		return 0, enhance.UsingMod{}, nil, false, protocolErr
 	}
 
 	// chain info
 	if after, ok := strings.CutPrefix(req.ServerCode, "#"); ok {
-		serverInfo, protocolErr = gu.ImpactRealmsServer(after, req.ClientPublicKey)
+		serverInfo, protocolErr = gu.ImpactRealmsServer(ctx, after, req.ClientPublicKey)
 	} else {
-		serverInfo, protocolErr = gu.ImpactRentalServer(req.ServerCode, req.ServerPassword, req.ClientPublicKey)
+		serverInfo, protocolErr = gu.ImpactRentalServer(ctx, req.ServerCode, req.ServerPassword, req.ClientPublicKey)
 	}
 	if protocolErr != nil {
 		return 0, enhance.UsingMod{}, nil, false, protocolErr
@@ -142,6 +144,11 @@ func requestServerInfo(
 }
 
 func Login(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 100*time.Second)
+	defer cancel()
+	if ctx.Err() != nil {
+		return
+	}
 	// parse request
 	var request AuthRequest
 	var helper define.AuthServerHelper
@@ -246,7 +253,7 @@ func Login(c *gin.Context) {
 	}
 
 	// g79 login
-	activeSession, err := database.LoadOrRegisterActiveSession(
+	activeSession, err := database.LoadOrRegisterActiveSession(ctx,
 		helper,
 		bedrockVersion,
 		request.ProvidedPeAuthData,
@@ -270,7 +277,7 @@ func Login(c *gin.Context) {
 	// result in can not switch to the correct version.
 	for range 2 {
 		// request server info
-		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolError := requestServerInfo(
+		launcherLevel, currentUsingMod, serverInfo, needRelogin, protocolError := requestServerInfo(ctx,
 			activeSession.SessionType != define.SessionTypeMpayUser,
 			activeSession.G79User(),
 			&request,
@@ -293,7 +300,7 @@ func Login(c *gin.Context) {
 				bedrockVersion = value.(string)
 			}
 			// relogin g79 user
-			activeSession, err = database.RegisterActiveSession(
+			activeSession, err = database.RegisterActiveSession(ctx,
 				helper,
 				bedrockVersion,
 				"",

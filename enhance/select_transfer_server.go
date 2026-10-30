@@ -3,6 +3,7 @@ package enhance
 import (
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -21,7 +22,7 @@ type TransferServerInfo struct {
 	WebsocketPorts []int  `json:"ports"`
 }
 
-func SelectTransferServer(gu *g79.G79User) (g79UserUID uint32, raknetServerAddress string, signalingServerAddress string, err error) {
+func SelectTransferServer(ctx context.Context, gu *g79.G79User) (g79UserUID uint32, raknetServerAddress string, signalingServerAddress string, err error) {
 	// parse user unique id (g79 user uid)
 	uid, err := strconv.ParseUint(gu.EntityID, 10, 32)
 	if err != nil {
@@ -30,7 +31,11 @@ func SelectTransferServer(gu *g79.G79User) (g79UserUID uint32, raknetServerAddre
 	g79UserUID = uint32(uid)
 
 	// query transfer server list
-	resp, err := http.Get(gameinfo.G79Servers.Load().TransferServerUrl)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, gameinfo.G79Servers.Load().TransferServerUrl, nil)
+	if err != nil {
+		return 0, "", "", err
+	}
+	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return 0, "", "", fmt.Errorf("SelectTransferServer: %v", err)
 	}

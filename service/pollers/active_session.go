@@ -4,6 +4,7 @@ import (
 	"bunker-lite/service/define"
 	"bunker-lite/utils"
 	"context"
+	"time"
 )
 
 const (
@@ -26,21 +27,23 @@ func AppendSession(
 	sessionID string,
 	transaction *utils.Transaction,
 	expectedUnixTime int64,
-	loadFunc func(sessionID string, extendSessionLifeTime bool, deletePollerWhenExpire bool, useSessionLock bool) (session define.ActiveSession, found bool, err error),
+	loadFunc func(ctx context.Context, sessionID string, extendSessionLifeTime bool, deletePollerWhenExpire bool, useSessionLock bool) (session define.ActiveSession, found bool, err error),
 	deleteFunc func(sessionID string, deletePoller bool, useLock bool) error,
 	updateFunc func(session define.ActiveSession, useLock bool) error,
 ) (alreadyHit bool, success bool) {
 	callBack := func(sessionID *string) (appendToQueue bool) {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 		transaction.Lock(*sessionID)
 		defer transaction.Unlock(*sessionID)
 
-		session, found, err := loadFunc(*sessionID, false, false, false)
+		session, found, err := loadFunc(ctx, *sessionID, false, false, false)
 		if err != nil || !found {
 			_ = deleteFunc(*sessionID, false, false)
 			return false
 		}
 
-		protocolError := session.G79User().Update()
+		protocolError := session.G79User().Update(ctx)
 		if protocolError != nil {
 			_ = deleteFunc(*sessionID, false, false)
 			return false

@@ -8,6 +8,7 @@ import (
 	"bunker-lite/service/define"
 	"bunker-lite/service/pollers"
 	"bunker-lite/utils"
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -56,6 +57,7 @@ func initActiveSessionPoller() error {
 
 // RegisterActiveSession uses the published package when bedrockVersion is empty.
 func RegisterActiveSession(
+	ctx context.Context,
 	helper define.AuthServerHelper,
 	bedrockVersion string,
 	peAuthData string,
@@ -66,11 +68,25 @@ func RegisterActiveSession(
 	session define.ActiveSession,
 	err error,
 ) {
+	if ctx.Err() != nil {
+		return define.ActiveSession{}, ctx.Err()
+	}
 	// prepare
 	var g79User *g79.G79User
 	var success bool
 	session = define.NewActiveSession()
 	session.SessionID = uuid.NewString()
+
+	// Cache misses are resource readiness failures, not account login failures.
+	mpayUser := new(android.AndroidMpayUser)
+	if len(peAuthData) > 0 {
+		err = mpayUser.UsePublishedPackage()
+	} else {
+		err = enhance.UseGamePackage(mpayUser, bedrockVersion)
+	}
+	if err != nil {
+		return define.ActiveSession{}, err
+	}
 
 	// do lock
 	if useGeneralLock {
@@ -87,6 +103,9 @@ func RegisterActiveSession(
 		return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: 该辅助用户已因登录多次失败而被锁定, 请等待至多一小时或联系管理员以解除锁定")
 	}
 	defer func() {
+		if !success && ctx.Err() != nil {
+			return
+		}
 		// prepare
 		currentTime := time.Now().Unix()
 		// update login status
@@ -103,25 +122,21 @@ func RegisterActiveSession(
 
 	// g79 login
 	if len(peAuthData) == 0 && len(saAuthData) == 0 {
-		var mu = new(android.AndroidMpayUser)
 		var protocolError *defines.ProtocolError
-		if err = json.Unmarshal(helper.MpayUserData, mu); err != nil {
+		if err = json.Unmarshal(helper.MpayUserData, mpayUser); err != nil {
 			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
 		}
-		if err = enhance.UseGamePackage(mu, bedrockVersion); err != nil {
-			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", err)
-		}
-		if g79User, protocolError = g79.Login(mu); protocolError != nil {
+		if g79User, protocolError = g79.Login(ctx, mpayUser); protocolError != nil {
 			return define.ActiveSession{}, fmt.Errorf("RegisterActiveSession: %v", protocolError.Error())
 		}
 		session.SessionType = define.SessionTypeMpayUser
 	}
 	if len(peAuthData) > 0 {
-		g79User, err = enhance.PeAuthLogin(peAuthData)
+		g79User, err = enhance.PeAuthLogin(ctx, peAuthData)
 		session.SessionType = define.SessionTypePeAuth
 	}
 	if len(saAuthData) > 0 {
-		g79User, err = enhance.SaAuthLogin(bedrockVersion, saAuthData)
+		g79User, err = enhance.SaAuthLogin(ctx, bedrockVersion, saAuthData)
 		session.SessionType = define.SessionTypeSaAuth
 	}
 	if err != nil {
@@ -214,6 +229,7 @@ func DeleteActiveSession(sessionID string, deletePoller bool, useSessionLock boo
 
 // LoadActiveSession ..
 func LoadActiveSession(
+	ctx context.Context,
 	sessionID string,
 	extendSessionLifeTime bool,
 	deletePollerWhenExpire bool,
@@ -223,6 +239,9 @@ func LoadActiveSession(
 	found bool,
 	err error,
 ) {
+	if ctx.Err() != nil {
+		return define.ActiveSession{}, false, ctx.Err()
+	}
 	if useSessionLock {
 		ActiveSessionTran.Lock(sessionID)
 		defer ActiveSessionTran.Unlock(sessionID)
@@ -252,8 +271,11 @@ func LoadActiveSession(
 		}
 	}
 
-	session.G79User().Username, err = enhance.GetName(session.G79User())
+	session.G79User().Username, err = enhance.GetName(ctx, session.G79User())
 	if err != nil {
+		if ctx.Err() != nil {
+			return define.ActiveSession{}, false, ctx.Err()
+		}
 		_ = DeleteActiveSession(sessionID, deletePollerWhenExpire, false)
 		return define.ActiveSession{}, false, fmt.Errorf("LoadActiveSession: %v", err)
 	}
@@ -285,6 +307,7 @@ func GetSessionIDByHelperUniqueID(helperUniqueID string, useLock bool) (sessionI
 
 // LoadOrRegisterActiveSession uses the published package when bedrockVersion is empty.
 func LoadOrRegisterActiveSession(
+	ctx context.Context,
 	helper define.AuthServerHelper,
 	bedrockVersion string,
 	peAuthData string,
@@ -297,6 +320,9 @@ func LoadOrRegisterActiveSession(
 	session define.ActiveSession,
 	err error,
 ) {
+	if ctx.Err() != nil {
+		return define.ActiveSession{}, ctx.Err()
+	}
 	if useGeneralLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -304,7 +330,7 @@ func LoadOrRegisterActiveSession(
 
 	sessionID, found, err := GetSessionIDByHelperUniqueID(helper.HelperUniqueID, false)
 	if found {
-		session, found, err := LoadActiveSession(sessionID, extendSessionLifeTime, deletePollerWhenExpire, useSessionLock)
+		session, found, err := LoadActiveSession(ctx, sessionID, extendSessionLifeTime, deletePollerWhenExpire, useSessionLock)
 		if err != nil {
 			return define.ActiveSession{}, fmt.Errorf("LoadOrRegisterActiveSession: %v", err)
 		}
@@ -313,7 +339,7 @@ func LoadOrRegisterActiveSession(
 		}
 	}
 
-	session, err = RegisterActiveSession(
+	session, err = RegisterActiveSession(ctx,
 		helper,
 		bedrockVersion,
 		peAuthData,

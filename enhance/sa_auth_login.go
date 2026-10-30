@@ -3,6 +3,7 @@ package enhance
 import (
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/mpay/android"
+	"context"
 	"encoding/json"
 	"fmt"
 )
@@ -16,7 +17,7 @@ type SaAuthData struct {
 }
 
 // SaAuthLogin ..
-func SaAuthLogin(bedrockVersion string, saAuthJsonData string) (g79User *g79.G79User, err error) {
+func SaAuthLogin(ctx context.Context, bedrockVersion string, saAuthJsonData string) (g79User *g79.G79User, err error) {
 	// 0. Prepare
 	var saAuthData SaAuthData
 	var mpayUser android.AndroidMpayUser
@@ -43,7 +44,7 @@ func SaAuthLogin(bedrockVersion string, saAuthJsonData string) (g79User *g79.G79
 	mpayUser.AndroidMpayDevice.MpayID = saAuthData.MpayID
 
 	// 4. g79 login
-	g79User, protocolError := g79.Login(&mpayUser)
+	g79User, protocolError := g79.Login(ctx, &mpayUser)
 	if protocolError != nil {
 		return nil, fmt.Errorf("SaAuthLogin: %v", protocolError.Error())
 	}

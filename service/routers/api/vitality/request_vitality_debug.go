@@ -67,7 +67,7 @@ func RequestVitalityDebug(c *gin.Context) {
 	database.ActiveSessionTran.Lock(request.SessionID)
 	defer database.ActiveSessionTran.Unlock(request.SessionID)
 
-	session, found, err := database.LoadActiveSession(request.SessionID, true, true, false)
+	session, found, err := database.LoadActiveSession(c.Request.Context(), request.SessionID, true, true, false)
 	if err != nil {
 		c.JSON(http.StatusOK, VitalityDebugResponse{
 			ErrorInfo: fmt.Sprintf("RequestVitalityDebug: %v", err),
@@ -86,7 +86,7 @@ func RequestVitalityDebug(c *gin.Context) {
 	switch request.RequestType {
 	case RequestTypeGetCurrencyOnline:
 		// send http request
-		reader, protocolError := session.G79User().CreateHttpClient().
+		reader, protocolError := session.G79User().CreateHttpClient(c.Request.Context()).
 			SetMethod(http.MethodPost).
 			SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/get-currency-online").
 			SetRawBody([]byte("{}")).
@@ -121,7 +121,7 @@ func RequestVitalityDebug(c *gin.Context) {
 		})
 	case RequestTypeGetDailyGrowth:
 		// send http request
-		reader, protocolError := session.G79User().CreateHttpClient().
+		reader, protocolError := session.G79User().CreateHttpClient(c.Request.Context()).
 			SetMethod(http.MethodPost).
 			SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-get-daily-growth-info").
 			SetTokenMode(g79.TOKEN_MODE_NORMAL).

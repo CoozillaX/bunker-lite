@@ -88,7 +88,7 @@ func SetLoginStates(c *gin.Context) {
 			})
 			return
 		}
-		_, err = database.RegisterActiveSession(
+		_, err = database.RegisterActiveSession(c.Request.Context(),
 			helper,
 			"",
 			request.PeAuth,

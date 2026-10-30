@@ -59,7 +59,7 @@ func RegisterActiveSession(c *gin.Context) {
 	helper := database.GetAuthHelperByToken(request.Token, true)
 
 	if request.OverrideSession {
-		session, err = database.RegisterActiveSession(
+		session, err = database.RegisterActiveSession(c.Request.Context(),
 			helper,
 			"",
 			request.ProvidedPeAuthData,
@@ -68,7 +68,7 @@ func RegisterActiveSession(c *gin.Context) {
 			true,
 		)
 	} else {
-		session, err = database.LoadOrRegisterActiveSession(
+		session, err = database.LoadOrRegisterActiveSession(c.Request.Context(),
 			helper,
 			"",
 			request.ProvidedPeAuthData,

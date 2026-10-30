@@ -6,6 +6,7 @@ import (
 	"bunker-core/protocol/mpay"
 	"bunker-lite/service/define"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -95,13 +96,16 @@ func GetAuthHelperByToken(token string, useLock bool) (helper define.AuthServerH
 }
 
 // CreateAuthHelper ..
-func CreateAuthHelper(mpayUser mpay.MpayUser, enableVitality bool, useLock bool) (uniqueID string, protocolError *defines.ProtocolError) {
+func CreateAuthHelper(ctx context.Context, mpayUser mpay.MpayUser, enableVitality bool, useLock bool) (uniqueID string, protocolError *defines.ProtocolError) {
+	if ctx.Err() != nil {
+		return "", &defines.ProtocolError{Message: ctx.Err().Error()}
+	}
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
 	}
 
-	gu, protocolError := g79.Login(mpayUser)
+	gu, protocolError := g79.Login(ctx, mpayUser)
 	if protocolError != nil {
 		return "", protocolError
 	}
@@ -291,7 +295,10 @@ func DeleteAuthHelper(uniqueID string, useGeneralLock bool, useSessionLock bool)
 }
 
 // GetHelperBasicInfo ..
-func GetHelperBasicInfo(uniqueID string, deletePollerWhenExpire bool, useLock bool) (session define.ActiveSession, err error) {
+func GetHelperBasicInfo(ctx context.Context, uniqueID string, deletePollerWhenExpire bool, useLock bool) (session define.ActiveSession, err error) {
+	if ctx.Err() != nil {
+		return define.ActiveSession{}, ctx.Err()
+	}
 	if useLock {
 		mu.Lock()
 		defer mu.Unlock()
@@ -304,7 +311,7 @@ func GetHelperBasicInfo(uniqueID string, deletePollerWhenExpire bool, useLock bo
 	helper := GetAuthHelperByUniqueID(uniqueID, false)
 
 	// g79 login
-	session, err = LoadOrRegisterActiveSession(
+	session, err = LoadOrRegisterActiveSession(ctx,
 		helper,
 		"",
 		"",

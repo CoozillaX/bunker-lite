@@ -3,6 +3,7 @@ package enhance
 import (
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -21,7 +22,7 @@ type TanLobbyRoomInfo struct {
 	SignalingServerAddress string
 }
 
-func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomInfo, err error) {
+func QueryTanLobbyRoomInfo(ctx context.Context, gu *g79.G79User, roomID string) (result TanLobbyRoomInfo, err error) {
 	var roomTransferServerID int
 	var roomModItemIDs []string
 
@@ -42,7 +43,7 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 		"name": roomID,
 		"uid":  uid,
 	})
-	reader, protocolError := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient(ctx).
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79Servers.Load().TransferServerNewHttpUrl + "/room-with-name").
 		SetRawBody(reqBody).
@@ -78,19 +79,23 @@ func QueryTanLobbyRoomInfo(gu *g79.G79User, roomID string) (result TanLobbyRoomI
 
 	// get room mod download url and encrypt key
 	if len(roomModItemIDs) > 0 {
-		roomModItemIDs, result.RoomModDisplayName, result.RoomModDownloadURL, err = GetLobbyDownloadInfoByItemIDs(gu, roomModItemIDs)
+		roomModItemIDs, result.RoomModDisplayName, result.RoomModDownloadURL, err = GetLobbyDownloadInfoByItemIDs(ctx, gu, roomModItemIDs)
 		if err != nil {
 			return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", err)
 		}
 	}
 	if len(roomModItemIDs) > 0 {
-		if result.RoomModEncryptKey, err = GetLobbyItemEncryptionKeys(gu, roomModItemIDs); err != nil {
+		if result.RoomModEncryptKey, err = GetLobbyItemEncryptionKeys(ctx, gu, roomModItemIDs); err != nil {
 			return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", err)
 		}
 	}
 
 	// query transfer server list
-	resp, err := http.Get(gameinfo.G79Servers.Load().TransferServerUrl)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, gameinfo.G79Servers.Load().TransferServerUrl, nil)
+	if err != nil {
+		return TanLobbyRoomInfo{}, err
+	}
+	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return TanLobbyRoomInfo{}, fmt.Errorf("QueryTanLobbyRoomInfo: %v", err)
 	}

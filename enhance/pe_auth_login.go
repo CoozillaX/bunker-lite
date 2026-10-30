@@ -6,6 +6,7 @@ import (
 	"bunker-core/protocol/gameinfo"
 	"bunker-core/protocol/mpay/android"
 	"bunker-core/protocol/mpay/utils"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -64,7 +65,7 @@ func ParseHttpEncrypt(body string) (result map[string]any, err error) {
 //
 // Note that gu.MpayUser is not very completely, so
 // that the returned g79 user only can be used once.
-func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
+func PeAuthLogin(ctx context.Context, peAuthStringData string) (gu *g79.G79User, err error) {
 	// 0. Prepare
 	var saDataInCookie map[string]any
 
@@ -122,7 +123,7 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 
 	// 9. Do request
 	gu = &g79.G79User{MpayUser: mu}
-	reader, protocolError := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient(ctx).
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79Servers.Load().CoreServerUrl + "/pe-authentication").
 		SetRawBody(reqBody).
@@ -145,14 +146,14 @@ func PeAuthLogin(peAuthStringData string) (gu *g79.G79User, err error) {
 	gu.MpayUser = mu
 
 	// 11. Get username
-	gu.Username, err = GetName(gu)
+	gu.Username, err = GetName(ctx, gu)
 	if err != nil {
 		return nil, fmt.Errorf("PeAuthLogin: %v", err)
 	}
 
 	// 12. Acc online exp
 	go func() {
-		_, _, _ = gu.AccOnlineExp()
+		_, _, _ = gu.AccOnlineExp(ctx)
 	}()
 
 	return gu, nil

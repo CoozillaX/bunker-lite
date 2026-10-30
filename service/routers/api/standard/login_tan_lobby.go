@@ -71,7 +71,7 @@ func TanLobbyLogin(c *gin.Context) {
 	helper = database.GetAuthHelperByToken(request.FBToken, true)
 
 	// g79 login
-	session, err := database.LoadOrRegisterActiveSession(
+	session, err := database.LoadOrRegisterActiveSession(c.Request.Context(),
 		helper,
 		"",
 		request.ProvidedPeAuthData,
@@ -90,7 +90,7 @@ func TanLobbyLogin(c *gin.Context) {
 	}
 
 	// query tan lobby room info
-	roomInfo, err := enhance.QueryTanLobbyRoomInfo(session.G79User(), request.RoomID)
+	roomInfo, err := enhance.QueryTanLobbyRoomInfo(c.Request.Context(), session.G79User(), request.RoomID)
 	if err != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			Success:   false,
@@ -100,7 +100,7 @@ func TanLobbyLogin(c *gin.Context) {
 	}
 
 	// Get launcher level and current using mod
-	launcherLevel, _, _, protocolError := enhance.GetLauncherLevel(session.G79User())
+	launcherLevel, _, _, protocolError := enhance.GetLauncherLevel(c.Request.Context(), session.G79User())
 	if protocolError != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			Success:   false,
@@ -108,7 +108,7 @@ func TanLobbyLogin(c *gin.Context) {
 		})
 		return
 	}
-	currentUsingMod, protocolError := enhance.GetCurrentUsingMod(session.G79User())
+	currentUsingMod, protocolError := enhance.GetCurrentUsingMod(c.Request.Context(), session.G79User())
 	if protocolError != nil {
 		c.JSON(http.StatusOK, TanLobbyLoginResponse{
 			Success:   false,

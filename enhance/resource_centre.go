@@ -4,6 +4,7 @@ import (
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
 	"bunker-core/utils"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GetLobbyDownloadInfoByItemIDs(gu *g79.G79User, itemIDs []string) (
+func GetLobbyDownloadInfoByItemIDs(ctx context.Context, gu *g79.G79User, itemIDs []string) (
 	realItemIds []string,
 	modDisplayName []string,
 	modDownloadURL []string,
@@ -21,7 +22,7 @@ func GetLobbyDownloadInfoByItemIDs(gu *g79.G79User, itemIDs []string) (
 	reqBody, _ := json.Marshal(map[string]any{
 		"item_ids": itemIDs,
 	})
-	reader, protocolError := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient(ctx).
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-item/query/search-lobby-by-id-list").
 		SetRawBody(reqBody).
@@ -55,13 +56,13 @@ func GetLobbyDownloadInfoByItemIDs(gu *g79.G79User, itemIDs []string) (
 	return
 }
 
-func GetLobbyItemEncryptionKeys(gu *g79.G79User, itemIDs []string) (result [][]byte, err error) {
+func GetLobbyItemEncryptionKeys(ctx context.Context, gu *g79.G79User, itemIDs []string) (result [][]byte, err error) {
 	// 1. Do req
 	reqBody, _ := json.Marshal(map[string]any{
 		"device_id": gu.MpayUser.GetDeviceID(),
 		"item_ids":  itemIDs,
 	})
-	reader, protocolError := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient(ctx).
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79Servers.Load().CoreServerUrl + "/pe-item/get-encryption-key-list-for-guests").
 		SetRawBody(reqBody).

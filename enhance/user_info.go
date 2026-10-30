@@ -4,16 +4,17 @@ import (
 	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-func GetName(gu *g79.G79User) (name string, err error) {
+func GetName(ctx context.Context, gu *g79.G79User) (name string, err error) {
 	reqBody, _ := json.Marshal(map[string]string{
 		"entity_id": gu.EntityID,
 	})
-	reader, protocolError := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient(ctx).
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79Servers.Load().CoreServerUrl + "/pe-user-detail/get").
 		SetRawBody(reqBody).
@@ -35,11 +36,11 @@ func GetName(gu *g79.G79User) (name string, err error) {
 	return query.Entity.Name, nil
 }
 
-func ChangeName(gu *g79.G79User, userNewName string) *defines.ProtocolError {
+func ChangeName(ctx context.Context, gu *g79.G79User, userNewName string) *defines.ProtocolError {
 	reqBody, _ := json.Marshal(map[string]any{
 		"name": userNewName,
 	})
-	_, protocolError := gu.CreateHttpClient().
+	_, protocolError := gu.CreateHttpClient(ctx).
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-nickname-setting/update").
 		SetRawBody(reqBody).
@@ -51,8 +52,8 @@ func ChangeName(gu *g79.G79User, userNewName string) *defines.ProtocolError {
 	return nil
 }
 
-func GetLauncherLevel(gu *g79.G79User) (level int, exp int, needExp int, protocolError *defines.ProtocolError) {
-	reader, protocolError := gu.CreateHttpClient().
+func GetLauncherLevel(ctx context.Context, gu *g79.G79User) (level int, exp int, needExp int, protocolError *defines.ProtocolError) {
+	reader, protocolError := gu.CreateHttpClient(ctx).
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-get-grow-lv-exp").
 		SetRawBody([]byte("{}")).

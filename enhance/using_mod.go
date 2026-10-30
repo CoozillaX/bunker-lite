@@ -4,6 +4,7 @@ import (
 	"bunker-core/protocol/defines"
 	"bunker-core/protocol/g79"
 	"bunker-core/protocol/gameinfo"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -39,9 +40,9 @@ type UsingMod struct {
 	SkinDownloadInfo *DownloadInfo
 }
 
-func GetCurrentUsingMod(gu *g79.G79User) (UsingMod, *defines.ProtocolError) {
+func GetCurrentUsingMod(ctx context.Context, gu *g79.G79User) (UsingMod, *defines.ProtocolError) {
 	// 1. Do req
-	reader, protocolError := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient(ctx).
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-get-user-setting-list").
 		SetRawBody([]byte(currentUsingModRawBody)).
@@ -63,11 +64,11 @@ func GetCurrentUsingMod(gu *g79.G79User) (UsingMod, *defines.ProtocolError) {
 
 	// 3. Get skin download info
 	if !strings.HasPrefix(query.UsingMod.SkinData.ItemID, "-") {
-		query.UsingMod.SkinDownloadInfo, protocolError = GetDownloadInfoByItemID(gu, query.UsingMod.SkinData.ItemID)
+		query.UsingMod.SkinDownloadInfo, protocolError = GetDownloadInfoByItemID(ctx, gu, query.UsingMod.SkinData.ItemID)
 		if protocolError != nil {
 			return UsingMod{}, protocolError
 		}
-		query.UsingMod.SkinData.IsSlim, protocolError = GetSkinIsSlim(gu, query.UsingMod.SkinData.ItemID)
+		query.UsingMod.SkinData.IsSlim, protocolError = GetSkinIsSlim(ctx, gu, query.UsingMod.SkinData.ItemID)
 		if protocolError != nil {
 			return UsingMod{}, protocolError
 		}
@@ -81,7 +82,7 @@ func GetCurrentUsingMod(gu *g79.G79User) (UsingMod, *defines.ProtocolError) {
 	return query.UsingMod, nil
 }
 
-func GetSkinIsSlim(gu *g79.G79User, itemID string) (isSlim bool, protocolError *defines.ProtocolError) {
+func GetSkinIsSlim(ctx context.Context, gu *g79.G79User, itemID string) (isSlim bool, protocolError *defines.ProtocolError) {
 	// 1. Make request
 	var req struct {
 		ItemIDList []string `json:"item_id_list"`
@@ -90,7 +91,7 @@ func GetSkinIsSlim(gu *g79.G79User, itemID string) (isSlim bool, protocolError *
 	reqBody, _ := json.Marshal(req)
 
 	// 2. Do request
-	reader, protocolError := gu.CreateHttpClient().
+	reader, protocolError := gu.CreateHttpClient(ctx).
 		SetMethod(http.MethodPost).
 		SetUrl(gameinfo.G79Servers.Load().ApiGatewayUrl + "/pe-item/query/search-by-id-list").
 		SetRawBody([]byte(reqBody)).
